@@ -6,7 +6,7 @@
 #include "peripherals.h"
 
 typedef enum ReadStartBitState {
-	NOT_FOUND,					//not start bit found
+	NOT_FOUND,					//no start bit found
 	READ_T0,					//read t0 edge => any negative edge
 	READ_T1,					//read t1 edge in specified time
 	READ_T2						//read t2 edge in specified time => found start bit
@@ -22,14 +22,10 @@ typedef enum State {
 	WRITE_DATA_BIT
 } State;
 
-extern bool eventTriggeredTimerA;
-extern bool eventTriggeredTimerB;
-extern bool eventToggledEdge;
-extern bool eventStateTransistionIn;
-extern bool eventStateTransistionOut;
-
 void stateMachine(void);
+void setState(State state);
 
+bool isEvent(void);
 bool isEventTriggeredTimerA(void);
 bool isEventTriggeredTimerB(void);
 bool isEventInputToggled(void);
@@ -38,11 +34,10 @@ bool isEventTransistionOut(void);
 
 void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat);
 void clearTimeout(Timer timer);
-void setState(State state);
 
 void stateMachineTimer1InputCapture(void);
 void stateMachineTimer1ACompareMatch(void);
 void stateMachineTimer1BCompareMatch(void);
-void timer1Overflow(void);
+void stateMachineUartReceived(char c);
 
 #endif

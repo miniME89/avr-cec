@@ -1,8 +1,7 @@
 #include "includes/peripherals.h"
-#include "includes/state_machine.h"
 #include "includes/defines.h"
 #include "includes/utils.h"
-#include "includes/cec.h"
+#include "includes/state_machine.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdbool.h>
@@ -26,40 +25,12 @@ void setInterrupts(bool enable)
 }
 
 /************************************************************************/
-/* Interrupt for timer1 input compare                                   */
-/************************************************************************/
-
-//Interrupt for timer1 input compare
-ISR(TIMER1_CAPT_vect)
-{
-	stateMachineTimer1InputCapture();
-}
-
-//Interrupt for timer1 compare match A
-ISR(TIMER1_COMPA_vect)
-{
-	stateMachineTimer1ACompareMatch();
-}
-
-//Interrupt for timer1 compare match B
-ISR(TIMER1_COMPB_vect)
-{
-	stateMachineTimer1BCompareMatch();
-}
-
-//Interrupt for timer1 overflow
-ISR(TIMER1_OVF_vect)
-{
-	timer1OverflowCounter++;
-}
-
-/************************************************************************/
 /* IO                                                                   */
 /************************************************************************/
 void initIO(void)
 {
 	INFO_LED_PORT_DDR |= (1 << INFO_LED_PIN);
-	setDirectionCEC(INPUT);
+	setDataDirectionCEC(INPUT);
 }
 
 Level getInputCaptureState()
@@ -92,7 +63,7 @@ void setInfoLED(Level level)
 	
 }
 
-void setDirectionCEC(DataDirection direction)
+void setDataDirectionCEC(DataDirection direction)
 {
 	if (direction == OUTPUT)
 	{
@@ -109,6 +80,30 @@ void setDirectionCEC(DataDirection direction)
 /************************************************************************/
 /* timer1                                                               */
 /************************************************************************/
+//Interrupt for timer1 input compare
+ISR(TIMER1_CAPT_vect)
+{
+	stateMachineTimer1InputCapture();
+}
+
+//Interrupt for timer1 compare match A
+ISR(TIMER1_COMPA_vect)
+{
+	stateMachineTimer1ACompareMatch();
+}
+
+//Interrupt for timer1 compare match B
+ISR(TIMER1_COMPB_vect)
+{
+	stateMachineTimer1BCompareMatch();
+}
+
+//Interrupt for timer1 overflow
+ISR(TIMER1_OVF_vect)
+{
+	timer1OverflowCounter++;
+}
+
 void initTimer1()
 {
 	//TCCR1B = (1 << WGM12);
@@ -182,37 +177,56 @@ void setTimer1CompareMatchInterrupt(Timer timer, bool enable)
 /************************************************************************/
 /* uart                                                                 */
 /************************************************************************/
+ISR(USART_RXC_vect)
+{
+	stateMachineUartReceived(UDR);
+}
+
 void initUart(void)
 {
 	unsigned int regubrr = UBRR_REGISTER;							//set baud rate
 	UBRRH = (unsigned char)(regubrr >> 8);
 	UBRRL = (unsigned char)regubrr;
 
-	UCSRB = (1 << RXEN) | (1 << TXEN);								//enable receiver and transmitter
+	UCSRB = (1 << RXEN) | (1 << TXEN) | (1<<RXCIE);					//enable receiver + transmitter + receiver interrupt
 
 	UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);				//set frame format: 8data
 
 	bufferUart = newBufferFIFO(64);
 }
 
-void uart_write_char(unsigned char data)
+void uartSendChar(char c)
 {
-	while(!( UCSRA & (1 << UDRE)))
-	{
-		if (eventToggledEdge || eventTriggeredTimerA || eventTriggeredTimerB)
-		{
-			return;
-		}
-	}
-
-	UDR = data;
+	putFIFO(bufferUart, c);
 }
 
-void uart_write_string(char* str)
+void uartSendString(char* str)
 {
 	while (*str)
 	{
-		uart_write_char(*str);
+		putFIFO(bufferUart, *str);
 		str++;
+	}
+}
+
+void uartFlush()
+{
+	char c;
+	uint8_t charCount = 0;
+
+	while (charCount < FLUSH_MAX_CHARS && !isEmptyFIFO(bufferUart))
+	{
+		while(!( UCSRA & (1 << UDRE)))		//wait till UART is ready
+		{
+			if (isEvent())					//cancel if there is a state machine event
+			{
+				return;
+			}
+		}
+
+		getFIFO(bufferUart, &c);
+
+		UDR = c;
+		charCount++;
 	}
 }

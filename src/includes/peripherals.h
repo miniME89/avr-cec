@@ -28,7 +28,6 @@ typedef enum DataDirection
 	OUTPUT
 } DataDirection;
 
-extern FIFOBuffer* bufferUart;
 extern uint8_t timer1OverflowCounter;
 
 //interrupts
@@ -39,7 +38,7 @@ void initIO(void);
 Level getInputCaptureState(void);
 void setInputCaptureTriggerEdge(Edge edge);
 void setInfoLED(Level level);
-void setDirectionCEC(DataDirection direction);
+void setDataDirectionCEC(DataDirection direction);
 
 //Timer1
 void initTimer1(void);
@@ -50,7 +49,8 @@ void setTimer1CompareMatchInterrupt(Timer timer, bool enable);
 
 //UART
 void initUart(void);
-void uart_write_char(unsigned char data);
-void uart_write_string(char* str);
+void uartSendChar(char c);
+void uartSendString(char* str);
+void uartFlush(void);
 
 #endif

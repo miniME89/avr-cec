@@ -37,10 +37,6 @@ void stateMachine()
 				debug("a");
 			}
 
-			//setCurrentState(_READ_DATA_BIT);
-			//setTimerTask(DATA_BIT_SAMPLE_TIME, A, false, true);
-			//setTimerTask(DATA_BIT_TIMEOUT, B, true, false);
-
 			data[0] = 0x05;
 			data[1] = 0x44;
 			data[2] = 0x43;
@@ -101,7 +97,7 @@ void stateMachine()
 						if ((START_BIT_T2 + START_BIT_TOLERANCE) > lastEdgeTicks && lastEdgeTicks > (START_BIT_T2 - START_BIT_TOLERANCE))	//t2 valid time?
 						{
 							readStartBitState = READ_T2;
-							putFIFO(bufferUart, 'F');
+							//uartSendChar('F');
 
 							setState(READ_DATA_BIT);
 						}
@@ -143,7 +139,7 @@ void stateMachine()
 					}
 					else
 					{
-						setTimeout(DATA_BIT_TIMEOUT, TIMER_B, true, false);
+						setTimeout(DATA_BIT_FOLLOWING_TIMEOUT, TIMER_B, true, false);
 					}
 				}
 			}
@@ -169,7 +165,7 @@ void stateMachine()
 
 				if (dataBitCounter > 9)
 				{
-					putFIFO(bufferUart, dataByte);
+					uartSendChar(dataByte);
 					data[dataByteCounter] = dataByte;
 					dataBitCounter = 0;
 					dataByteCounter++;
@@ -181,7 +177,7 @@ void stateMachine()
 				if (dataByteCounter > 0 && dataBitCounter == 0 && (dataByte & 0x0F) == LOGICAL_ADDRESS)
 				{
 					cecHigh();
-					setTimeout(DATA_BIT_TIMEOUT, TIMER_B, true, false);
+					setTimeout(DATA_BIT_FOLLOWING_TIMEOUT, TIMER_B, true, false);
 				}
 				else
 				{
@@ -196,12 +192,10 @@ void stateMachine()
 					if (dataBitCounter != 0)
 					{
 						//this shouldn't happen => error
-						putFIFO(bufferUart, 'X');
-						//putFIFO(bufferUart, dataBitCounter);
-						//putFIFO(bufferUart, dataByteCounter);
+						uartSendChar('X');
 					}
 
-					putFIFO(bufferUart, '\n');
+					uartSendChar('\n');
 					data[++dataByteCounter] = '\n';
 				}
 			}
@@ -329,6 +323,11 @@ void stateMachine()
 			}
 		break;
 	}
+}
+
+bool isEvent(void)
+{
+	return (eventTriggeredTimerA || eventTriggeredTimerB || eventToggledEdge || eventStateTransistionIn || eventStateTransistionOut);
 }
 
 bool isEventTriggeredTimerA()
@@ -484,3 +483,10 @@ void stateMachineTimer1BCompareMatch()
 	eventTriggeredTimerB = true;
 }
 
+/************************************************************************/
+/* Interrupt for UART received                                          */
+/************************************************************************/
+void stateMachineUartReceived(char c)
+{
+	uartSendChar('R');
+}

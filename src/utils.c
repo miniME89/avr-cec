@@ -3,18 +3,6 @@
 #include "includes/peripherals.h"
 #include <stdlib.h>
 
-void debug(char* message)
-{
-	#if DEBUG_CEC == 1
-		while (*message)
-		{
-			putFIFO(bufferUart, *message);
-			message++;
-		}
-		putFIFO(bufferUart, '\n');
-	#endif
-}
-
 FIFOBuffer* newBufferFIFO(uint8_t size)
 {
 	FIFOBuffer* buffer = malloc(sizeof(FIFOBuffer));
@@ -54,3 +42,7 @@ bool getFIFO(FIFOBuffer* buffer, char* byte)
 	return true;
 }
 
+bool isEmptyFIFO(FIFOBuffer* buffer)
+{
+	return (buffer->read == buffer->write);
+}

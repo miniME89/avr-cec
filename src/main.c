@@ -14,14 +14,10 @@ int main(void)
 
 	setInterrupts(true);
 
-	char c;
 	while(1)
 	{
 		stateMachine();
 		
-		if (getFIFO(bufferUart, &c))
-		{
-			uart_write_char(c);
-		}
+		uartFlush();
 	}
 }

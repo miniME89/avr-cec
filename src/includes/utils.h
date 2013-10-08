@@ -10,11 +10,9 @@ typedef struct FIFOBuffer {
 	uint8_t write;
 } FIFOBuffer;
 
-void debug(char* message);
-
 FIFOBuffer* newBufferFIFO(uint8_t size);
 bool putFIFO(FIFOBuffer* buffer, char byte);
 bool getFIFO(FIFOBuffer* buffer, char* byte);
-
+bool isEmptyFIFO(FIFOBuffer* buffer);
 
 #endif
