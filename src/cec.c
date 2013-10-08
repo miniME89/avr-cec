@@ -6,7 +6,7 @@
 /************************************************************************/
 void cecLow()
 {
-	setDataDirectionCEC(OUTPUT);
+    setDataDirectionCEC(OUTPUT);
 }
 
 /************************************************************************/
@@ -14,5 +14,5 @@ void cecLow()
 /************************************************************************/
 void cecHigh()
 {
-	setDataDirectionCEC(INPUT);
+    setDataDirectionCEC(INPUT);
 }

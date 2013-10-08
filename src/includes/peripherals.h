@@ -6,26 +6,26 @@
 
 typedef enum Level
 {
-	LOW = 0,
-	HIGH = 1
+    LOW = 0,
+    HIGH = 1
 } Level;
 
 typedef enum Edge
 {
-	FALLING,
-	RISING
+    FALLING,
+    RISING
 } Edge;
 
 typedef enum Timer
 {
-	TIMER_A,
-	TIMER_B
+    TIMER_A,
+    TIMER_B
 } Timer;
 
 typedef enum DataDirection
 {
-	INPUT,
-	OUTPUT
+    INPUT,
+    OUTPUT
 } DataDirection;
 
 extern uint8_t timer1OverflowCounter;

@@ -6,20 +6,20 @@
 #include "peripherals.h"
 
 typedef enum ReadStartBitState {
-	NOT_FOUND,					//no start bit found
-	READ_T0,					//read t0 edge => any negative edge
-	READ_T1,					//read t1 edge in specified time
-	READ_T2						//read t2 edge in specified time => found start bit
+    NOT_FOUND,                  //no start bit found
+    READ_T0,                    //read t0 edge => any negative edge
+    READ_T1,                    //read t1 edge in specified time
+    READ_T2                     //read t2 edge in specified time => found start bit
 } ReadStartBitState;
 
 typedef enum State {
-	START,
-	EXIT,
-	READ_START_BIT,
-	READ_DATA_BIT,
-	WRITE_SIGNAL_FREE_TIME,
-	WRITE_START_BIT,
-	WRITE_DATA_BIT
+    START,
+    EXIT,
+    READ_START_BIT,
+    READ_DATA_BIT,
+    WRITE_SIGNAL_FREE_TIME,
+    WRITE_START_BIT,
+    WRITE_DATA_BIT
 } State;
 
 void stateMachine(void);
