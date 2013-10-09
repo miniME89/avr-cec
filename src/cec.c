@@ -1,5 +1,6 @@
 #include "includes/cec.h"
-#include "includes/peripherals.h"
+
+Level shouldLevel = HIGH;
 
 /************************************************************************/
 /* pull cec line LOW                                                     */
@@ -7,6 +8,7 @@
 void cecLow()
 {
     setDataDirectionCEC(OUTPUT);
+    shouldLevel = LOW;
 }
 
 /************************************************************************/
@@ -15,4 +17,10 @@ void cecLow()
 void cecHigh()
 {
     setDataDirectionCEC(INPUT);
+    shouldLevel = HIGH;
+}
+
+Level cecShouldLevel()
+{
+    return shouldLevel;
 }

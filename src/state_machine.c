@@ -24,6 +24,8 @@ char data[20];
 uint16_t lastEdgeTicks = 0;
 Level lastEdgeLevel = HIGH;
 
+bool send = false;
+
 /************************************************************************/
 /* state machine                                                        */
 /************************************************************************/
@@ -68,6 +70,14 @@ void stateMachine()
             if (isEventTransistionIn())
             {
                 debug("c");
+            }
+
+            if (send)
+            {
+                setState(WRITE_SIGNAL_FREE_TIME);
+                uartSendString(data);
+                uartSendChar('\n');
+                send = false;
             }
 
             if (isEventInputToggled())
@@ -120,9 +130,11 @@ void stateMachine()
             if (isEventTransistionIn())
             {
                 debug("d");
+
                 dataBitCounter = 0;
                 dataByteCounter = 0;
                 dataByte = 0;
+
                 eventToggledEdge = true;
             }
 
@@ -147,8 +159,6 @@ void stateMachine()
 
             if (isEventTriggeredTimerA())
             {
-                //debug("A");
-
                 if (dataBitCounter <= 7)                                    //data bit
                 {
                     dataByte = (dataByte << 1) | lastEdgeLevel;
@@ -182,8 +192,6 @@ void stateMachine()
                 }
                 else
                 {
-                    //debug("B");
-
                     clearTimeout(TIMER_A);
                     clearTimeout(TIMER_B);
 
@@ -194,8 +202,6 @@ void stateMachine()
                     {
                         //this shouldn't happen => error
                         uartSendChar('X');
-                        uartSendChar(dataByteCounter);
-                        uartSendChar(dataBitCounter);
                     }
 
                     uartSendChar('\n');
@@ -206,6 +212,9 @@ void stateMachine()
             if (isEventTransistionOut())
             {
                 debug("d");
+
+                dataBitCounter = 0;
+                dataByteCounter = 0;
             }
         break;
         //============================================================================================================
@@ -213,16 +222,23 @@ void stateMachine()
             if (isEventTransistionIn())
             {
                 debug("e");
+
+                //TODO check for correct signal free time: SFT_PRESENT_INITIATOR, SFT_NEW_INITIATOR or SFT_RETRANSMISSION
+                //NOTE: According to the specification the SFT is the time since the last transmitted frame. Due to limitations of the timer unit
+                //      the signal free time is checked from the beginning of a writing attempt. This will delay the signal at max 16.8ms.
+                resetTimer1();
+                setTimeout(SFT_NEW_INITIATOR, TIMER_A, true, false);
             }
 
-            //TODO: check when cec bus is free...
-            cecLow();
+            if (isEventInputToggled())
+            {
+                resetTimer1();
+            }
 
-            resetTimer1();
-
-            setState(WRITE_START_BIT);
-            setTimeout(START_BIT_T1, TIMER_A, false, false);
-            setTimeout(START_BIT_T2, TIMER_B, true, false);
+            if (isEventTriggeredTimerA())
+            {
+                setState(WRITE_START_BIT);
+            }
 
             if (isEventTransistionOut())
             {
@@ -234,6 +250,27 @@ void stateMachine()
             if (isEventTransistionIn())
             {
                 debug("f");
+
+                cecLow();
+                resetTimer1();
+
+                setTimeout(START_BIT_T1, TIMER_A, false, false);
+                setTimeout(START_BIT_T2, TIMER_B, true, false);
+            }
+
+            if (isEventInputToggled())
+            {
+                if (cecShouldLevel() != lastEdgeLevel)                  //lost arbitration?
+                {
+                    cecHigh();
+
+                    clearTimeout(TIMER_A);
+                    clearTimeout(TIMER_B);
+
+                    setState(READ_START_BIT);
+
+                    uartSendChar('L');
+                }
             }
 
             if (isEventTriggeredTimerA())
@@ -244,9 +281,8 @@ void stateMachine()
             if (isEventTriggeredTimerB())
             {
                 cecLow();
+
                 setState(WRITE_DATA_BIT);
-                setTimeout(DATA_BIT_FOLLOWING, TIMER_B, true, true);
-                eventTriggeredTimerB = true;
             }
 
             if (isEventTransistionOut())
@@ -259,6 +295,30 @@ void stateMachine()
             if (isEventTransistionIn())
             {
                 debug("g");
+
+                dataBitCounter = 0;
+                dataByteCounter = 0;
+
+                setTimeout(DATA_BIT_FOLLOWING, TIMER_B, true, true);
+                eventTriggeredTimerB = true;
+            }
+
+            if (isEventInputToggled())
+            {
+                if (dataByteCounter == 0 && dataBitCounter < 4)
+                {
+                    if (cecShouldLevel() != lastEdgeLevel)              //lost arbitration?
+                    {
+                        cecHigh();
+
+                        clearTimeout(TIMER_A);
+                        clearTimeout(TIMER_B);
+
+                        setState(READ_START_BIT);
+
+                        uartSendChar('L');
+                    }
+                }
             }
 
             if (isEventTriggeredTimerA())
@@ -273,11 +333,11 @@ void stateMachine()
                     cecLow();
 
                     bool dataBit = (data[dataByteCounter] & (0b10000000 >> dataBitCounter)) > 0;
-                    if (dataBit)                                                        //high
+                    if (dataBit)                                                        //logic 1
                     {
                         setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
                     }
-                    else                                                                //low
+                    else                                                                //logic 0
                     {
                         setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
                     }
@@ -323,6 +383,9 @@ void stateMachine()
             if (isEventTransistionOut())
             {
                 debug("g");
+
+                dataBitCounter = 0;
+                dataByteCounter = 0;
             }
         break;
     }
@@ -417,6 +480,14 @@ void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
 void clearTimeout(Timer timer)
 {
     setTimer1CompareMatchInterrupt(timer, false);
+    if (timer == TIMER_A)
+    {
+        eventTriggeredTimerA = false;
+    }
+    else
+    {
+        eventTriggeredTimerB = false;
+    }
 }
 
 /************************************************************************/
@@ -491,5 +562,13 @@ void stateMachineTimer1BCompareMatch()
 /************************************************************************/
 void stateMachineUartReceived(char c)
 {
-    uartSendChar('R');
+    if (c == '\n')
+    {
+        data[dataByteCounter++] = '\0';
+        send = true;
+    }
+    else
+    {
+        data[dataByteCounter++] = c;
+    }
 }
