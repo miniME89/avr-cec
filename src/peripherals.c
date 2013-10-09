@@ -31,6 +31,7 @@ void initIO(void)
 {
     INFO_LED_PORT_DDR |= (1 << INFO_LED_PIN);
     setDataDirectionCEC(INPUT);
+    setInfoLED(HIGH);
 }
 
 Level getInputCaptureState()
@@ -130,10 +131,12 @@ void setTimer1CompareMatchInterrupt(Timer timer, bool enable)
     {
         if (timer == TIMER_A)
         {
+            TIFR |= (1 << OCF1A);
             TIMSK |= (1 << OCIE1A);
         }
         else
         {
+            TIFR |= (1 << OCF1B);
             TIMSK |= (1 << OCIE1B);
         }
     }
