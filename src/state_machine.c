@@ -167,7 +167,7 @@ void stateMachine()
 
                     if (dataBitCounter == 9 && (data[0] & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
                     {
-                        cecLow();
+                        cecLow();                                           //assert ACK bit start
                         setTimeout(DATA_BIT_LOGIC_0, TIMER_B, false, false);
                     }
                 }
@@ -221,7 +221,7 @@ void stateMachine()
             if (isEventTriggeredTimerB())
             {
                 uartSendChar('R');
-                cecHigh();
+                cecHigh();                                                  //assert ACK bit end
             }
 
             if (isEventTransistionOut())
@@ -275,8 +275,10 @@ void stateMachine()
 
             if (isEventInputToggled())
             {
-                if (cecShouldLevel() != lastEdgeLevel)                  //lost arbitration?
+                //TODO implement proper monitoring..
+                if (cecShouldLevel() != lastEdgeLevel)                  //monitor CEC line
                 {
+                    //TODO error handling: unexpected HIGH/LOW impedance on line
                     cecHigh();
 
                     clearTimeout(TIMER_A);
@@ -295,8 +297,6 @@ void stateMachine()
 
             if (isEventTriggeredTimerB())
             {
-                cecLow();
-
                 setState(WRITE_DATA_BIT);
             }
 
@@ -314,16 +314,83 @@ void stateMachine()
                 dataBitCounter = 0;
                 dataByteCounter = 0;
 
-                setTimeout(DATA_BIT_FOLLOWING, TIMER_B, true, true);
-                events.triggeredTimerB = true;
+                events.triggeredTimerA = true;
             }
 
-            if (isEventInputToggled())
+            if (isEventTriggeredTimerA())
             {
-                if (dataByteCounter == 0 && dataBitCounter < 4)
+                if (lastEdgeLevel == HIGH)                                                  //start of next data bit
                 {
-                    if (cecShouldLevel() != lastEdgeLevel)              //lost arbitration?
+                    if (dataBitCounter >= 10)                                               //data block finished?
                     {
+                        if (data[dataByteCounter + 1])                                      //there is a following data block
+                        {
+                            dataBitCounter = 0;
+                            dataByteCounter++;
+                        }
+                        else                                                                //end of message
+                        {
+                            setState(READ_START_BIT);
+                        }
+                    }
+
+                    if (dataBitCounter <= 7)                                                //information bit
+                    {
+                        cecLow();
+                        setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample information bit (for verification)
+
+                        bool dataBit = (data[dataByteCounter] & (0b10000000 >> dataBitCounter)) > 0;
+                        if (dataBit)                                                        //logic 1
+                        {
+                            setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
+                        }
+                        else                                                                //logic 0
+                        {
+                            setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
+                        }
+
+                        dataBitCounter++;
+                    }
+                    else if (dataBitCounter == 8)                                           //EOM
+                    {
+                        cecLow();
+                        setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample EOM bit (for verification)
+
+                        if (data[dataByteCounter + 1])                                      //there is a following data block (EOM = 0)
+                        {
+                            setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
+                        }
+                        else                                                                //there is no following data block (EOM = 1)
+                        {
+                            setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
+                        }
+
+                        dataBitCounter++;
+                    }
+                    else if (dataBitCounter == 9)                                           //ACK
+                    {
+                        cecLow();
+
+                        setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
+                        setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample ACK bit (for verification)
+
+                        dataBitCounter++;
+                    }
+                }
+                else                                                                        //back to high impedance of data bit
+                {
+                    cecHigh();
+                    setTimeout(DATA_BIT_FOLLOWING, TIMER_A, true, false);                   //set timer for following data bit
+                }
+            }
+
+            if (isEventTriggeredTimerB())
+            {
+                if (dataBitCounter < 10)                                                    //verify bit on CEC line
+                {
+                    if (cecShouldLevel() != lastEdgeLevel)                                  //monitor CEC line
+                    {
+                        //TODO error handling: unexpected HIGH/LOW impedance on line
                         cecHigh();
 
                         clearTimeout(TIMER_A);
@@ -334,64 +401,13 @@ void stateMachine()
                         uartSendChar('L');
                     }
                 }
-            }
-
-            if (isEventTriggeredTimerA())
-            {
-                cecHigh();
-            }
-
-            if (isEventTriggeredTimerB())
-            {
-                if (dataBitCounter <= 7)                                                //information bit
+                else                                                                        //don't verify ACK bit
                 {
-                    cecLow();
-
-                    bool dataBit = (data[dataByteCounter] & (0b10000000 >> dataBitCounter)) > 0;
-                    if (dataBit)                                                        //logic 1
+                    if (lastEdgeLevel == HIGH)                                              //ACK bit not asserted by follower?
                     {
-                        setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
+                        //TODO error handling: ACK bit not asserted by follower
+                        uartSendChar('E');
                     }
-                    else                                                                //logic 0
-                    {
-                        setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
-                    }
-
-                    dataBitCounter++;
-                }
-                else if (dataBitCounter == 8)                                           //EOM
-                {
-                    cecLow();
-
-                    if (data[dataByteCounter + 1])                                      //there is a following data block (EOM = 0)
-                    {
-                        setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
-                    }
-                    else                                                                //there is no following data block (EOM = 1)
-                    {
-                        setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
-                    }
-
-                    dataBitCounter++;
-                }
-                else if (dataBitCounter == 9)                                           //ACK
-                {
-                    cecLow();
-
-                    setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
-
-                    dataBitCounter++;
-
-                    if (data[dataByteCounter + 1])                                      //there is a following data block
-                    {
-                        dataBitCounter = 0;
-                        dataByteCounter++;
-                    }
-                }
-                else
-                {
-                    clearTimeout(TIMER_B);
-                    setState(READ_START_BIT);
                 }
             }
 
