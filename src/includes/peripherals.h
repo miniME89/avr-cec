@@ -1,5 +1,5 @@
-#ifndef PERIPHERAL_H_
-#define PERIPHERAL_H_
+#ifndef PERIPHERALS_H_
+#define PERIPHERALS_H_
 
 #include "utils.h"
 #include <inttypes.h>

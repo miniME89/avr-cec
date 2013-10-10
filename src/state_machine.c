@@ -4,22 +4,17 @@
 #include <avr/io.h>
 
 State currentState = START;
-bool eventTriggeredTimerA = false;
-bool eventTriggeredTimerB = false;
-bool eventToggledEdge = false;
-bool eventStateTransistionIn = true;
-bool eventStateTransistionOut = false;
+SubStateReadStartBit readStartBitState = NOT_FOUND;
+Events events = {.triggeredTimerA = false, .triggeredTimerB = false, .toggledEdge = false, .transistionIn = true, .transistionOut = false};
 
-ReadStartBitState readStartBitState = NOT_FOUND;
-bool timerTaskAReset = false;
-bool timerTaskBReset = false;
-bool timerTaskARepeat = false;
-bool timerTaskBRepeat = false;
+TimerOptions timerOptionsA = {.repeat = false, .reset = false};
+TimerOptions timerOptionsB = {.repeat = false, .reset = false};
 
 uint8_t dataByteCounter = 0;
 uint8_t dataBitCounter = 0;
-char dataByte = 0;
-char data[20];
+char data[16];
+Level EOM;
+Level ACK;
 
 uint16_t lastEdgeTicks = 0;
 Level lastEdgeLevel = HIGH;
@@ -82,7 +77,7 @@ void stateMachine()
 
             if (isEventInputToggled())
             {
-                if (lastEdgeLevel == HIGH)                                  //high
+                if (lastEdgeLevel == HIGH)
                 {
                     if (readStartBitState == READ_T0)                       //is t1?
                     {
@@ -96,7 +91,7 @@ void stateMachine()
                         }
                     }
                 }
-                else                                                        //low
+                else
                 {
                     if (readStartBitState == NOT_FOUND)                     //is t0?
                     {
@@ -133,9 +128,10 @@ void stateMachine()
 
                 dataBitCounter = 0;
                 dataByteCounter = 0;
-                dataByte = 0;
+                EOM = LOW;
+                ACK = HIGH;
 
-                eventToggledEdge = true;
+                events.toggledEdge = true;
             }
 
             if (isEventInputToggled())
@@ -143,54 +139,15 @@ void stateMachine()
                 if (lastEdgeLevel == LOW)                                   //start of next data bit
                 {
                     resetTimer1();
+                    setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_A, false, false);
 
-                    setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_A, false, true);
-                    if (dataByteCounter == 0 && dataBitCounter == 9 && (dataByte & 0x0F) == LOGICAL_ADDRESS)    //is ACK bit and needs to be asserted?
+                    if (dataBitCounter == 9 && (data[0] & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
                     {
                         cecLow();
                         setTimeout(DATA_BIT_LOGIC_0, TIMER_B, false, false);
                     }
-                    else
-                    {
-                        setTimeout(DATA_BIT_FOLLOWING_TIMEOUT, TIMER_B, true, false);
-                    }
                 }
-            }
-
-            if (isEventTriggeredTimerA())
-            {
-                if (dataBitCounter <= 7)                                    //data bit
-                {
-                    dataByte = (dataByte << 1) | lastEdgeLevel;
-                }
-                else if (dataBitCounter == 8)                               //EOM
-                {
-
-                }
-                else if (dataBitCounter == 9)                               //ACK
-                {
-
-                }
-
-                dataBitCounter++;
-
-                if (dataBitCounter > 9)
-                {
-                    uartSendChar(dataByte);
-                    data[dataByteCounter] = dataByte;
-                    dataBitCounter = 0;
-                    dataByteCounter++;
-                }
-            }
-
-            if (isEventTriggeredTimerB())
-            {
-                if (dataByteCounter > 0 && dataBitCounter == 0 && (dataByte & 0x0F) == LOGICAL_ADDRESS)
-                {
-                    cecHigh();
-                    setTimeout(DATA_BIT_FOLLOWING_TIMEOUT, TIMER_B, true, false);
-                }
-                else
+                else if (EOM == HIGH)                                       //end of message
                 {
                     clearTimeout(TIMER_A);
                     clearTimeout(TIMER_B);
@@ -198,15 +155,49 @@ void stateMachine()
                     readStartBitState = NOT_FOUND;
                     setState(READ_START_BIT);
 
-                    if (dataBitCounter != 0)
-                    {
-                        //this shouldn't happen => error
-                        uartSendChar('X');
-                    }
-
                     uartSendChar('\n');
-                    data[++dataByteCounter] = '\n';
                 }
+            }
+
+            if (isEventTriggeredTimerA())
+            {
+                if (dataBitCounter <= 7)                                    //data bit
+                {
+                    data[dataByteCounter] = (data[dataByteCounter] << 1) | lastEdgeLevel;
+                }
+
+                if (dataBitCounter == 7)                                    //last information bit of data block
+                {
+                    uartSendChar(data[dataByteCounter]);
+                }
+                else if (dataBitCounter == 8)                               //EOM bit
+                {
+                    EOM = lastEdgeLevel;
+                }
+                else if (dataBitCounter == 9)                               //ACK bit
+                {
+                    ACK = lastEdgeLevel;
+                }
+
+                dataBitCounter++;
+
+                if (dataBitCounter > 9)                                     //end of data block (10 bit)
+                {
+                    dataBitCounter = 0;
+                    dataByteCounter++;
+
+                    if (dataByteCounter > 15)                               //max CEC message size is 16 blocks
+                    {
+                        //TODO error handling
+                        setState(READ_START_BIT);
+                    }
+                }
+            }
+
+            if (isEventTriggeredTimerB())
+            {
+                uartSendChar('R');
+                cecHigh();
             }
 
             if (isEventTransistionOut())
@@ -300,7 +291,7 @@ void stateMachine()
                 dataByteCounter = 0;
 
                 setTimeout(DATA_BIT_FOLLOWING, TIMER_B, true, true);
-                eventTriggeredTimerB = true;
+                events.triggeredTimerB = true;
             }
 
             if (isEventInputToggled())
@@ -328,7 +319,7 @@ void stateMachine()
 
             if (isEventTriggeredTimerB())
             {
-                if (dataBitCounter <= 7)                                                //data bit
+                if (dataBitCounter <= 7)                                                //information bit
                 {
                     cecLow();
 
@@ -375,7 +366,7 @@ void stateMachine()
                 }
                 else
                 {
-                    clearTimeout(TIMER_B);                                              //repeating task b will be disabled, therefore no following bits
+                    clearTimeout(TIMER_B);
                     setState(READ_START_BIT);
                 }
             }
@@ -393,14 +384,14 @@ void stateMachine()
 
 bool isEvent(void)
 {
-    return (eventTriggeredTimerA || eventTriggeredTimerB || eventToggledEdge || eventStateTransistionIn || eventStateTransistionOut);
+    return (events.triggeredTimerA || events.triggeredTimerB || events.toggledEdge || events.transistionIn || events.transistionOut);
 }
 
 bool isEventTriggeredTimerA()
 {
-    if (eventTriggeredTimerA)
+    if (events.triggeredTimerA)
     {
-        eventTriggeredTimerA = false;
+        events.triggeredTimerA = false;
         return true;
     }
 
@@ -409,9 +400,9 @@ bool isEventTriggeredTimerA()
 
 bool isEventTriggeredTimerB()
 {
-    if (eventTriggeredTimerB)
+    if (events.triggeredTimerB)
     {
-        eventTriggeredTimerB = false;
+        events.triggeredTimerB = false;
         return true;
     }
 
@@ -420,9 +411,9 @@ bool isEventTriggeredTimerB()
 
 bool isEventInputToggled()
 {
-    if (eventToggledEdge)
+    if (events.toggledEdge)
     {
-        eventToggledEdge = false;
+        events.toggledEdge = false;
         return true;
     }
 
@@ -431,9 +422,9 @@ bool isEventInputToggled()
 
 bool isEventTransistionIn()
 {
-    if (eventStateTransistionIn)
+    if (events.transistionIn)
     {
-        eventStateTransistionIn = false;
+        events.transistionIn = false;
         return true;
     }
 
@@ -442,9 +433,9 @@ bool isEventTransistionIn()
 
 bool isEventTransistionOut()
 {
-    if (eventStateTransistionOut)
+    if (events.transistionOut)
     {
-        eventStateTransistionOut = false;
+        events.transistionOut = false;
         return true;
     }
 
@@ -460,17 +451,17 @@ void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
     {
         setTimer1CompareMatch(TIMER_A, ticks);
         setTimer1CompareMatchInterrupt(TIMER_A, true);
-        timerTaskAReset = reset;
-        timerTaskARepeat = repeat;
-        eventTriggeredTimerA = false;
+        timerOptionsA.reset = reset;
+        timerOptionsA.repeat = repeat;
+        events.triggeredTimerA = false;
     }
     else
     {
         setTimer1CompareMatch(TIMER_B, ticks);
         setTimer1CompareMatchInterrupt(TIMER_B, true);
-        timerTaskBReset = reset;
-        timerTaskBRepeat = repeat;
-        eventTriggeredTimerB = false;
+        timerOptionsB.reset = reset;
+        timerOptionsB.repeat = repeat;
+        events.triggeredTimerB = false;
     }
 }
 
@@ -482,11 +473,11 @@ void clearTimeout(Timer timer)
     setTimer1CompareMatchInterrupt(timer, false);
     if (timer == TIMER_A)
     {
-        eventTriggeredTimerA = false;
+        events.triggeredTimerA = false;
     }
     else
     {
-        eventTriggeredTimerB = false;
+        events.triggeredTimerB = false;
     }
 }
 
@@ -496,8 +487,8 @@ void clearTimeout(Timer timer)
 void setState(State state)
 {
     currentState = state;
-    eventStateTransistionIn = true;
-    eventStateTransistionOut = true;
+    events.transistionIn = true;
+    events.transistionOut = true;
 }
 
 
@@ -508,7 +499,7 @@ void stateMachineTimer1InputCapture()
 {
     lastEdgeLevel = getInputCaptureState();
     lastEdgeTicks = getTimer1Ticks();
-    eventToggledEdge = true;
+    events.toggledEdge = true;
     setInfoLED(lastEdgeLevel);
 
     if (lastEdgeLevel == HIGH)
@@ -526,17 +517,17 @@ void stateMachineTimer1InputCapture()
 /************************************************************************/
 void stateMachineTimer1ACompareMatch()
 {
-    if (timerTaskAReset)
+    if (timerOptionsA.reset)
     {
         resetTimer1();
     }
 
-    if (!timerTaskARepeat)
+    if (!timerOptionsA.repeat)
     {
-        setTimer1CompareMatchInterrupt(TIMER_A, false);         //disable timer1 compare interrupt
+        setTimer1CompareMatchInterrupt(TIMER_A, false);         //disable timer1 compare A interrupt
     }
 
-    eventTriggeredTimerA = true;
+    events.triggeredTimerA = true;
 }
 
 /************************************************************************/
@@ -544,17 +535,17 @@ void stateMachineTimer1ACompareMatch()
 /************************************************************************/
 void stateMachineTimer1BCompareMatch()
 {
-    if (timerTaskBReset)
+    if (timerOptionsB.reset)
     {
         resetTimer1();
     }
 
-    if (!timerTaskBRepeat)
+    if (!timerOptionsB.repeat)
     {
-        setTimer1CompareMatchInterrupt(TIMER_B, false);         //disable timer1 compare interrupt
+        setTimer1CompareMatchInterrupt(TIMER_B, false);         //disable timer1 compare B interrupt
     }
 
-    eventTriggeredTimerB = true;
+    events.triggeredTimerB = true;
 }
 
 /************************************************************************/
@@ -562,6 +553,7 @@ void stateMachineTimer1BCompareMatch()
 /************************************************************************/
 void stateMachineUartReceived(char c)
 {
+    //TODO temporary + need a proper end of message character
     if (c == '\n')
     {
         data[dataByteCounter++] = '\0';

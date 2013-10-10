@@ -1,16 +1,9 @@
 #ifndef STATE_MACHINE_H_
 #define STATE_MACHINE_H_
 
+#include "peripherals.h"
 #include <inttypes.h>
 #include <stdbool.h>
-#include "peripherals.h"
-
-typedef enum ReadStartBitState {
-    NOT_FOUND,                  //no start bit found
-    READ_T0,                    //read t0 edge => any negative edge
-    READ_T1,                    //read t1 edge in specified time
-    READ_T2                     //read t2 edge in specified time => found start bit
-} ReadStartBitState;
 
 typedef enum State {
     START,
@@ -21,6 +14,28 @@ typedef enum State {
     WRITE_START_BIT,
     WRITE_DATA_BIT
 } State;
+
+typedef enum SubStateReadStartBit {
+    NOT_FOUND,                  //no start bit found
+    READ_T0,                    //read t0 edge => any negative edge
+    READ_T1,                    //read t1 edge in specified time
+    READ_T2                     //read t2 edge in specified time => found start bit
+} SubStateReadStartBit;
+
+typedef struct Events
+{
+    bool triggeredTimerA;
+    bool triggeredTimerB;
+    bool toggledEdge;
+    bool transistionIn;
+    bool transistionOut;
+} Events;
+
+typedef struct TimerOptions
+{
+    bool repeat;                //repeat
+    bool reset;                 //reset timer1 on execution
+} TimerOptions;
 
 void stateMachine(void);
 void setState(State state);
