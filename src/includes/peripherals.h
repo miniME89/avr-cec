@@ -76,5 +76,7 @@ void initUart(void);
 void uartSendChar(char c);
 void uartSendString(char* str);
 void uartFlush(void);
+bool uartReadChar(char* c);
+bool uartReadString(char* str, uint8_t size);
 
 #endif

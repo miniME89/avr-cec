@@ -30,7 +30,8 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 
-FIFOBuffer* bufferUart;
+FIFOBuffer* bufferUartWrite;
+FIFOBuffer* bufferUartRead;
 uint8_t timer1OverflowCounter = 0;
 
 /************************************************************************/
@@ -214,19 +215,20 @@ void initUart(void)
 
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);     //set frame format: 8data
 
-    bufferUart = newBufferFIFO(64);
+    bufferUartWrite = newBufferFIFO(64);
+    bufferUartRead = newBufferFIFO(64);
 }
 
 void uartSendChar(char c)
 {
-    putFIFO(bufferUart, c);
+    putFIFO(bufferUartWrite, c);
 }
 
 void uartSendString(char* str)
 {
     while (*str)
     {
-        putFIFO(bufferUart, *str);
+        putFIFO(bufferUartWrite, *str);
         str++;
     }
 }
@@ -236,7 +238,7 @@ void uartFlush()
     char c;
     uint8_t charCount = 0;
 
-    while (charCount < FLUSH_MAX_CHARS && !isEmptyFIFO(bufferUart))
+    while (charCount < FLUSH_MAX_CHARS && !isEmptyFIFO(bufferUartWrite))
     {
         while (!(UCSRA & (1 << UDRE)))                      //wait till UART is ready
         {
@@ -246,14 +248,40 @@ void uartFlush()
             }
         }
 
-        getFIFO(bufferUart, &c);
+        getFIFO(bufferUartWrite, &c);
 
         UDR = c;
         charCount++;
     }
 }
 
+bool uartReadChar(char* c)
+{
+    return getFIFO(bufferUartRead, c);
+}
+
+bool uartReadString(char* str, uint8_t size)
+{
+    uint8_t count = 0;
+    while (getFIFO(bufferUartRead, str) && count < size)
+    {
+        str++;
+    }
+
+    if (count > 0)
+    {
+        str++;
+        *str = '\0';
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 ISR(USART_RXC_vect)
 {
-    stateMachineUartReceived(UDR);
+    putFIFO(bufferUartRead, UDR);
 }
