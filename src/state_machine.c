@@ -24,7 +24,6 @@
 
 #include "includes/state_machine.h"
 #include "includes/defines.h"
-#include "includes/cec.h"
 #include <avr/io.h>
 
 State currentState = START;
@@ -39,6 +38,7 @@ SignalBuffer bufferWrite = {.bitCounter = 0, .byteCounter = 0};
 
 uint16_t lastEdgeTicks = 0;
 Level lastEdgeLevel = HIGH;
+Level shouldLevel = HIGH;
 
 /************************************************************************/
 /* state machine                                                        */
@@ -171,7 +171,7 @@ void stateMachine()
 
                     if (bufferRead.bitCounter == 9 && (bufferRead.data[0] & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
                     {
-                        cecLow();                                           //assert ACK bit start
+                        low();                                              //assert ACK bit start
                         setTimeout(DATA_BIT_LOGIC_0, TIMER_B, false, false);
                     }
                 }
@@ -225,7 +225,7 @@ void stateMachine()
             if (isEventTriggeredTimerB())
             {
                 uartSendChar('R');
-                cecHigh();                                                  //assert ACK bit end
+                high();                                                     //assert ACK bit end
             }
 
             if (isEventTransistionOut())
@@ -270,7 +270,7 @@ void stateMachine()
             {
                 debug("f");
 
-                cecLow();
+                low();
                 resetTimer1();
 
                 setTimeout(START_BIT_T1, TIMER_A, false, false);
@@ -280,10 +280,10 @@ void stateMachine()
             if (isEventInputToggled())
             {
                 //TODO implement proper monitoring..
-                if (cecShouldLevel() != lastEdgeLevel)                  //monitor CEC line
+                if (!verifyLevel())                                                         //monitor CEC line
                 {
                     //TODO error handling: unexpected HIGH/LOW impedance on line
-                    cecHigh();
+                    high();
 
                     clearTimeout(TIMER_A);
                     clearTimeout(TIMER_B);
@@ -296,7 +296,7 @@ void stateMachine()
 
             if (isEventTriggeredTimerA())
             {
-                cecHigh();
+                high();
             }
 
             if (isEventTriggeredTimerB())
@@ -340,7 +340,7 @@ void stateMachine()
 
                     if (bufferWrite.bitCounter <= 7)                                        //information bit
                     {
-                        cecLow();
+                        low();
                         setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample information bit (for verification)
 
                         bool dataBit = (bufferWrite.data[bufferWrite.byteCounter] & (0b10000000 >> bufferWrite.bitCounter)) > 0;
@@ -357,7 +357,7 @@ void stateMachine()
                     }
                     else if (bufferWrite.bitCounter == 8)                                           //EOM
                     {
-                        cecLow();
+                        low();
                         setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample EOM bit (for verification)
 
                         if (bufferWrite.data[bufferWrite.byteCounter + 1])                  //there is a following data block (EOM = 0)
@@ -373,7 +373,7 @@ void stateMachine()
                     }
                     else if (bufferWrite.bitCounter == 9)                                   //ACK
                     {
-                        cecLow();
+                        low();
 
                         setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
                         setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample ACK bit (for verification)
@@ -383,7 +383,7 @@ void stateMachine()
                 }
                 else                                                                        //back to high impedance of data bit
                 {
-                    cecHigh();
+                    high();
                     setTimeout(DATA_BIT_FOLLOWING, TIMER_A, true, false);                   //set timer for following data bit
                 }
             }
@@ -392,10 +392,10 @@ void stateMachine()
             {
                 if (bufferWrite.bitCounter < 10)                                            //verify bit on CEC line
                 {
-                    if (cecShouldLevel() != lastEdgeLevel)                                  //monitor CEC line
+                    if (!verifyLevel())                                                     //monitor CEC line
                     {
                         //TODO error handling: unexpected HIGH/LOW impedance on line
-                        cecHigh();
+                        high();
 
                         clearTimeout(TIMER_A);
                         clearTimeout(TIMER_B);
@@ -532,10 +532,27 @@ void clearTimeout(Timer timer)
     }
 }
 
+void low()
+{
+    setDataDirectionCEC(OUTPUT);
+    shouldLevel = LOW;
+}
+
+void high()
+{
+    setDataDirectionCEC(INPUT);
+    shouldLevel = HIGH;
+}
+
+bool verifyLevel()
+{
+    return (shouldLevel == lastEdgeLevel);
+}
+
 /************************************************************************/
 /* Interrupt for timer1 input compare                                   */
 /************************************************************************/
-void stateMachineTimer1InputCapture()
+void executeTimer1InputCapture()
 {
     lastEdgeLevel = getInputCaptureState();
     lastEdgeTicks = getTimer1Ticks();
@@ -555,7 +572,7 @@ void stateMachineTimer1InputCapture()
 /************************************************************************/
 /* Interrupt for timer1 compare match A                                 */
 /************************************************************************/
-void stateMachineTimer1ACompareMatch()
+void executeTimer1ACompareMatch()
 {
     if (timerOptionsA.reset)
     {
@@ -573,7 +590,7 @@ void stateMachineTimer1ACompareMatch()
 /************************************************************************/
 /* Interrupt for timer1 compare match B                                 */
 /************************************************************************/
-void stateMachineTimer1BCompareMatch()
+void executeTimer1BCompareMatch()
 {
     if (timerOptionsB.reset)
     {

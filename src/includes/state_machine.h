@@ -83,8 +83,12 @@ bool isEventTransistionOut(void);
 void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat);
 void clearTimeout(Timer timer);
 
-void stateMachineTimer1InputCapture(void);
-void stateMachineTimer1ACompareMatch(void);
-void stateMachineTimer1BCompareMatch(void);
+void low(void);
+void high(void);
+bool verifyLevel(void);
+
+void executeTimer1InputCapture(void);
+void executeTimer1ACompareMatch(void);
+void executeTimer1BCompareMatch(void);
 
 #endif

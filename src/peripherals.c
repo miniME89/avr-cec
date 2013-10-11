@@ -181,19 +181,19 @@ void setTimer1CompareMatchInterrupt(Timer timer, bool enable)
 //Interrupt for timer1 input compare
 ISR(TIMER1_CAPT_vect)
 {
-    stateMachineTimer1InputCapture();
+    executeTimer1InputCapture();
 }
 
 //Interrupt for timer1 compare match A
 ISR(TIMER1_COMPA_vect)
 {
-    stateMachineTimer1ACompareMatch();
+    executeTimer1ACompareMatch();
 }
 
 //Interrupt for timer1 compare match B
 ISR(TIMER1_COMPB_vect)
 {
-    stateMachineTimer1BCompareMatch();
+    executeTimer1BCompareMatch();
 }
 
 //Interrupt for timer1 overflow
