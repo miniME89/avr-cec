@@ -25,7 +25,7 @@
 #include "includes/peripherals.h"
 #include "includes/defines.h"
 #include "includes/utils.h"
-#include "includes/state_machine.h"
+#include "includes/cec_driver.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdbool.h>

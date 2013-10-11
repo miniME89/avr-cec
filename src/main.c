@@ -25,7 +25,7 @@
 #include "includes/defines.h"
 #include "includes/utils.h"
 #include "includes/peripherals.h"
-#include "includes/state_machine.h"
+#include "includes/cec_driver.h"
 
 int main(void)
 {

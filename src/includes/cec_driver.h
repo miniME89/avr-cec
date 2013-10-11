@@ -16,14 +16,14 @@
  */
 
 /**
- * @file state_machine.h
+ * @file cec_driver.h
  * @author Marcel
  * @brief
  *
  */
 
-#ifndef STATE_MACHINE_H_
-#define STATE_MACHINE_H_
+#ifndef CEC_DRIVER_H_
+#define CEC_DRIVER_H_
 
 #include "peripherals.h"
 #include <inttypes.h>

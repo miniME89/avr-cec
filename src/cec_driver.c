@@ -16,13 +16,13 @@
  */
 
 /**
- * @file state_machine.c
+ * @file cec_driver.c
  * @author Marcel
  * @brief
  *
  */
 
-#include "includes/state_machine.h"
+#include "includes/cec_driver.h"
 #include "includes/defines.h"
 #include <avr/io.h>
 
