@@ -24,49 +24,92 @@
 
 #include "includes/utils.h"
 #include "includes/defines.h"
-#include "includes/peripherals.h"
 #include <stdlib.h>
 
-FIFOBuffer* newBufferFIFO(uint8_t size)
+CharQueue* newQueueChar(uint8_t size)
 {
-    FIFOBuffer* buffer = malloc(sizeof(FIFOBuffer));
-    buffer->data = malloc(size * sizeof(char));
-    buffer->size = size;
-    buffer->read = 0;
-    buffer->write = 0;
+    CharQueue* queue = malloc(sizeof(CharQueue));
+    queue->data = malloc(size * sizeof(char));
+    queue->size = size;
+    queue->read = 0;
+    queue->write = 0;
     
-    return buffer;
+    return queue;
 }
 
-bool putFIFO(FIFOBuffer* buffer, char byte)
+bool putChar(CharQueue* queue, char c)
 {
-    uint8_t next = ((buffer->write + 1) & (buffer->size - 1));
+    uint8_t next = ((queue->write + 1) & (queue->size - 1));
     
-    if (buffer->read == next)
+    if (queue->read == next)
     {
         return false;
     }
     
-    buffer->data[buffer->write] = byte;
-    buffer->write = next;
+    queue->data[queue->write] = c;
+    queue->write = next;
     
     return true;
 }
 
-bool getFIFO(FIFOBuffer* buffer, char* byte)
+bool getChar(CharQueue* queue, char* c)
 {
-    if (buffer->read == buffer->write)
+    if (queue->read == queue->write)
     {
         return false;
     }
     
-    *byte = buffer->data[buffer->read];
-    buffer->read = (buffer->read+1) & (buffer->size - 1);
+    *c = queue->data[queue->read];
+    queue->read = (queue->read+1) & (queue->size - 1);
     
     return true;
 }
 
-bool isEmptyFIFO(FIFOBuffer* buffer)
+bool isEmptyQueueChar(CharQueue* queue)
 {
-    return (buffer->read == buffer->write);
+    return (queue->read == queue->write);
+}
+
+MessageQueue* newQueueMessage(uint8_t size)
+{
+    MessageQueue* queue = malloc(sizeof(MessageQueue));
+    queue->data = malloc(size * sizeof(Message));
+    queue->size = size;
+    queue->read = 0;
+    queue->write = 0;
+
+    return queue;
+}
+
+bool putMessage(MessageQueue* queue, Message message)
+{
+    uint8_t next = ((queue->write + 1) & (queue->size - 1));
+
+    if (queue->read == next)
+    {
+        return false;
+    }
+
+    queue->data[queue->write] = message;
+    queue->write = next;
+
+    return true;
+}
+
+bool getMessage(MessageQueue* queue, Message* message)
+{
+    if (queue->read == queue->write)
+    {
+        return false;
+    }
+
+    *message = queue->data[queue->read];
+    queue->read = (queue->read+1) & (queue->size - 1);
+
+    return true;
+}
+
+bool isEmptyQueueMessage(MessageQueue* queue)
+{
+    return (queue->read == queue->write);
 }

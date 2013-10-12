@@ -25,8 +25,8 @@
 #ifndef PERIPHERALS_H_
 #define PERIPHERALS_H_
 
-#include "utils.h"
 #include <inttypes.h>
+#include <stdbool.h>
 
 typedef enum Level
 {

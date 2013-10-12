@@ -28,10 +28,9 @@
 #include "includes/cec_driver.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <stdbool.h>
 
-FIFOBuffer* bufferUartWrite;
-FIFOBuffer* bufferUartRead;
+CharQueue* queueUartWrite;
+CharQueue* queueUartRead;
 uint8_t timer1OverflowCounter = 0;
 
 /************************************************************************/
@@ -215,20 +214,20 @@ void initUart(void)
 
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);     //set frame format: 8data
 
-    bufferUartWrite = newBufferFIFO(64);
-    bufferUartRead = newBufferFIFO(64);
+    queueUartWrite = newQueueChar(32);
+    queueUartRead = newQueueChar(32);
 }
 
 void uartSendChar(char c)
 {
-    putFIFO(bufferUartWrite, c);
+    putChar(queueUartWrite, c);
 }
 
 void uartSendString(char* str)
 {
     while (*str)
     {
-        putFIFO(bufferUartWrite, *str);
+        putChar(queueUartWrite, *str);
         str++;
     }
 }
@@ -238,7 +237,7 @@ void uartFlush()
     char c;
     uint8_t charCount = 0;
 
-    while (charCount < FLUSH_MAX_CHARS && !isEmptyFIFO(bufferUartWrite))
+    while (charCount < FLUSH_MAX_CHARS && !isEmptyQueueChar(queueUartWrite))
     {
         while (!(UCSRA & (1 << UDRE)))                      //wait till UART is ready
         {
@@ -248,7 +247,7 @@ void uartFlush()
             }
         }
 
-        getFIFO(bufferUartWrite, &c);
+        getChar(queueUartWrite, &c);
 
         UDR = c;
         charCount++;
@@ -257,13 +256,13 @@ void uartFlush()
 
 bool uartReadChar(char* c)
 {
-    return getFIFO(bufferUartRead, c);
+    return getChar(queueUartRead, c);
 }
 
 bool uartReadString(char* str, uint8_t size)
 {
     uint8_t count = 0;
-    while (getFIFO(bufferUartRead, str) && count < size)
+    while (getChar(queueUartRead, str) && count < size)
     {
         str++;
     }
@@ -283,5 +282,5 @@ bool uartReadString(char* str, uint8_t size)
 
 ISR(USART_RXC_vect)
 {
-    putFIFO(bufferUartRead, UDR);
+    putChar(queueUartRead, UDR);
 }

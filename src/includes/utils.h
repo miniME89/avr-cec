@@ -20,23 +20,38 @@
  * @author Marcel
  * @brief
  *
+ * TODO implement generic queue
  */
 
 #ifndef UTILS_H_
 #define UTILS_H_
+
+#include "cec_driver.h"
 #include <inttypes.h>
 #include <stdbool.h>
 
-typedef struct FIFOBuffer {
+typedef struct QueueChar {
     char* data;
     uint8_t size;
     uint8_t read;
     uint8_t write;
-} FIFOBuffer;
+} CharQueue;
 
-FIFOBuffer* newBufferFIFO(uint8_t size);
-bool putFIFO(FIFOBuffer* buffer, char byte);
-bool getFIFO(FIFOBuffer* buffer, char* byte);
-bool isEmptyFIFO(FIFOBuffer* buffer);
+typedef struct MessageQueue {
+    Message* data;
+    uint8_t size;
+    uint8_t read;
+    uint8_t write;
+} MessageQueue;
+
+CharQueue* newQueueChar(uint8_t size);
+bool putChar(CharQueue* queue, char c);
+bool getChar(CharQueue* queue, char* c);
+bool isEmptyQueueChar(CharQueue* buffer);
+
+MessageQueue* newQueueMessage(uint8_t size);
+bool putMessage(MessageQueue* queue, Message message);
+bool getMessage(MessageQueue* queue, Message* message);
+bool isEmptyQueueMessage(MessageQueue* buffer);
 
 #endif

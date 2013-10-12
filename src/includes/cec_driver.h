@@ -61,14 +61,13 @@ typedef struct TimerOptions
     bool reset;                 //reset timer1 on execution
 } TimerOptions;
 
-typedef struct SignalBuffer
+typedef struct Message
 {
-    uint8_t byteCounter;
-    uint8_t bitCounter;
-    char data[16];
-    Level EOM;
-    Level ACK;
-} SignalBuffer;
+    char header;
+    char opcode;
+    char operands[14];
+    uint8_t size;
+} Message;
 
 void stateMachine(void);
 void setState(State state);

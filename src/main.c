@@ -22,8 +22,6 @@
  *
  */
 
-#include "includes/defines.h"
-#include "includes/utils.h"
 #include "includes/peripherals.h"
 #include "includes/cec_driver.h"
 
