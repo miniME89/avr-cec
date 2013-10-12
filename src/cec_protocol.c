@@ -16,30 +16,37 @@
  */
 
 /**
- * @file main.c
+ * @file cec_protocol.c
  * @author Marcel
  * @brief
  *
  */
 
-#include "includes/peripherals.h"
-#include "includes/cec_driver.h"
 #include "includes/cec_protocol.h"
+#include "includes/cec_driver.h"
+#include "includes/utils.h"
+#include <inttypes.h>
 
-int main(void)
+void processProtocol(void)
 {
-    initUart();
-    initTimer1();
-    initIO();
-	initDriver();
-
-    setInterrupts(true);
-
-    while (1)
+    Message message;
+    if (readMessage(&message))
     {
-        processDriver();
-        processProtocol();
-
-        uartFlush();
+        for (uint8_t i = 0; i < message.size; i++)
+        {
+            if (i == 0)
+            {
+                uartSendChar(message.header);
+            }
+            else if (i == 1)
+            {
+                uartSendChar(message.opcode);
+            }
+            else
+            {
+                uartSendChar(message.operands[i - 2]);
+            }
+        }
+        uartSendChar('\n');
     }
 }

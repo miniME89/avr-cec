@@ -50,6 +50,11 @@
 #define FLUSH_MAX_CHARS             5                                       //max characters send when output buffer is flushed
 
 //CEC
+#define ENABLE_ASSERTION            1                                       //enable/disable assertion of data blocks send to the specified logical address
+
+#define PHYSICAL_ADDRESS            0xFFFF
+#define LOGICAL_ADDRESS             0x4
+
 #define START_BIT_T1                ((3.7 * 1000) / TIMER1_TICK_VALUE)      //start bit: rising edge time t1 (in timer1 ticks => 3.7ms) (HDMI CEC specification p. 8)
 #define START_BIT_T2                ((4.5 * 1000) / TIMER1_TICK_VALUE)      //start bit: falling edge time t2 (in timer1 ticks => 4.5ms) (HDMI CEC specification p. 8)
 #define START_BIT_TOLERANCE         ((0.2 * 1000) / TIMER1_TICK_VALUE)      //start bit: rising/falling edge time tolerance (in timer1 ticks => 0.2ms) (HDMI CEC specification p. 8)
@@ -63,9 +68,6 @@
 #define SFT_PRESENT_INITIATOR       ((7 * 2.4 * 1000) / TIMER1_TICK_VALUE)  //signal free time: present initiator sends another frame immediately after its previous frame (in timer1 ticks => 16.8ms) (HDMI CEC specification p. 15)
 #define SFT_NEW_INITIATOR           ((5 * 2.4 * 1000) / TIMER1_TICK_VALUE)  //signal free time: new initiator wants to send a frame (in timer1 ticks => 12ms) (HDMI CEC specification p. 15)
 #define SFT_RETRANSMISSION          ((3 * 2.4 * 1000) / TIMER1_TICK_VALUE)  //signal free time: retransmission after a previous unsuccessful attempt (in timer1 ticks => 7.2ms) (HDMI CEC specification p. 15)
-
-#define PHYSICAL_ADDRESS            0xFFFF
-#define LOGICAL_ADDRESS             0x4
 
 //macros
 #define debug(message) if (DEBUG_AVR_CEC) {uartSendString(message); uartSendChar('\n');}

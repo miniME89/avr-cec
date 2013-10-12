@@ -52,8 +52,6 @@ typedef enum DataDirection
     OUTPUT
 } DataDirection;
 
-extern uint8_t timer1OverflowCounter;
-
 //interrupts
 void setInterrupts(bool enable);
 
@@ -68,6 +66,7 @@ void setDataDirectionCEC(DataDirection direction);
 void initTimer1(void);
 void resetTimer1(void);
 uint16_t getTimer1Ticks(void);
+uint8_t getTimer1OverflowCounter(void);
 void setTimer1CompareMatch(Timer timer, uint16_t ticks);
 void setTimer1CompareMatchInterrupt(Timer timer, bool enable);
 

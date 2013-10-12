@@ -69,7 +69,8 @@ typedef struct Message
     uint8_t size;
 } Message;
 
-void stateMachine(void);
+void initDriver(void);
+void processDriver(void);
 void setState(State state);
 
 bool isEvent(void);
@@ -78,6 +79,9 @@ bool isEventTriggeredTimerB(void);
 bool isEventInputToggled(void);
 bool isEventTransistionIn(void);
 bool isEventTransistionOut(void);
+
+bool writeMessage(Message message);
+bool readMessage(Message* message);
 
 void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat);
 void clearTimeout(Timer timer);

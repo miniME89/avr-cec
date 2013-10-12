@@ -137,6 +137,11 @@ uint16_t getTimer1Ticks(void)
     return TCNT1 ;
 }
 
+uint8_t getTimer1OverflowCounter()
+{
+    return timer1OverflowCounter;
+}
+
 void setTimer1CompareMatch(Timer timer, uint16_t ticks)
 {
     if (timer == TIMER_A)

@@ -35,7 +35,8 @@ TimerOptions timerOptionsB = {.repeat = false, .reset = false};
 
 MessageQueue* messageQueueRead;
 MessageQueue* messageQueueWrite;
-Message messageBuffer;
+Message messageBufferWrite;
+Message messageBufferRead;
 uint8_t bitCounter;
 uint8_t byteCounter;
 Level EOM;
@@ -45,10 +46,13 @@ uint16_t lastEdgeTicks = 0;
 Level lastEdgeLevel = HIGH;
 Level shouldLevel = HIGH;
 
-/************************************************************************/
-/* state machine                                                        */
-/************************************************************************/
-void stateMachine()
+void initDriver(void)
+{
+    messageQueueRead = newQueueMessage(16);
+    messageQueueWrite = newQueueMessage(16);
+}
+
+void processDriver()
 {
     switch(currentState)
     {
@@ -58,9 +62,6 @@ void stateMachine()
             {
                 debug("a");
             }
-
-            messageQueueRead = newQueueMessage(16);
-            messageQueueWrite = newQueueMessage(16);
 
             Message message;
             message.header = 0x05;
@@ -93,11 +94,6 @@ void stateMachine()
             if (isEventTransistionIn())
             {
                 debug("c");
-            }
-
-            if (getMessage(messageQueueWrite, &messageBuffer))
-            {
-                setState(WRITE_SIGNAL_FREE_TIME);
             }
 
             if (isEventInputToggled())
@@ -140,6 +136,21 @@ void stateMachine()
                 }
             }
 
+            if (readStartBitState == NOT_FOUND)                             //registered nothing on line?
+            {
+                if (messageBufferWrite.size == 0)                           //no message in write buffer?
+                {
+                    if (getMessage(messageQueueWrite, &messageBufferWrite)) //get message from queue
+                    {
+                        setState(WRITE_SIGNAL_FREE_TIME);
+                    }
+                }
+                else
+                {
+                    setState(WRITE_SIGNAL_FREE_TIME);
+                }
+            }
+
             if (isEventTransistionOut())
             {
                 debug("c");
@@ -151,7 +162,7 @@ void stateMachine()
             {
                 debug("d");
 
-                messageBuffer.size = 0;
+                messageBufferRead.size = 0;
                 bitCounter = 0;
                 byteCounter = 0;
                 EOM = LOW;
@@ -167,10 +178,12 @@ void stateMachine()
                     resetTimer1();
                     setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_A, false, false);
 
-                    if (bitCounter == 9 && (messageBuffer.header & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
+                    if (bitCounter == 9 && (messageBufferRead.header & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
                     {
-                        low();                                              //assert ACK bit (start)
-                        setTimeout(DATA_BIT_LOGIC_0, TIMER_B, false, false);
+                        #if ENABLE_ASSERTION == 1
+                            low();                                          //assert ACK bit (start)
+                            setTimeout(DATA_BIT_LOGIC_0, TIMER_B, false, false);
+                        #endif
                     }
                 }
                 else if (EOM == HIGH)                                       //end of message
@@ -178,13 +191,11 @@ void stateMachine()
                     clearTimeout(TIMER_A);
                     clearTimeout(TIMER_B);
 
-                    messageBuffer.size = byteCounter;
-                    putMessage(messageQueueRead, messageBuffer);
+                    messageBufferRead.size = byteCounter;
+                    putMessage(messageQueueRead, messageBufferRead);
 
                     readStartBitState = NOT_FOUND;
                     setState(READ_START_BIT);
-
-                    uartSendChar('\n');
                 }
             }
 
@@ -195,15 +206,26 @@ void stateMachine()
                 {
                     if (byteCounter == 0)                                   //1 byte header
                     {
-                        messageBuffer.header = (messageBuffer.header << 1) | lastEdgeLevel;
+                        messageBufferRead.header = (messageBufferRead.header << 1) | lastEdgeLevel;
                     }
                     else if (byteCounter == 1)                              //0-1 byte opcode
                     {
-                        messageBuffer.opcode = (messageBuffer.opcode << 1) | lastEdgeLevel;
+                        messageBufferRead.opcode = (messageBufferRead.opcode << 1) | lastEdgeLevel;
                     }
                     else                                                    //0-14 bytes operands
                     {
-                        messageBuffer.operands[byteCounter - 2] = (messageBuffer.operands[byteCounter - 2] << 1) | lastEdgeLevel;
+                        messageBufferRead.operands[byteCounter - 2] = (messageBufferRead.operands[byteCounter - 2] << 1) | lastEdgeLevel;
+                    }
+                }
+
+                if (bitCounter == 7)
+                {
+                    byteCounter++;
+
+                    if (byteCounter > 15)                                   //max CEC message size is 16 blocks
+                    {
+                        //TODO error handling
+                        setState(READ_START_BIT);
                     }
                 }
                 else if (bitCounter == 8)                                   //EOM bit
@@ -219,42 +241,24 @@ void stateMachine()
 
                 if (bitCounter > 9)                                         //end of data block (10 bit)
                 {
-                    if (byteCounter == 0)
-                    {
-                        uartSendChar(messageBuffer.header);
-                    }
-                    else if (byteCounter == 1)
-                    {
-                        uartSendChar(messageBuffer.opcode);
-                    }
-                    else
-                    {
-                        uartSendChar(messageBuffer.operands[byteCounter - 2]);
-                    }
-
                     bitCounter = 0;
-                    byteCounter++;
-
-                    if (byteCounter > 15)                                   //max CEC message size is 16 blocks
-                    {
-                        //TODO error handling
-                        setState(READ_START_BIT);
-                    }
                 }
             }
 
-            //Timer B execution: when data block was asserted to pull line up again
+            //Timer B execution: pull line up again when data block was asserted
             if (isEventTriggeredTimerB())
             {
-                uartSendChar('R');
-                high();                                                     //assert ACK bit (end)
+                #if ENABLE_ASSERTION == 1
+                    uartSendChar('R');
+                    high();                                                 //assert ACK bit (end)
+                #endif
             }
 
             if (isEventTransistionOut())
             {
                 debug("d");
 
-                messageBuffer.size = 0;
+                messageBufferRead.size = 0;
                 bitCounter = 0;
                 byteCounter = 0;
             }
@@ -272,7 +276,10 @@ void stateMachine()
 
             if (isEventInputToggled())
             {
-                resetTimer1();
+                clearTimeout(TIMER_A);
+                setState(READ_START_BIT);
+                events.toggledEdge = true;
+                uartSendChar('S');
             }
 
             if (isEventTriggeredTimerA())
@@ -301,7 +308,7 @@ void stateMachine()
             if (isEventInputToggled())
             {
                 //TODO implement proper monitoring..
-                if (!verifyLevel())                                                         //monitor CEC line
+                if (!verifyLevel())                                         //monitor CEC line
                 {
                     //TODO error handling: unexpected HIGH/LOW impedance on line
                     high();
@@ -310,6 +317,7 @@ void stateMachine()
                     clearTimeout(TIMER_B);
 
                     setState(READ_START_BIT);
+                    events.toggledEdge = true;
 
                     uartSendChar('L');
                 }
@@ -349,7 +357,7 @@ void stateMachine()
                 {
                     if (bitCounter >= 10)                                                   //data block finished?
                     {
-                        if ((byteCounter + 1) < messageBuffer.size)                           //there is a following data block
+                        if ((byteCounter + 1) < messageBufferWrite.size)                     //there is a following data block
                         {
                             bitCounter = 0;
                             byteCounter++;
@@ -368,15 +376,15 @@ void stateMachine()
                         bool dataBit;
                         if (byteCounter == 0)                                               //1 byte header
                         {
-                            dataBit = (messageBuffer.header & (0b10000000 >> bitCounter)) > 0;
+                            dataBit = (messageBufferWrite.header & (0b10000000 >> bitCounter)) > 0;
                         }
                         else if (byteCounter == 1)                                          //0-1 byte opcode
                         {
-                            dataBit = (messageBuffer.opcode & (0b10000000 >> bitCounter)) > 0;
+                            dataBit = (messageBufferWrite.opcode & (0b10000000 >> bitCounter)) > 0;
                         }
                         else                                                                //0-14 bytes operands
                         {
-                            dataBit = (messageBuffer.operands[byteCounter - 2] & (0b10000000 >> bitCounter)) > 0;
+                            dataBit = (messageBufferWrite.operands[byteCounter - 2] & (0b10000000 >> bitCounter)) > 0;
                         }
 
                         if (dataBit)                                                        //logic 1
@@ -395,7 +403,7 @@ void stateMachine()
                         low();
                         setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample EOM bit (for verification)
 
-                        if ((byteCounter + 1) < messageBuffer.size)                           //there is a following data block (EOM = 0)
+                        if ((byteCounter + 1) < messageBufferWrite.size)                    //there is a following data block (EOM = 0)
                         {
                             setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
                         }
@@ -437,6 +445,7 @@ void stateMachine()
                         clearTimeout(TIMER_B);
 
                         setState(READ_START_BIT);
+                        events.toggledEdge = true;
 
                         uartSendChar('L');
                     }
@@ -455,8 +464,9 @@ void stateMachine()
             {
                 debug("g");
 
+                messageBufferWrite.size = 0;
                 bitCounter = 0;
-               byteCounter = 0;
+                byteCounter = 0;
             }
         break;
     }
@@ -529,9 +539,16 @@ bool isEventTransistionOut()
     return false;
 }
 
-/************************************************************************/
-/* set timeout                                                          */
-/************************************************************************/
+bool writeMessage(Message message)
+{
+    return putMessage(messageQueueWrite, message);
+}
+
+bool readMessage(Message* message)
+{
+    return getMessage(messageQueueRead, message);
+}
+
 void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
 {
     if (timer == TIMER_A)
@@ -552,9 +569,6 @@ void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
     }
 }
 
-/************************************************************************/
-/* clear timeout                                                        */
-/************************************************************************/
 void clearTimeout(Timer timer)
 {
     setTimer1CompareMatchInterrupt(timer, false);
@@ -585,9 +599,6 @@ bool verifyLevel()
     return (shouldLevel == lastEdgeLevel);
 }
 
-/************************************************************************/
-/* Interrupt for timer1 input compare                                   */
-/************************************************************************/
 void executeTimer1InputCapture()
 {
     lastEdgeLevel = getInputCaptureState();
@@ -597,17 +608,14 @@ void executeTimer1InputCapture()
 
     if (lastEdgeLevel == HIGH)
     {
-        setInputCaptureTriggerEdge(FALLING);                        //next trigger on falling edge
+        setInputCaptureTriggerEdge(FALLING);                    //next trigger on falling edge
     }
     else
     {
-        setInputCaptureTriggerEdge(RISING);                         //next trigger on rising edge
+        setInputCaptureTriggerEdge(RISING);                     //next trigger on rising edge
     }
 }
 
-/************************************************************************/
-/* Interrupt for timer1 compare match A                                 */
-/************************************************************************/
 void executeTimer1ACompareMatch()
 {
     if (timerOptionsA.reset)
@@ -623,9 +631,6 @@ void executeTimer1ACompareMatch()
     events.triggeredTimerA = true;
 }
 
-/************************************************************************/
-/* Interrupt for timer1 compare match B                                 */
-/************************************************************************/
 void executeTimer1BCompareMatch()
 {
     if (timerOptionsB.reset)

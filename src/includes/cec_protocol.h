@@ -16,30 +16,15 @@
  */
 
 /**
- * @file main.c
+ * @file cec_protocol.h
  * @author Marcel
  * @brief
  *
  */
 
-#include "includes/peripherals.h"
-#include "includes/cec_driver.h"
-#include "includes/cec_protocol.h"
+#ifndef CEC_PROTOCOL_H_
+#define CEC_PROTOCOL_H_
 
-int main(void)
-{
-    initUart();
-    initTimer1();
-    initIO();
-	initDriver();
+void processProtocol(void);
 
-    setInterrupts(true);
-
-    while (1)
-    {
-        processDriver();
-        processProtocol();
-
-        uartFlush();
-    }
-}
+#endif
