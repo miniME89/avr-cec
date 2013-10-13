@@ -26,6 +26,9 @@
 #include "includes/defines.h"
 #include <stdlib.h>
 
+//==========================================
+// Definitions
+//==========================================
 CharQueue* newQueueChar(uint8_t size)
 {
     CharQueue* queue = malloc(sizeof(CharQueue));

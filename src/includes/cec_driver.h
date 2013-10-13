@@ -25,42 +25,12 @@
 #ifndef CEC_DRIVER_H_
 #define CEC_DRIVER_H_
 
-#include "peripherals.h"
 #include <inttypes.h>
 #include <stdbool.h>
 
-typedef enum State {
-    START,
-    EXIT,
-    READ_START_BIT,
-    READ_DATA_BIT,
-    WRITE_SIGNAL_FREE_TIME,
-    WRITE_START_BIT,
-    WRITE_DATA_BIT
-} State;
-
-typedef enum SubStateReadStartBit {
-    NOT_FOUND,                  //no start bit found
-    READ_T0,                    //read t0 edge => any negative edge
-    READ_T1,                    //read t1 edge in specified time
-    READ_T2                     //read t2 edge in specified time => found start bit
-} SubStateReadStartBit;
-
-typedef struct Events
-{
-    bool triggeredTimerA;
-    bool triggeredTimerB;
-    bool toggledEdge;
-    bool transistionIn;
-    bool transistionOut;
-} Events;
-
-typedef struct TimerOptions
-{
-    bool repeat;                //repeat
-    bool reset;                 //reset timer1 on execution
-} TimerOptions;
-
+/**
+ * CEC Message
+ */
 typedef struct Message
 {
     char header;
@@ -69,29 +39,50 @@ typedef struct Message
     uint8_t size;
 } Message;
 
+/**
+ * Initialize the driver
+ */
 void initDriver(void);
+
+/**
+ * Process driver actions. An internal state machine takes care of the specific action which should be executed.
+ */
 void processDriver(void);
-void setState(State state);
 
+/**
+ * Check whether there are events to process of the internal state machine. If this is the case, any delaying actions of
+ * other modules should be canceled.
+ * @return Returns true if there are unprocessed events.
+ */
 bool isEvent(void);
-bool isEventTriggeredTimerA(void);
-bool isEventTriggeredTimerB(void);
-bool isEventInputToggled(void);
-bool isEventTransistionIn(void);
-bool isEventTransistionOut(void);
 
+/**
+ * Write a CEC message on the bus. The message will be put into the send queue and processed later.
+ * @param message The CEC message to write.
+ * @return Returns true if the message was successful put into a send queue.
+ */
 bool writeMessage(Message message);
+
+/**
+ * Read the next message from the receive queue of messages read from the bus.
+ * @param message A pointer to a Message where the data should be copied.
+ * @return Returns true if the message was successful read from the queue. Returns false if the receive queue is empty.
+ */
 bool readMessage(Message* message);
 
-void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat);
-void clearTimeout(Timer timer);
-
-void low(void);
-void high(void);
-bool verifyLevel(void);
-
+/**
+ * Called when input capture interrupt is executed.
+ */
 void executeTimer1InputCapture(void);
+
+/**
+ * Called when compare match A is executed.
+ */
 void executeTimer1ACompareMatch(void);
+
+/**
+ * Called when compare match B is executed.
+ */
 void executeTimer1BCompareMatch(void);
 
 #endif

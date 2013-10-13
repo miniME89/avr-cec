@@ -29,13 +29,16 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-CharQueue* queueUartWrite;
-CharQueue* queueUartRead;
-uint8_t timer1OverflowCounter = 0;
+//==========================================
+// Variables
+//==========================================
+static CharQueue* queueUartWrite;
+static CharQueue* queueUartRead;
+static uint8_t timer1OverflowCounter = 0;
 
-/************************************************************************/
-/* interrupts                                                           */
-/************************************************************************/
+//==========================================
+// Definitions
+//==========================================
 void setInterrupts(bool enable)
 {
     if (enable)
@@ -48,9 +51,7 @@ void setInterrupts(bool enable)
     }
 }
 
-/************************************************************************/
-/* IO                                                                   */
-/************************************************************************/
+//IO
 void initIO(void)
 {
     INFO_LED_PORT_DDR |= (1 << INFO_LED_PIN);
@@ -102,9 +103,7 @@ void setDataDirectionCEC(DataDirection direction)
     }
 }
 
-/************************************************************************/
-/* timer1                                                               */
-/************************************************************************/
+//timer1
 void initTimer1()
 {
     //TCCR1B = (1 << WGM12);
@@ -206,9 +205,7 @@ ISR(TIMER1_OVF_vect)
     timer1OverflowCounter++;
 }
 
-/************************************************************************/
-/* uart                                                                 */
-/************************************************************************/
+//uart
 void initUart(void)
 {
     unsigned int regubrr = UBRR_REGISTER;                   //set baud rate

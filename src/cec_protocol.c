@@ -24,7 +24,7 @@
 
 #include "includes/cec_protocol.h"
 #include "includes/cec_driver.h"
-#include "includes/utils.h"
+#include "includes/peripherals.h"
 #include <inttypes.h>
 
 void processProtocol(void)
@@ -48,5 +48,17 @@ void processProtocol(void)
             }
         }
         uartSendChar('\n');
+
+        //test: display device as "PC" on TV
+        if (message.header == 0x04 && message.opcode == 0x46)
+        {
+            Message m;
+            m.header = 0x40;
+            m.opcode = 0x47;
+            m.operands[0] = 0x50;
+            m.operands[1] = 0x43;
+            m.size = 4;
+            writeMessage(m);
+        }
     }
 }

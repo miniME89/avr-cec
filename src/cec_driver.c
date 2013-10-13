@@ -24,28 +24,152 @@
 
 #include "includes/cec_driver.h"
 #include "includes/defines.h"
+#include "includes/peripherals.h"
 #include "includes/utils.h"
 
-State currentState = START;
-SubStateReadStartBit readStartBitState = NOT_FOUND;
-Events events = {.triggeredTimerA = false, .triggeredTimerB = false, .toggledEdge = false, .transistionIn = true, .transistionOut = false};
+//==========================================
+// Declarations
+//==========================================
+/**
+ * The state of the state machine.
+ */
+typedef enum State {
+    START,                  //!< START
+    EXIT,                   //!< EXIT
+    READ_START_BIT,         //!< READ_START_BIT
+    READ_DATA_BIT,          //!< READ_DATA_BIT
+    WRITE_SIGNAL_FREE_TIME, //!< WRITE_SIGNAL_FREE_TIME
+    WRITE_START_BIT,        //!< WRITE_START_BIT
+    WRITE_DATA_BIT          //!< WRITE_DATA_BIT
+} State;
 
-TimerOptions timerOptionsA = {.repeat = false, .reset = false};
-TimerOptions timerOptionsB = {.repeat = false, .reset = false};
+/**
+ * The sub states for the sub state machine when in READ_START_BIT state.
+ */
+typedef enum SubStateReadStartBit {
+    NOT_FOUND,              //!< no start bit found
+    READ_T0,                //!< read t0 edge => any negative edge
+    READ_T1,                //!< read t1 edge in specified time
+    READ_T2                 //!< read t2 edge in specified time => found start bit
+} SubStateReadStartBit;
 
-MessageQueue* messageQueueRead;
-MessageQueue* messageQueueWrite;
-Message messageBufferWrite;
-Message messageBufferRead;
-uint8_t bitCounter;
-uint8_t byteCounter;
-Level EOM;
-Level ACK;
+/**
+ * All possible events of the state machine.
+ */
+typedef struct Events
+{
+    bool triggeredTimerA;
+    bool triggeredTimerB;
+    bool toggledEdge;
+    bool transistionIn;
+    bool transistionOut;
+} Events;
 
-uint16_t lastEdgeTicks = 0;
-Level lastEdgeLevel = HIGH;
-Level shouldLevel = HIGH;
+/**
+ * Timer options
+ */
+typedef struct TimerOptions
+{
+    bool repeat;            //!< repeat
+    bool reset;             //!< reset timer1 on execution
+} TimerOptions;
 
+/**
+ * Set the state for the state machine.
+ * @param state
+ */
+static void setState(State state);
+
+/**
+ * Check if there is a triggered timer A event. This will consume the event if there is one.
+ * @return Returns true if there is a triggered timer A event.
+ */
+static bool isEventTriggeredTimerA(void);
+
+/**
+ * Check if there is a triggered timer B event. This will consume the event if there is one.
+ * @return Returns true if there is a triggered timer B event.
+ */
+static bool isEventTriggeredTimerB(void);
+
+/**
+ * Check if there is a input toggled event. This will consume the event if there is one.
+ * @return Returns true if there is a input toggled event.
+ */
+static bool isEventInputToggled(void);
+
+/**
+ * Check if there is a state transition in event. This will consume the event if there is one.
+ * @return Returns true if there is a state transition in event.
+ */
+static bool isEventTransistionIn(void);
+
+/**
+ * Check if there is a state transition out event. This will consume the event if there is one.
+ * @return Returns true if there is a state transition out event.
+ */
+static bool isEventTransistionOut(void);
+
+/**
+ *
+ * @param ticks
+ * @param timer
+ * @param reset
+ * @param repeat
+ */
+static void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat);
+
+/**
+ *
+ * @param timer
+ */
+static void clearTimeout(Timer timer);
+
+/**
+ * Pull the CEC line low.
+ * This will set the connected pin as output with logic 0 which will therefore pull the CEC line low.
+ */
+static void low(void);
+
+/**
+ * Set high impedance state for connected pin.
+ * This will set the connected pin as input which is therefore in high impedance state and will no longer pull the CEC line low.
+ */
+static void high(void);
+
+/**
+ * Verify the level of the bus set by the functions low() and high().
+ * Note: The change of the level by using low() or high() isn't immediate.
+ * @return Returns true if the bus is on the expected level set by the low() and high() functions.
+ */
+static bool verifyLevel(void);
+
+//==========================================
+// Variables
+//==========================================
+static State currentState = START;
+static SubStateReadStartBit readStartBitState = NOT_FOUND;
+static Events events = {.triggeredTimerA = false, .triggeredTimerB = false, .toggledEdge = false, .transistionIn = true, .transistionOut = false};
+
+static TimerOptions timerOptionsA = {.repeat = false, .reset = false};
+static TimerOptions timerOptionsB = {.repeat = false, .reset = false};
+
+static MessageQueue* messageQueueRead;
+static MessageQueue* messageQueueWrite;
+static Message messageBufferWrite;
+static Message messageBufferRead;
+static uint8_t bitCounter;
+static uint8_t byteCounter;
+static Level EOM;
+static Level ACK;
+
+static uint16_t lastEdgeTicks = 0;
+static Level lastEdgeLevel = HIGH;
+static Level shouldLevel = HIGH;
+
+//==========================================
+// Definitions
+//==========================================
 void initDriver(void)
 {
     messageQueueRead = newQueueMessage(16);
