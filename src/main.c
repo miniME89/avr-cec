@@ -22,9 +22,9 @@
  *
  */
 
-#include "includes/peripherals.h"
-#include "includes/cec_driver.h"
-#include "includes/cec_protocol.h"
+#include "inc/peripherals.h"
+#include "inc/cec_driver.h"
+#include "inc/cec_protocol.h"
 
 int main(void)
 {
