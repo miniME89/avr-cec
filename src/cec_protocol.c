@@ -27,38 +27,58 @@
 #include "includes/peripherals.h"
 #include <inttypes.h>
 
+Message msgReadCec;
+Message msgWriteCec;
+Message msgReadUart;
+
 void processProtocol(void)
 {
-    Message message;
-    if (readMessage(&message))
+    //try to get next CEC message from CEC read queue
+    if (readMessage(&msgReadCec))
     {
-        for (uint8_t i = 0; i < message.size; i++)
+        for (uint8_t i = 0; i < msgReadCec.size; i++)
         {
             if (i == 0)
             {
-                uartSendChar(message.header);
+                uartSendChar(msgReadCec.header);
             }
             else if (i == 1)
             {
-                uartSendChar(message.opcode);
+                uartSendChar(msgReadCec.opcode);
             }
             else
             {
-                uartSendChar(message.operands[i - 2]);
+                uartSendChar(msgReadCec.operands[i - 2]);
             }
         }
         uartSendChar('\n');
+    }
 
-        //test: display device as "PC" on TV
-        if (message.header == 0x04 && message.opcode == 0x46)
+    //try to get next char from UART read queue
+    char c;
+    if (uartReadChar(&c))
+    {
+        if (c == '\n')                              //EOM indicated by LF
         {
-            Message m;
-            m.header = 0x40;
-            m.opcode = 0x47;
-            m.operands[0] = 0x50;
-            m.operands[1] = 0x43;
-            m.size = 4;
-            writeMessage(m);
+            writeMessage(msgReadUart);
+            msgReadUart.size = 0;
+        }
+        else
+        {
+            if (msgReadUart.size == 0)
+            {
+                msgReadUart.header = c;
+            }
+            else if (msgReadUart.size == 1)
+            {
+                msgReadUart.opcode = c;
+            }
+            else
+            {
+                msgReadUart.operands[msgReadUart.size - 2] = c;
+            }
+
+            msgReadUart.size++;
         }
     }
 }
