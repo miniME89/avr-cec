@@ -9,11 +9,11 @@ TEMPLATE = app
 SOURCES += src/main.cpp\
         src/windowmain.cpp
 
-HEADERS  += includes/windowmain.h
+HEADERS  += inc/windowmain.h
 
 FORMS    += ui/windowmain.ui
 
-INCLUDEPATH = includes/
+INCLUDEPATH = inc/
 
 release: DESTDIR = ./build/release
 debug:   DESTDIR = ./build/debug
