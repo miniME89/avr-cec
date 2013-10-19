@@ -1,0 +1,12 @@
+#directories
+build
+bin
+
+#files
+*.eep
+*.elf
+*.hex
+*.lss
+*.map
+*.sym
+*.atsuo
