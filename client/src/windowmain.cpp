@@ -17,10 +17,10 @@ WindowMain::~WindowMain()
 void WindowMain::setupUi()
 {
     QStandardItemModel *model = new QStandardItemModel(this);
-    model->appendRow(new QStandardItem(QIcon(":/icons/res/connection.png"), "Connection"));
-    model->appendRow(new QStandardItem(QIcon(":/icons/res/actions.png"), "Actions"));
-    model->appendRow(new QStandardItem(QIcon(":/icons/res/sniffer.png"), "Sniffer"));
-    model->appendRow(new QStandardItem(QIcon(":/icons/res/settings.png"), "Settings"));
+    model->appendRow(new QStandardItem(QIcon(":/icons/connection.png"), "Connection"));
+    model->appendRow(new QStandardItem(QIcon(":/icons/actions.png"), "Actions"));
+    model->appendRow(new QStandardItem(QIcon(":/icons/sniffer.png"), "Sniffer"));
+    model->appendRow(new QStandardItem(QIcon(":/icons/settings.png"), "Settings"));
 
     for (int i = 0; i < model->rowCount(); i++) {
         model->item(i)->setSizeHint(QSize(50, 50));
