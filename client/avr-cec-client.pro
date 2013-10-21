@@ -7,13 +7,15 @@ TEMPLATE = app
 
 
 SOURCES += src/main.cpp\
-        src/windowmain.cpp
+    src/windowmain.cpp
 
 HEADERS  += inc/windowmain.h
 
 FORMS    += ui/windowmain.ui
 
 INCLUDEPATH = inc/
+
+RESOURCES += res/res.qrc
 
 release: DESTDIR = ./build/release
 debug:   DESTDIR = ./build/debug

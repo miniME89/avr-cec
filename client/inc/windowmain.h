@@ -2,9 +2,10 @@
 #define WINDOWMAIN_H
 
 #include <QMainWindow>
+#include <QItemSelection>
 
 namespace Ui {
-class WindowMain;
+    class WindowMain;
 }
 
 class WindowMain : public QMainWindow
@@ -17,6 +18,14 @@ public:
 
 private:
     Ui::WindowMain *ui;
+    void setupUi();
+    void setupUiPageConnection();
+    void setupUiPageActions();
+    void setupUiPageSniffer();
+    void setupUiPageSettings();
+
+private slots:
+    void selectionChangedMainMenu(QItemSelection selection);
 };
 
 #endif // WINDOWMAIN_H
