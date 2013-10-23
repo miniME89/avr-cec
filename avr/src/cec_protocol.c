@@ -22,9 +22,9 @@
  *
  */
 
-#include "inc/cec_protocol.h"
-#include "inc/cec_driver.h"
-#include "inc/peripherals.h"
+#include "cec_protocol.h"
+#include "cec_driver.h"
+#include "peripherals.h"
 #include <inttypes.h>
 
 Message msgReadCec;

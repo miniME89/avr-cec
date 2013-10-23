@@ -22,8 +22,8 @@
  *
  */
 
-#include "inc/utils.h"
-#include "inc/defines.h"
+#include "utils.h"
+#include "defines.h"
 #include <stdlib.h>
 
 //==========================================

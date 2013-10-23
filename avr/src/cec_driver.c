@@ -22,10 +22,10 @@
  *
  */
 
-#include "inc/cec_driver.h"
-#include "inc/defines.h"
-#include "inc/peripherals.h"
-#include "inc/utils.h"
+#include "cec_driver.h"
+#include "defines.h"
+#include "peripherals.h"
+#include "utils.h"
 
 //==========================================
 // Declarations

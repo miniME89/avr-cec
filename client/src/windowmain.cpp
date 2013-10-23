@@ -3,6 +3,12 @@
 #include "dialogaction.h"
 #include <QStandardItemModel>
 #include <QDebug>
+#include "opendevice.h"
+
+#define  USB_CFG_VENDOR_ID       0xc0, 0x16 /* = 0x16c0 = 5824 = voti.nl */
+#define  USB_CFG_DEVICE_ID       0xdc, 0x05 /* = 0x05dc = 1500 */
+#define  USB_CFG_VENDOR_NAME     'o', 'b', 'd', 'e', 'v', '.', 'a', 't'
+#define  USB_CFG_DEVICE_NAME     'L', 'E', 'D', 'C', 'o', 'n', 't', 'r', 'o', 'l'
 
 WindowMain::WindowMain(QWidget *parent) : QMainWindow(parent), ui(new Ui::WindowMain)
 {
@@ -36,6 +42,21 @@ void WindowMain::setupUi()
     setupUiPageActions();
     setupUiPageSniffer();
     setupUiPageSettings();
+
+    usb_dev_handle *handle = NULL;
+    char vendor[] = {USB_CFG_VENDOR_NAME, 0};
+    char product[] = {USB_CFG_DEVICE_NAME, 0};
+    const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
+    int vid = rawVid[1] * 256 + rawVid[0];
+    int pid = rawPid[1] * 256 + rawPid[0];
+
+    if(usbOpenDevice(&handle, vid, vendor, pid, product, NULL, NULL, NULL) != 0) {
+        qDebug() <<"Could not find USB device \"" <<product <<"\" with vid=" <<vid <<" pid=" <<pid;
+    }
+    else
+    {
+        qDebug() <<"Found USB device \"" <<product <<"\" with vid=" <<vid <<" pid=" <<pid;
+    }
 }
 
 void WindowMain::setupUiPageConnection()

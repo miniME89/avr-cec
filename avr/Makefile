@@ -1,19 +1,10 @@
-# make all = Make software.
-#
-# make clean = Clean out built project files.
-#
-# make coff = Convert ELF to AVR COFF.
-#
-# make extcoff = Convert ELF to AVR Extended COFF.
-#
-# make filename.s = Just compile filename.c into the assembler code only.
-#
-# make filename.i = Create a preprocessed source file for use in submitting
-#                   bug reports to the GCC project.
-#
-# To rebuild project do "make clean" then "make all".
-#----------------------------------------------------------------------------
-
+# WinAVR cross-compiler toolchain is used here
+SHELL = sh
+CC = avr-gcc
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+DUDE = avrdude
+NM = avr-nm
 
 # MCU name
 MCU = atmega8
@@ -22,20 +13,14 @@ MCU = atmega8
 #     This will define a symbol, F_CPU, in all source code files
 F_CPU = 16000000
 
-# Output format. (can be srec, ihex, binary)
-FORMAT = ihex
+# Target file name
+TARGET = main
 
 # Build directory
 BUILDDIR = bin
 
 # Source directory
 SRCDIR = src
-
-# Target file name (without extension).
-TARGET = main
-
-# c source files
-SRC = $(wildcard $(SRCDIR)/*.c)
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
@@ -47,32 +32,16 @@ OPT = s
 #     AVR [Extended] COFF format requires stabs, plus an avr-objcopy run.
 DEBUG = dwarf-2
 
-# List any extra directories to look for include files here.
-#     Each directory must be seperated by a space.
-#     Use forward slashes for directory separators.
-#     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = inc/
-
 # Compiler flag to set the C Standard level.
 #     c89   = "ANSI" C
 #     gnu89 = c89 plus GCC extensions
 #     c99   = ISO C99 standard (not yet fully implemented)
 #     gnu99 = c99 plus GCC extensions
-CSTANDARD = -std=gnu99
+CSTANDARD = gnu99
 
-# Place -D or -U options here for C sources
-CDEFS = -DF_CPU=$(F_CPU)UL
-
-
-#---------------- Compiler Options C ----------------
-#  -g*:          generate debugging information
-#  -O*:          optimization level
-#  -f...:        tuning, see GCC manual and avr-libc documentation
-#  -Wall...:     warning level
-#  -Wa,...:      tell GCC to pass this to the assembler.
-#    -adhlns...: create assembler listing
+# Compiler flags
 CFLAGS = -g$(DEBUG)
-CFLAGS += $(CDEFS)
+CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
@@ -80,218 +49,83 @@ CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
-CFLAGS += -Wa,-adhlns=$(<:%.c=$(BUILDDIR)/%.lst)
-CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
-CFLAGS += $(CSTANDARD)
+CFLAGS += -Iinc -I. -Iusbdrv
+CFLAGS += -mmcu=$(MCU)
+CFLAGS += -std=$(CSTANDARD)
+#CFLAGS += -MMD -MP -MF .dep/$(@F).d
 
-
-#---------------- Library Options ----------------
-# Minimalistic printf version
-PRINTF_LIB_MIN = -Wl,-u,vfprintf -lprintf_min
-
-# Floating point printf version (requires MATH_LIB = -lm below)
-PRINTF_LIB_FLOAT = -Wl,-u,vfprintf -lprintf_flt
-
-
-# Minimalistic scanf version
-SCANF_LIB_MIN = -Wl,-u,vfscanf -lscanf_min
-
-# Floating point + %[ scanf version (requires MATH_LIB = -lm below)
-SCANF_LIB_FLOAT = -Wl,-u,vfscanf -lscanf_flt
-
-
-MATH_LIB = -lm
-
-
-# List any extra directories to look for libraries here.
-#     Each directory must be seperated by a space.
-#     Use forward slashes for directory separators.
-#     For a directory that has spaces, enclose it in quotes.
-EXTRALIBDIRS = 
-
-
-#---------------- Linker Options ----------------
-#  -Wl,...:     tell GCC to pass this to linker.
-#    -Map:      create map file
-#    --cref:    add cross reference to  map file
+# Library flags
 LDFLAGS = -Wl,-Map=$(BUILDDIR)/$(TARGET).map,--cref
-LDFLAGS += $(EXTMEMOPTS)
-LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
-LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
-#LDFLAGS += -T linker_script.x
+LDFLAGS += -lm
 
+# Flash flags
+DUDEFLAGS = -c stk500v2 -p $(MCU) -P com8
 
-# Define programs and commands.
-SHELL = sh
-CC = avr-gcc
-OBJCOPY = avr-objcopy
-OBJDUMP = avr-objdump
-SIZE = avr-size
-AR = avr-ar rcs
-NM = avr-nm
-AVRDUDE = avrdude
-REMOVE = rm -f
-REMOVEDIR = rm -rf
-COPY = cp
-WINSHELL = cmd
+# Object files
+SOURCES = $(wildcard $(SRCDIR)/*.c)
+OBJECTS = $(SOURCES:%.c=%.o)
+OBJECTS += usbdrv/usbdrv.o usbdrv/oddebug.o usbdrv/usbdrvasm.o
 
-
-# Define all object files.
-OBJ = $(SRC:%.c=$(BUILDDIR)/%.o)
-
-# Define all listing files.
-LST = $(SRC:%.c=$(BUILDDIR)/%.lst)
-
-
-# Compiler flags to generate dependency files.
-GENDEPFLAGS = -MMD -MP -MF $(BUILDDIR)/.dep/$(@F).d
-
-
-# Combine all necessary flags and optional flags.
-# Add target processor to flags.
-ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
-
-
-# Default target.
-all: begin sizebefore build sizeafter end
-
-
-# Change the build target to build a HEX file or a library.
-build: elf hex eep lss sym
-#build: lib
-
+# default
+all: elf hex eep lss sym
 
 elf: $(BUILDDIR)/$(TARGET).elf
 hex: $(BUILDDIR)/$(TARGET).hex
 eep: $(BUILDDIR)/$(TARGET).eep
 lss: $(BUILDDIR)/$(TARGET).lss
 sym: $(BUILDDIR)/$(TARGET).sym
-lib: $(BUILDDIR)/lib$(TARGET).a
 
+# From C source to .o object file
+%.o: %.c	
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# AVR Studio 3.x does not check make's exit code but relies on
-# the following magic strings to be generated by the compile job.
-begin:
+# From assembler source to .o object file
+%.o: %.S
+	$(CC) $(CFLAGS) -x assembler-with-cpp -c $< -o $@
+
+# Create elf output file from object files
+%.elf: $(OBJECTS)
 	@echo
-	@echo -------- begin --------
-	@echo
-end:
-	@echo --------  end  --------
-	@echo
+	@echo Create elf output:
+	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
 
-
-# Display size of file.
-HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
-ELFSIZE = $(SIZE) --mcu=$(MCU) --format=avr $(TARGET).elf
-
-sizebefore:
-	@if test -f $(TARGET).elf; then echo; echo Size before:; $(ELFSIZE); \
-	2>/dev/null; echo; fi
-
-
-sizeafter:
-	@if test -f $(TARGET).elf; then echo; echo Size after:; $(ELFSIZE); \
-	2>/dev/null; echo; fi
-
-
-# Convert ELF to COFF for use in debugging / simulating in AVR Studio or VMLAB.
-COFFCONVERT = $(OBJCOPY) --debugging
-COFFCONVERT += --change-section-address .data-0x800000
-COFFCONVERT += --change-section-address .bss-0x800000
-COFFCONVERT += --change-section-address .noinit-0x800000
-COFFCONVERT += --change-section-address .eeprom-0x810000
-
-
-coff: $(TARGET).elf
-	@echo
-	@echo Converting to AVR COFF: $(TARGET).cof
-	$(COFFCONVERT) -O coff-avr $< $(TARGET).cof
-
-
-extcoff: $(TARGET).elf
-	@echo
-	@echo Converting to AVR Extended COFF: $(TARGET).cof
-	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
-
-
-# Create final output files (.hex, .eep) from ELF output file.
+# Create final hex output file
 %.hex: %.elf
 	@echo
-	@echo Creating load file for Flash: $@
-	$(OBJCOPY) -O $(FORMAT) -R .eeprom -R .fuse -R .lock -R .signature $< $@
+	@echo Create hex output:
+	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
-
+# Create eep
 %.eep: %.elf
 	@echo
-	@echo Creating load file for EEPROM: $@
+	@echo Create eep output:
 	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	--change-section-lma .eeprom=0 --no-change-warnings -O $(FORMAT) $< $@ || exit 0
-
+	--change-section-lma .eeprom=0 --no-change-warnings -O ihex $< $@ || exit 0
 
 # Create extended listing file from ELF output file.
 %.lss: %.elf
 	@echo
-	@echo Creating Extended Listing: $@
+	@echo Create lss output:
 	$(OBJDUMP) -h -S -z $< > $@
-
 
 # Create a symbol table from ELF output file.
 %.sym: %.elf
 	@echo
-	@echo Creating Symbol Table: $@
+	@echo Create sym output:
 	$(NM) -n $< > $@
 
-
-# Create library from object files.
-.SECONDARY : $(TARGET).a
-.PRECIOUS : $(OBJ)
-%.a: $(OBJ)
-	@echo
-	@echo Creating library: $@
-	$(AR) $@ $(OBJ)
-
-
-# Link: create ELF output file from object files.
-.SECONDARY : $(TARGET).elf
-.PRECIOUS : $(OBJ)
-%.elf: $(OBJ)
-	@echo
-	@echo Linking: $@
-	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
-
-
-# Compile: create object files from C source files.
-$(BUILDDIR)/%.o : %.c
-	@echo
-	@echo Compiling C: $<
-	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
-
-
-# Create preprocessed source for use in sending a bug report.
-%.i : %.c
-	$(CC) -E -mmcu=$(MCU) -I. $(CFLAGS) $< -o $@ 
-
-
-# Target: clean project.
+# clean
 clean:
-	@echo
-	@echo Cleaning project:
-	$(REMOVEDIR) $(BUILDDIR)
+	$(RM) $(BUILDDIR)/*.elf 
+	$(RM) $(BUILDDIR)/*.hex
+	$(RM) $(BUILDDIR)/*.eep
+	$(RM) $(BUILDDIR)/*.lss
+	$(RM) $(BUILDDIR)/*.sym
+	$(RM) $(BUILDDIR)/*.map
 
+# Flash
+flash: $(TARGET).hex
+	$(DUDE) $(DUDEFLAGS) -U flash:w:$<
 
 # Create build directory
 $(shell mkdir $(BUILDDIR) 2>/dev/null)
-
-
-# Create object files directory
-$(shell mkdir $(BUILDDIR)/$(SRCDIR) 2>/dev/null)
-
-
-# Include the dependency files.
--include $(shell mkdir $(BUILDDIR)/.dep 2>/dev/null) $(wildcard $(BUILDDIR)/.dep/*)
-
-
-# Listing of phony targets.
-.PHONY : all begin finish end sizebefore sizeafter \
-build elf hex eep lss sym coff extcoff \
-clean clean_list

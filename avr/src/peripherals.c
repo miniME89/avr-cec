@@ -22,10 +22,10 @@
  *
  */
 
-#include "inc/peripherals.h"
-#include "inc/defines.h"
-#include "inc/utils.h"
-#include "inc/cec_driver.h"
+#include "peripherals.h"
+#include "defines.h"
+#include "utils.h"
+#include "cec_driver.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
