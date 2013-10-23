@@ -26,6 +26,7 @@ private:
 
 private slots:
     void selectionChangedMainMenu(QItemSelection selection);
+    void clickedButtonAdd();
 };
 
 #endif // WINDOWMAIN_H

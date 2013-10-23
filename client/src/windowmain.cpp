@@ -1,5 +1,6 @@
 #include "windowmain.h"
 #include "ui_windowmain.h"
+#include "dialogaction.h"
 #include <QStandardItemModel>
 #include <QDebug>
 
@@ -49,6 +50,8 @@ void WindowMain::setupUiPageActions()
     model->setHorizontalHeaderItem(1, new QStandardItem(QString("Column2 Header")));
     model->setHorizontalHeaderItem(2, new QStandardItem(QString("Column3 Header")));
 
+    connect(ui->buttonAdd, SIGNAL(clicked()), this, SLOT(clickedButtonAdd()));
+
     ui->tableActions->setModel(model);
 }
 
@@ -71,4 +74,10 @@ void WindowMain::setupUiPageSettings()
 void WindowMain::selectionChangedMainMenu(QItemSelection selection)
 {
     ui->stackedContent->setCurrentIndex(ui->mainMenu->currentIndex().row());
+}
+
+void WindowMain::clickedButtonAdd()
+{
+    DialogAction* dialogAction = new DialogAction();
+    dialogAction->open();
 }
