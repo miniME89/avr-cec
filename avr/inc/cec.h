@@ -16,7 +16,7 @@
  */
 
 /**
- * @file cec_driver.h
+ * @file cec.h
  * @author Marcel
  * @brief
  *
@@ -42,12 +42,12 @@ typedef struct Message
 /**
  * Initialize the driver
  */
-void initDriver(void);
+void initCec(void);
 
 /**
  * Process driver actions. An internal state machine takes care of the specific action which should be executed.
  */
-void processDriver(void);
+void processCec(void);
 
 /**
  * Check whether there are events to process of the internal state machine. If this is the case, any delaying actions of
@@ -73,16 +73,16 @@ bool readMessage(Message* message);
 /**
  * Called when input capture interrupt is executed.
  */
-void executeTimer1InputCapture(void);
+void executeTimerInputCapture(void);
 
 /**
  * Called when compare match A is executed.
  */
-void executeTimer1ACompareMatch(void);
+void executeTimerACompareMatch(void);
 
 /**
  * Called when compare match B is executed.
  */
-void executeTimer1BCompareMatch(void);
+void executeTimerBCompareMatch(void);
 
 #endif

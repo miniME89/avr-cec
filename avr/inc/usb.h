@@ -16,15 +16,16 @@
  */
 
 /**
- * @file cec_protocol.h
+ * @file usb.h
  * @author Marcel
  * @brief
  *
  */
 
-#ifndef CEC_PROTOCOL_H_
-#define CEC_PROTOCOL_H_
+#ifndef USB_H_
+#define USB_H_
 
-void processProtocol(void);
+void initUsb(void);
+void processUsb(void);
 
 #endif

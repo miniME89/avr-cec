@@ -63,12 +63,12 @@ void setInfoLED(Level level);
 void setDataDirectionCEC(DataDirection direction);
 
 //Timer1
-void initTimer1(void);
-void resetTimer1(void);
-uint16_t getTimer1Ticks(void);
-uint8_t getTimer1OverflowCounter(void);
-void setTimer1CompareMatch(Timer timer, uint16_t ticks);
-void setTimer1CompareMatchInterrupt(Timer timer, bool enable);
+void initTimer(void);
+void resetTimer(void);
+uint16_t getTimerTicks(void);
+uint8_t getTimerOverflowCounter(void);
+void setTimerCompareMatch(Timer timer, uint16_t ticks);
+void setTimerCompareMatchInterrupt(Timer timer, bool enable);
 
 //UART
 void initUart(void);

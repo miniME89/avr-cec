@@ -1,16 +1,8 @@
-# WinAVR cross-compiler toolchain is used here
-SHELL = sh
-CC = avr-gcc
-OBJCOPY = avr-objcopy
-OBJDUMP = avr-objdump
-DUDE = avrdude
-NM = avr-nm
-
+#====================================== Options =======================================
 # MCU name
 MCU = atmega8
 
-# Processor frequency.
-#     This will define a symbol, F_CPU, in all source code files
+# Processor frequency
 F_CPU = 16000000
 
 # Target file name
@@ -22,22 +14,26 @@ BUILDDIR = bin
 # Source directory
 SRCDIR = src
 
-# Optimization level, can be [0, 1, 2, 3, s]. 
-#     0 = turn off optimization. s = optimize for size.
+# include directory
+INCDIRS = inc inc/usbdrv
+
+# Optimization level [0, 1, 2, 3, s]
 OPT = s
 
-# Debugging format.
-#     Native formats for AVR-GCC's -g are dwarf-2 [default] or stabs.
-#     AVR Studio 4.10 requires dwarf-2.
-#     AVR [Extended] COFF format requires stabs, plus an avr-objcopy run.
+# Debugging format [dwarf-2, stabs]
 DEBUG = dwarf-2
 
-# Compiler flag to set the C Standard level.
-#     c89   = "ANSI" C
-#     gnu89 = c89 plus GCC extensions
-#     c99   = ISO C99 standard (not yet fully implemented)
-#     gnu99 = c99 plus GCC extensions
+# Compiler flag to set the C Standard level [c89, gnu89, c99, gnu99]
 CSTANDARD = gnu99
+
+#================================== Advanced options ==================================
+# Tools
+SHELL = sh
+CC = avr-gcc
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+DUDE = avrdude
+NM = avr-nm
 
 # Compiler flags
 CFLAGS = -g$(DEBUG)
@@ -49,10 +45,10 @@ CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
-CFLAGS += -Iinc -I. -Iusbdrv
+CFLAGS += $(patsubst %,-I%,$(INCDIRS))
 CFLAGS += -mmcu=$(MCU)
 CFLAGS += -std=$(CSTANDARD)
-#CFLAGS += -MMD -MP -MF .dep/$(@F).d
+CFLAGS += -MMD -MP -MF $(BUILDDIR)/.dep/$(@F).d
 
 # Library flags
 LDFLAGS = -Wl,-Map=$(BUILDDIR)/$(TARGET).map,--cref
@@ -61,29 +57,39 @@ LDFLAGS += -lm
 # Flash flags
 DUDEFLAGS = -c stk500v2 -p $(MCU) -P com8
 
-# Object files
-SOURCES = $(wildcard $(SRCDIR)/*.c)
-OBJECTS = $(SOURCES:%.c=%.o)
-OBJECTS += usbdrv/usbdrv.o usbdrv/oddebug.o usbdrv/usbdrvasm.o
+# Sources and object files
+SOURCES_C = $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*/*.c)
+SOURCES_ASM = $(wildcard $(SRCDIR)/*.asm) $(wildcard $(SRCDIR)/*/*.asm)
 
-# default
+OBJECTS = $(SOURCES_C:%.c=$(BUILDDIR)/%.o) $(SOURCES_ASM:%.asm=$(BUILDDIR)/%.o)
+
+#====================================== Targets =======================================
+# Default
 all: elf hex eep lss sym
 
 elf: $(BUILDDIR)/$(TARGET).elf
+
 hex: $(BUILDDIR)/$(TARGET).hex
+
 eep: $(BUILDDIR)/$(TARGET).eep
+
 lss: $(BUILDDIR)/$(TARGET).lss
+
 sym: $(BUILDDIR)/$(TARGET).sym
 
 # From C source to .o object file
-%.o: %.c	
+$(BUILDDIR)/%.o: %.c
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # From assembler source to .o object file
-%.o: %.S
+$(BUILDDIR)/%.o: %.S
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -x assembler-with-cpp -c $< -o $@
 
 # Create elf output file from object files
+.SECONDARY : $(TARGET).elf
+.PRECIOUS : $(OBJECTS)
 %.elf: $(OBJECTS)
 	@echo
 	@echo Create elf output:
@@ -99,8 +105,7 @@ sym: $(BUILDDIR)/$(TARGET).sym
 %.eep: %.elf
 	@echo
 	@echo Create eep output:
-	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	--change-section-lma .eeprom=0 --no-change-warnings -O ihex $< $@ || exit 0
+	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" --change-section-lma .eeprom=0 --no-change-warnings -O ihex $< $@ || exit 0
 
 # Create extended listing file from ELF output file.
 %.lss: %.elf
@@ -114,18 +119,19 @@ sym: $(BUILDDIR)/$(TARGET).sym
 	@echo Create sym output:
 	$(NM) -n $< > $@
 
-# clean
+# Clean
 clean:
-	$(RM) $(BUILDDIR)/*.elf 
-	$(RM) $(BUILDDIR)/*.hex
-	$(RM) $(BUILDDIR)/*.eep
-	$(RM) $(BUILDDIR)/*.lss
-	$(RM) $(BUILDDIR)/*.sym
-	$(RM) $(BUILDDIR)/*.map
+	$(RM) -r $(BUILDDIR)
 
 # Flash
-flash: $(TARGET).hex
+flash: $(BUILDDIR)/$(TARGET).hex
 	$(DUDE) $(DUDEFLAGS) -U flash:w:$<
+
+# Listing of phony targets
+.PHONY : all build elf hex eep lss sym clean
 
 # Create build directory
 $(shell mkdir $(BUILDDIR) 2>/dev/null)
+
+# Include the dependency files
+-include $(shell mkdir $(BUILDDIR)/.dep 2>/dev/null) $(wildcard $(BUILDDIR)/.dep/*)

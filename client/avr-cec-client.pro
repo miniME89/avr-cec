@@ -9,16 +9,17 @@ TEMPLATE = app
 SOURCES += src/main.cpp \
     src/windowmain.cpp \
     src/dialogaction.cpp \
-    src/opendevice.cpp
+    src/usbcontroller.cpp
 
 HEADERS  += inc/windowmain.h \
     inc/dialogaction.h \
-    inc/opendevice.h
+    inc/usbcontroller.h
 
 FORMS    += ui/windowmain.ui \
     ui/dialogaction.ui
 
-INCLUDEPATH += inc/
+INCLUDEPATH += inc
+INCLUDEPATH += ..
 
 RESOURCES += res/res.qrc
 

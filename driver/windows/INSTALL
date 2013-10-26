@@ -1,0 +1,8 @@
+1. Connect the device
+2. Ignore any failed driver installation message
+3. Open "device manager"
+4. Search for a device named "avr-cec" under "other devices"
+5. Right click on the device and choose "Update Driver Software..."
+6. Select "Browse my computer for driver software"
+7. Select this folder and press next
+8. Unplug the device and reconnect it again

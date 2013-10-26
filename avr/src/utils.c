@@ -24,6 +24,7 @@
 
 #include "utils.h"
 #include "defines.h"
+#include "peripherals.h"
 #include <stdlib.h>
 
 //==========================================
@@ -90,6 +91,7 @@ bool putMessage(MessageQueue* queue, Message message)
 
     if (queue->read == next)
     {
+        uartSendChar('O');
         return false;
     }
 

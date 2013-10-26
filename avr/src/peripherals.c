@@ -25,7 +25,7 @@
 #include "peripherals.h"
 #include "defines.h"
 #include "utils.h"
-#include "cec_driver.h"
+#include "cec.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -34,7 +34,7 @@
 //==========================================
 static CharQueue* queueUartWrite;
 static CharQueue* queueUartRead;
-static uint8_t timer1OverflowCounter = 0;
+static uint8_t timerOverflowCounter = 0;
 
 //==========================================
 // Definitions
@@ -103,45 +103,45 @@ void setDataDirectionCEC(DataDirection direction)
     }
 }
 
-//timer1
-void initTimer1()
+//timer
+void initTimer()
 {
     //TCCR1B = (1 << WGM12);
 
-    #if TIMER1_PRESCALER == 1
+    #if TIMER_PRESCALER == 1
         TCCR1B |= (0 << ICES1) | (1 << CS10);               //input capture (falling edge) + 1x prescaler
-    #elif TIMER1_PRESCALER == 8
+    #elif TIMER_PRESCALER == 8
         TCCR1B |= (0 << ICES1) | (1 << CS11);               //input capture (falling edge) + 8x prescaler
-    #elif TIMER1_PRESCALER == 64
+    #elif TIMER_PRESCALER == 64
         TCCR1B |= (0 << ICES1) | (1 << CS11) | (1 << CS10); //input capture (falling edge) + 64x prescaler
-    #elif TIMER1_PRESCALER == 256
+    #elif TIMER_PRESCALER == 256
         TCCR1B |= (0 << ICES1) | (1 << CS12);               //input capture (falling edge) + 256x prescaler
-    #elif TIMER1_PRESCALER == 1024
+    #elif TIMER_PRESCALER == 1024
         TCCR1B |= (0 << ICES1) | (1 << CS12) | (1 << CS10); //input capture (falling edge) + 1024x prescaler
     #else
-        #warning "value of TIMER1_PRESCALER needs to be 1, 8, 64, 256 or 1024"
+        #warning "value of TIMER_PRESCALER needs to be 1, 8, 64, 256 or 1024"
     #endif
 
     TIMSK |= (1 << TICIE1) | (1 << TOIE1);                  //interrupt on input capture + interrupt on timer overflow
 }
 
-void resetTimer1()
+void resetTimer()
 {
     TCNT1 = 0;
-    timer1OverflowCounter = 0;
+    timerOverflowCounter = 0;
 }
 
-uint16_t getTimer1Ticks(void)
+uint16_t getTimerTicks(void)
 {
     return TCNT1 ;
 }
 
-uint8_t getTimer1OverflowCounter()
+uint8_t getTimerOverflowCounter()
 {
-    return timer1OverflowCounter;
+    return timerOverflowCounter;
 }
 
-void setTimer1CompareMatch(Timer timer, uint16_t ticks)
+void setTimerCompareMatch(Timer timer, uint16_t ticks)
 {
     if (timer == TIMER_A)
     {
@@ -153,7 +153,7 @@ void setTimer1CompareMatch(Timer timer, uint16_t ticks)
     }
 }
 
-void setTimer1CompareMatchInterrupt(Timer timer, bool enable)
+void setTimerCompareMatchInterrupt(Timer timer, bool enable)
 {
     if (enable)
     {
@@ -181,28 +181,28 @@ void setTimer1CompareMatchInterrupt(Timer timer, bool enable)
     }
 }
 
-//Interrupt for timer1 input compare
+//Interrupt for timer input compare
 ISR(TIMER1_CAPT_vect)
 {
-    executeTimer1InputCapture();
+    executeTimerInputCapture();
 }
 
-//Interrupt for timer1 compare match A
+//Interrupt for timer compare match A
 ISR(TIMER1_COMPA_vect)
 {
-    executeTimer1ACompareMatch();
+    executeTimerACompareMatch();
 }
 
-//Interrupt for timer1 compare match B
+//Interrupt for timer compare match B
 ISR(TIMER1_COMPB_vect)
 {
-    executeTimer1BCompareMatch();
+    executeTimerBCompareMatch();
 }
 
-//Interrupt for timer1 overflow
+//Interrupt for timer overflow
 ISR(TIMER1_OVF_vect)
 {
-    timer1OverflowCounter++;
+    timerOverflowCounter++;
 }
 
 //uart
@@ -216,8 +216,8 @@ void initUart(void)
 
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);     //set frame format: 8data
 
-    queueUartWrite = newQueueChar(32);
-    queueUartRead = newQueueChar(32);
+    queueUartWrite = newQueueChar(2);
+    queueUartRead = newQueueChar(2);
 }
 
 void uartSendChar(char c)

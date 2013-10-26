@@ -1,6 +1,7 @@
 #directories
 build
 bin
+.settings
 
 #files
 *.eep

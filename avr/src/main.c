@@ -23,40 +23,24 @@
  */
 
 #include "peripherals.h"
-#include "cec_driver.h"
-#include "cec_protocol.h"
-#include "usbdrv/usbdrv.h"
-#include <util/delay.h>
-
-USB_PUBLIC uchar usbFunctionSetup(uchar data[8])
-{
-    return 0; // do nothing for now
-}
+#include "cec.h"
+#include "usb.h"
 
 int main(void)
 {
     initUart();
-    initTimer1();
+    initTimer();
     initIO();
-    initDriver();
-
-    usbInit();
-
-    usbDeviceDisconnect();
-    for (uint8_t i = 0; i < 250; i++)
-    {
-        _delay_ms(2);
-    }
-    usbDeviceConnect();
+    initCec();
+    initUsb();
 
     setInterrupts(true);
 
     while (1)
     {
-        processDriver();
-        processProtocol();
+        processCec();
+        processUsb();
 
         uartFlush();
-        usbPoll();
     }
 }

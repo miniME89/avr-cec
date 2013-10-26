@@ -40,9 +40,9 @@
 #define CEC_INPUT_CAPTURE_PORT      PINB
 #define CEC_INPUT_CAPTURE_PIN       PINB0
 
-//Timer1
-#define TIMER1_PRESCALER            64                                      //prescaler (1, 8, 64, 256 or 1024)
-#define TIMER1_TICK_VALUE           (1000000 / (F_CLK/TIMER1_PRESCALER))    //time value of 1 timer tick (in us)
+//Timer
+#define TIMER_PRESCALER            64                                       //prescaler (1, 8, 64, 256 or 1024)
+#define TIMER_TICK_VALUE           (1000000 / (F_CLK/TIMER_PRESCALER))      //time value of 1 timer tick (in us)
 
 //UART
 #define BAUD                        19200                                   //baud rate
@@ -50,24 +50,30 @@
 #define FLUSH_MAX_CHARS             5                                       //max characters send when output buffer is flushed
 
 //CEC
-#define ENABLE_ASSERTION            1                                       //enable/disable assertion of data blocks send to the specified logical address
+#define ENABLE_ASSERTION            0                                       //enable/disable assertion of data blocks send to the specified logical address
 
 #define PHYSICAL_ADDRESS            0xFFFF
 #define LOGICAL_ADDRESS             0x4
 
-#define START_BIT_T1                ((3.7 * 1000) / TIMER1_TICK_VALUE)      //start bit: rising edge time t1 (in timer1 ticks => 3.7ms) (HDMI CEC specification p. 8)
-#define START_BIT_T2                ((4.5 * 1000) / TIMER1_TICK_VALUE)      //start bit: falling edge time t2 (in timer1 ticks => 4.5ms) (HDMI CEC specification p. 8)
-#define START_BIT_TOLERANCE         ((0.2 * 1000) / TIMER1_TICK_VALUE)      //start bit: rising/falling edge time tolerance (in timer1 ticks => 0.2ms) (HDMI CEC specification p. 8)
+#define START_BIT_T1                ((3.7 * 1000) / TIMER_TICK_VALUE)       //start bit: rising edge time t1 (in timer ticks => 3.7ms) (HDMI CEC specification p. 8)
+#define START_BIT_T2                ((4.5 * 1000) / TIMER_TICK_VALUE)       //start bit: falling edge time t2 (in timer ticks => 4.5ms) (HDMI CEC specification p. 8)
+#define START_BIT_TOLERANCE         ((0.2 * 1000) / TIMER_TICK_VALUE)       //start bit: rising/falling edge time tolerance (in timer ticks => 0.2ms) (HDMI CEC specification p. 8)
 
-#define DATA_BIT_LOGIC_0            ((1.5 * 1000) / TIMER1_TICK_VALUE)      //data bit: rising edge time (in timer1 ticks => 1.5ms) to represent a logic 0 (HDMI CEC specification p. 9)
-#define DATA_BIT_LOGIC_1            ((0.6 * 1000) / TIMER1_TICK_VALUE)      //data bit: rising edge time (in timer1 ticks => 0.6ms) to represent a logic 1 (HDMI CEC specification p. 9)
-#define DATA_BIT_FOLLOWING          ((2.4 * 1000) / TIMER1_TICK_VALUE)      //data bit: start time (in timer1 ticks => 2.4ms) for a following data bit (HDMI CEC specification p. 9)
-#define DATA_BIT_FOLLOWING_TIMEOUT  ((2.75 * 1000) / TIMER1_TICK_VALUE)     //data bit: latest time for start of a following data bit (in timer1 ticks => 2.75ms) (HDMI CEC specification p. 9)
-#define DATA_BIT_SAMPLE_TIME        ((1.05 * 1000) / TIMER1_TICK_VALUE)     //data bit: sample time (in timer1 ticks => 1.05ms) (HDMI CEC specification p. 9)
+#define DATA_BIT_LOGIC_0            ((1.5 * 1000) / TIMER_TICK_VALUE)       //data bit: rising edge time (in timer ticks => 1.5ms) to represent a logic 0 (HDMI CEC specification p. 9)
+#define DATA_BIT_LOGIC_1            ((0.6 * 1000) / TIMER_TICK_VALUE)       //data bit: rising edge time (in timer ticks => 0.6ms) to represent a logic 1 (HDMI CEC specification p. 9)
+#define DATA_BIT_FOLLOWING          ((2.4 * 1000) / TIMER_TICK_VALUE)       //data bit: start time (in timer ticks => 2.4ms) for a following data bit (HDMI CEC specification p. 9)
+#define DATA_BIT_FOLLOWING_TIMEOUT  ((2.75 * 1000) / TIMER_TICK_VALUE)      //data bit: latest time for start of a following data bit (in timer ticks => 2.75ms) (HDMI CEC specification p. 9)
+#define DATA_BIT_SAMPLE_TIME        ((1.05 * 1000) / TIMER_TICK_VALUE)      //data bit: sample time (in timer ticks => 1.05ms) (HDMI CEC specification p. 9)
 
-#define SFT_PRESENT_INITIATOR       ((7 * 2.4 * 1000) / TIMER1_TICK_VALUE)  //signal free time: present initiator sends another frame immediately after its previous frame (in timer1 ticks => 16.8ms) (HDMI CEC specification p. 15)
-#define SFT_NEW_INITIATOR           ((5 * 2.4 * 1000) / TIMER1_TICK_VALUE)  //signal free time: new initiator wants to send a frame (in timer1 ticks => 12ms) (HDMI CEC specification p. 15)
-#define SFT_RETRANSMISSION          ((3 * 2.4 * 1000) / TIMER1_TICK_VALUE)  //signal free time: retransmission after a previous unsuccessful attempt (in timer1 ticks => 7.2ms) (HDMI CEC specification p. 15)
+#define SFT_PRESENT_INITIATOR       ((7 * 2.4 * 1000) / TIMER_TICK_VALUE)   //signal free time: present initiator sends another frame immediately after its previous frame (in timer ticks => 16.8ms) (HDMI CEC specification p. 15)
+#define SFT_NEW_INITIATOR           ((5 * 2.4 * 1000) / TIMER_TICK_VALUE)   //signal free time: new initiator wants to send a frame (in timer ticks => 12ms) (HDMI CEC specification p. 15)
+#define SFT_RETRANSMISSION          ((3 * 2.4 * 1000) / TIMER_TICK_VALUE)   //signal free time: retransmission after a previous unsuccessful attempt (in timer ticks => 7.2ms) (HDMI CEC specification p. 15)
+
+//usb
+#define COMMAND_GET_MESSAGE         1
+#define COMMAND_PUT_MESSAGE         2
+#define COMMAND_GET_CONFIG          3
+#define COMMAND_PUT_CONFIG          4
 
 //macros
 #define debug(message) if (DEBUG_AVR_CEC) {uartSendString(message); uartSendChar('\n');}

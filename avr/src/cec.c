@@ -16,13 +16,13 @@
  */
 
 /**
- * @file cec_driver.c
+ * @file cec.c
  * @author Marcel
  * @brief
  *
  */
 
-#include "cec_driver.h"
+#include "cec.h"
 #include "defines.h"
 #include "peripherals.h"
 #include "utils.h"
@@ -170,13 +170,13 @@ static Level shouldLevel = HIGH;
 //==========================================
 // Definitions
 //==========================================
-void initDriver(void)
+void initCec(void)
 {
-    messageQueueRead = newQueueMessage(16);
-    messageQueueWrite = newQueueMessage(16);
+    messageQueueRead = newQueueMessage(32);
+    messageQueueWrite = newQueueMessage(32);
 }
 
-void processDriver()
+void processCec()
 {
     switch(currentState)
     {
@@ -192,7 +192,7 @@ void processDriver()
             message.opcode = 0x44;
             message.operands[0] = 0x43;
             message.size = 3;
-            putMessage(messageQueueWrite, message);
+            //putMessage(messageQueueWrite, message);
 
             setState(READ_START_BIT);
 
@@ -241,7 +241,7 @@ void processDriver()
                     if (readStartBitState == NOT_FOUND)                     //is t0?
                     {
                         readStartBitState = READ_T0;
-                        resetTimer1();
+                        resetTimer();
                     }
                     else if (readStartBitState == READ_T1)                  //is t2?
                     {
@@ -299,7 +299,7 @@ void processDriver()
             {
                 if (lastEdgeLevel == LOW)                                   //start of next data bit
                 {
-                    resetTimer1();
+                    resetTimer();
                     setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_A, false, false);
 
                     if (bitCounter == 9 && (messageBufferRead.header & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
@@ -394,7 +394,7 @@ void processDriver()
                 debug("e");
 
                 //TODO check for correct signal free time: SFT_PRESENT_INITIATOR, SFT_NEW_INITIATOR or SFT_RETRANSMISSION
-                resetTimer1();
+                resetTimer();
                 setTimeout(SFT_NEW_INITIATOR, TIMER_A, true, false);
             }
 
@@ -423,7 +423,7 @@ void processDriver()
                 debug("f");
 
                 low();
-                resetTimer1();
+                resetTimer();
 
                 setTimeout(START_BIT_T1, TIMER_A, false, false);
                 setTimeout(START_BIT_T2, TIMER_B, true, false);
@@ -677,16 +677,16 @@ void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
 {
     if (timer == TIMER_A)
     {
-        setTimer1CompareMatch(TIMER_A, ticks);
-        setTimer1CompareMatchInterrupt(TIMER_A, true);
+        setTimerCompareMatch(TIMER_A, ticks);
+        setTimerCompareMatchInterrupt(TIMER_A, true);
         timerOptionsA.reset = reset;
         timerOptionsA.repeat = repeat;
         events.triggeredTimerA = false;
     }
     else
     {
-        setTimer1CompareMatch(TIMER_B, ticks);
-        setTimer1CompareMatchInterrupt(TIMER_B, true);
+        setTimerCompareMatch(TIMER_B, ticks);
+        setTimerCompareMatchInterrupt(TIMER_B, true);
         timerOptionsB.reset = reset;
         timerOptionsB.repeat = repeat;
         events.triggeredTimerB = false;
@@ -695,7 +695,7 @@ void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
 
 void clearTimeout(Timer timer)
 {
-    setTimer1CompareMatchInterrupt(timer, false);
+    setTimerCompareMatchInterrupt(timer, false);
     if (timer == TIMER_A)
     {
         events.triggeredTimerA = false;
@@ -723,10 +723,10 @@ bool verifyLevel()
     return (shouldLevel == lastEdgeLevel);
 }
 
-void executeTimer1InputCapture()
+void executeTimerInputCapture()
 {
     lastEdgeLevel = getInputCaptureState();
-    lastEdgeTicks = getTimer1Ticks();
+    lastEdgeTicks = getTimerTicks();
     events.toggledEdge = true;
     setInfoLED(lastEdgeLevel);
 
@@ -740,31 +740,31 @@ void executeTimer1InputCapture()
     }
 }
 
-void executeTimer1ACompareMatch()
+void executeTimerACompareMatch()
 {
     if (timerOptionsA.reset)
     {
-        resetTimer1();
+        resetTimer();
     }
 
     if (!timerOptionsA.repeat)
     {
-        setTimer1CompareMatchInterrupt(TIMER_A, false);         //disable timer1 compare A interrupt
+        setTimerCompareMatchInterrupt(TIMER_A, false);         //disable timer1 compare A interrupt
     }
 
     events.triggeredTimerA = true;
 }
 
-void executeTimer1BCompareMatch()
+void executeTimerBCompareMatch()
 {
     if (timerOptionsB.reset)
     {
-        resetTimer1();
+        resetTimer();
     }
 
     if (!timerOptionsB.repeat)
     {
-        setTimer1CompareMatchInterrupt(TIMER_B, false);         //disable timer1 compare B interrupt
+        setTimerCompareMatchInterrupt(TIMER_B, false);         //disable timer1 compare B interrupt
     }
 
     events.triggeredTimerB = true;

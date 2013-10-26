@@ -3,12 +3,7 @@
 #include "dialogaction.h"
 #include <QStandardItemModel>
 #include <QDebug>
-#include "opendevice.h"
-
-#define  USB_CFG_VENDOR_ID       0xc0, 0x16 /* = 0x16c0 = 5824 = voti.nl */
-#define  USB_CFG_DEVICE_ID       0xdc, 0x05 /* = 0x05dc = 1500 */
-#define  USB_CFG_VENDOR_NAME     'o', 'b', 'd', 'e', 'v', '.', 'a', 't'
-#define  USB_CFG_DEVICE_NAME     'L', 'E', 'D', 'C', 'o', 'n', 't', 'r', 'o', 'l'
+#include "usbcontroller.h"
 
 WindowMain::WindowMain(QWidget *parent) : QMainWindow(parent), ui(new Ui::WindowMain)
 {
@@ -42,21 +37,6 @@ void WindowMain::setupUi()
     setupUiPageActions();
     setupUiPageSniffer();
     setupUiPageSettings();
-
-    usb_dev_handle *handle = NULL;
-    char vendor[] = {USB_CFG_VENDOR_NAME, 0};
-    char product[] = {USB_CFG_DEVICE_NAME, 0};
-    const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
-    int vid = rawVid[1] * 256 + rawVid[0];
-    int pid = rawPid[1] * 256 + rawPid[0];
-
-    if(usbOpenDevice(&handle, vid, vendor, pid, product, NULL, NULL, NULL) != 0) {
-        qDebug() <<"Could not find USB device \"" <<product <<"\" with vid=" <<vid <<" pid=" <<pid;
-    }
-    else
-    {
-        qDebug() <<"Found USB device \"" <<product <<"\" with vid=" <<vid <<" pid=" <<pid;
-    }
 }
 
 void WindowMain::setupUiPageConnection()
@@ -97,8 +77,21 @@ void WindowMain::selectionChangedMainMenu(QItemSelection selection)
     ui->stackedContent->setCurrentIndex(ui->mainMenu->currentIndex().row());
 }
 
+char dataBuffer[16];
 void WindowMain::clickedButtonAdd()
 {
-    DialogAction* dialogAction = new DialogAction();
-    dialogAction->open();
+    //DialogAction* dialogAction = new DialogAction();
+    //dialogAction->open();
+
+    if(UsbController::getInstance()->connect()) {
+        qDebug() <<"Found USB device";
+    }
+    else
+    {
+        qDebug() <<"Could not find USB device";
+    }
+
+    int num = UsbController::getInstance()->readData(1, dataBuffer, sizeof(dataBuffer));
+    char d[] = {0x05, 0x44, 0x43};
+    //UsbController::getInstance()->sendData(2, d, 3);
 }

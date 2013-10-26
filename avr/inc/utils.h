@@ -26,7 +26,7 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "cec_driver.h"
+#include "cec.h"
 #include <inttypes.h>
 #include <stdbool.h>
 
