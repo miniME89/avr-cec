@@ -1,15 +1,14 @@
 #include "usbcontroller.h"
 #include <QDebug>
 
-#define COMMAND_GET_MESSAGE		1
+#define COMMAND_GET_MESSAGE     1
 #define COMMAND_PUT_MESSAGE     2
 #define COMMAND_GET_CONFIG      3
 #define COMMAND_PUT_CONFIG      4
+#define COMMAND_GET_DEBUG       5
 
 int counterMessagesRead = 0;
-int counterMessagesSend = 0;
 int counterBytesRead = 0;
-int counterBytesSend = 0;
 
 void UsbController::WorkerGetMessage::run()
 {
@@ -21,6 +20,36 @@ void UsbController::WorkerGetMessage::run()
         readBytes = UsbController::getInstance()->readData(COMMAND_GET_MESSAGE, data, sizeof(data));
         if (readBytes > 0)
         {
+            QString dataStr = QString(QByteArray(data, readBytes).toHex()).toUpper();
+            for (int i = 2; i < dataStr.size(); i = i + 2)
+            {
+                dataStr.insert(i, ' ');
+                i++;
+            }
+
+            counterBytesRead += readBytes;
+            qDebug() <<"total bytes read: " <<counterBytesRead <<" message: " <<++counterMessagesRead <<" bytes read: "<<readBytes <<" data: " <<dataStr;
+            msleep(50);
+        }
+        else
+        {
+            msleep(100);
+        }
+    }
+}
+
+void UsbController::WorkerGetDebug::run()
+{
+    char data[256];
+    int readBytes;
+
+    while(true)
+    {
+        readBytes = UsbController::getInstance()->readData(COMMAND_GET_DEBUG, data, sizeof(data));
+        if (readBytes > 0)
+        {
+            data[readBytes] = '\0';
+            qDebug() <<"Debug: " <<QString(data);
             msleep(50);
         }
         else
@@ -124,6 +153,7 @@ bool UsbController::connect()
         deviceHandle = handle;
 
         startGetMessages();
+        startGetDebug();
 
         return true;
     }
@@ -158,23 +188,13 @@ int UsbController::readData(int requestId, char* data, int size)
         return 0;
     }
 
+    mutexReadWrite.lock();
     int num = usb_control_msg(deviceHandle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, requestId, 0, 0, data, size, 5000);
+    mutexReadWrite.unlock();
 
     if(num < 0)
     {
         qDebug() <<"USB error: " <<usb_strerror();
-    }
-    else if (num > 0)
-    {
-        QString dataStr = QString(QByteArray(data, num).toHex()).toUpper();
-        for (int i = 2; i < dataStr.size(); i = i + 2)
-        {
-            dataStr.insert(i, ' ');
-            i++;
-        }
-
-        counterBytesRead += num;
-        qDebug() <<"total bytes read: " <<counterBytesRead <<" message: " <<++counterMessagesRead <<" bytes read: "<<num <<" data: " <<dataStr;
     }
 
     return num;
@@ -187,23 +207,13 @@ int UsbController::sendData(int requestId, char* data, int size)
         return 0;
     }
 
+    mutexReadWrite.lock();
     int num = usb_control_msg(deviceHandle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, requestId, 0, 0, data, size, 5000);
+    mutexReadWrite.unlock();
 
     if(num < 0)
     {
         qDebug() <<"USB error: " <<usb_strerror();
-    }
-    else if (num > 0)
-    {
-        QString dataStr = QString(QByteArray(data, num).toHex()).toUpper();
-        for (int i = 2; i < dataStr.size(); i = i + 2)
-        {
-            dataStr.insert(i, ' ');
-            i++;
-        }
-
-        counterBytesSend += num;
-        qDebug() <<"total bytes send: " <<counterBytesSend <<" message: " <<++counterMessagesSend <<" bytes send: "<<num <<" data: " <<dataStr;
     }
 
     return num;
@@ -260,6 +270,16 @@ void UsbController::startGetMessages()
 }
 
 void UsbController::stopGetMessages()
+{
+
+}
+
+void UsbController::startGetDebug()
+{
+    workerGetDebug.start();
+}
+
+void UsbController::stopGetDebug()
 {
 
 }

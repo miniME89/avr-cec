@@ -25,15 +25,16 @@
 #include "utils.h"
 #include "defines.h"
 #include "peripherals.h"
+#include "debug.h"
 #include <stdlib.h>
 
 //==========================================
 // Definitions
 //==========================================
-CharQueue* newQueueChar(uint8_t size)
+QueueDebug* newQueueDebug(uint8_t size)
 {
-    CharQueue* queue = malloc(sizeof(CharQueue));
-    queue->data = malloc(size * sizeof(char));
+    QueueDebug* queue = malloc(sizeof(QueueDebug));
+    queue->data = malloc(size * sizeof(DebugData));
     queue->size = size;
     queue->read = 0;
     queue->write = 0;
@@ -41,7 +42,7 @@ CharQueue* newQueueChar(uint8_t size)
     return queue;
 }
 
-bool putChar(CharQueue* queue, char c)
+bool putDebug(QueueDebug* queue, DebugData data)
 {
     uint8_t next = ((queue->write + 1) & (queue->size - 1));
     
@@ -50,26 +51,26 @@ bool putChar(CharQueue* queue, char c)
         return false;
     }
     
-    queue->data[queue->write] = c;
+    queue->data[queue->write] = data;
     queue->write = next;
     
     return true;
 }
 
-bool getChar(CharQueue* queue, char* c)
+bool getDebug(QueueDebug* queue, DebugData* data)
 {
     if (queue->read == queue->write)
     {
         return false;
     }
     
-    *c = queue->data[queue->read];
+    *data = queue->data[queue->read];
     queue->read = (queue->read+1) & (queue->size - 1);
     
     return true;
 }
 
-bool isEmptyQueueChar(CharQueue* queue)
+bool isEmptyQueueDebug(QueueDebug* queue)
 {
     return (queue->read == queue->write);
 }
@@ -91,7 +92,7 @@ bool putMessage(MessageQueue* queue, Message message)
 
     if (queue->read == next)
     {
-        uartSendChar('O');
+        debug_string("O");
         return false;
     }
 

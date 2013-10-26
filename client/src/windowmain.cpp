@@ -22,6 +22,7 @@ void WindowMain::setupUi()
     model->appendRow(new QStandardItem(QIcon(":/icons/connection.png"), "Connection"));
     model->appendRow(new QStandardItem(QIcon(":/icons/actions.png"), "Actions"));
     model->appendRow(new QStandardItem(QIcon(":/icons/sniffer.png"), "Sniffer"));
+    model->appendRow(new QStandardItem(QIcon(":/icons/debug.png"), "Debug"));
     model->appendRow(new QStandardItem(QIcon(":/icons/settings.png"), "Settings"));
 
     for (int i = 0; i < model->rowCount(); i++) {
@@ -67,6 +68,11 @@ void WindowMain::setupUiPageSniffer()
     ui->tableSniffer->setModel(model);
 }
 
+void WindowMain::setupUiPageDebug()
+{
+
+}
+
 void WindowMain::setupUiPageSettings()
 {
 
@@ -91,7 +97,6 @@ void WindowMain::clickedButtonAdd()
         qDebug() <<"Could not find USB device";
     }
 
-    int num = UsbController::getInstance()->readData(1, dataBuffer, sizeof(dataBuffer));
-    char d[] = {0x05, 0x44, 0x43};
+    //char d[] = {0x05, 0x44, 0x43};
     //UsbController::getInstance()->sendData(2, d, 3);
 }

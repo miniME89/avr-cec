@@ -25,10 +25,11 @@
 #include "peripherals.h"
 #include "cec.h"
 #include "usb.h"
+#include "debug.h"
 
 int main(void)
 {
-    initUart();
+    initDebug();
     initTimer();
     initIO();
     initCec();
@@ -40,7 +41,5 @@ int main(void)
     {
         processCec();
         processUsb();
-
-        uartFlush();
     }
 }

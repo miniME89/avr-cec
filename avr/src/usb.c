@@ -24,14 +24,17 @@
 
 #include "usb.h"
 #include "defines.h"
+#include "debug.h"
 #include "cec.h"
 #include "usbdrv.h"
 #include <util/delay.h>
 
-static uchar messageBuffer[16];
 static Message messageRead;
 static Message messageWrite;
+static DebugData debugData;
 
+static char bufferData[16];
+static uint8_t readCommand;
 static uint8_t currentPosition;
 static uint8_t bytesRemaining;
 
@@ -66,39 +69,52 @@ usbMsgLen_t usbFunctionSetup(uchar setupData[8])
                 {
                     if (i == 0)
                     {
-                        messageBuffer[i] = messageRead.header;
+                        bufferData[i] = messageRead.header;
                     }
                     else if (i == 1)
                     {
-                        messageBuffer[i] = messageRead.opcode;
+                        bufferData[i] = messageRead.opcode;
                     }
                     else
                     {
-                        messageBuffer[i] = messageRead.operands[i - 2];
+                        bufferData[i] = messageRead.operands[i - 2];
                     }
                 }
-                usbMsgPtr = messageBuffer;
+                usbMsgPtr = bufferData;
 
                 return messageRead.size;
             }
 
-            break;
+        break;
         case COMMAND_PUT_MESSAGE:
             currentPosition = 0;
             bytesRemaining = rq->wLength.word;
+            readCommand = COMMAND_PUT_MESSAGE;
             return USB_NO_MSG;
 
-            break;
+        break;
         case COMMAND_GET_CONFIG:
 
-            return 0;
-
-            break;
+        break;
         case COMMAND_PUT_CONFIG:
+            currentPosition = 0;
+            bytesRemaining = rq->wLength.word;
+            readCommand = COMMAND_PUT_CONFIG;
+            return USB_NO_MSG;
 
-            return 0;
+        break;
+        case COMMAND_GET_DEBUG:
+            if (readDebug(&debugData))
+            {
+                for (uint8_t i = 0; i < debugData.size; i++)
+                {
+                    bufferData[i] = debugData.data[i];
+                }
+                usbMsgPtr = bufferData;
 
-            break;
+                return debugData.size;
+            }
+        break;
     }
 
     return 0;
@@ -113,30 +129,37 @@ uchar usbFunctionWrite(uchar *data, uchar len)
     bytesRemaining -= len;
     for(uint8_t i = 0; i < len; i++)
     {
-        messageBuffer[currentPosition++] = data[i];
+        bufferData[currentPosition++] = data[i];
     }
 
     bool complete = bytesRemaining == 0;
     if (complete)
     {
-        for (uint8_t i = 0; i < currentPosition; i++)
-        {
-            if (i == 0)
-            {
-                messageWrite.header = messageBuffer[i];
-            }
-            else if (i == 1)
-            {
-                messageWrite.opcode = messageBuffer[i];
-            }
-            else
-            {
-                messageWrite.operands[i - 2] = messageBuffer[i];
-            }
-        }
+        switch (readCommand) {
+            case COMMAND_PUT_MESSAGE:
+                for (uint8_t i = 0; i < currentPosition; i++)
+                {
+                    if (i == 0)
+                    {
+                        messageWrite.header = bufferData[i];
+                    }
+                    else if (i == 1)
+                    {
+                        messageWrite.opcode = bufferData[i];
+                    }
+                    else
+                    {
+                        messageWrite.operands[i - 2] = bufferData[i];
+                    }
+                }
 
-        messageWrite.size = currentPosition;
-        writeMessage(messageWrite);
+                messageWrite.size = currentPosition;
+                writeMessage(messageWrite);
+            break;
+            case COMMAND_PUT_CONFIG:
+                //...
+            break;
+        }
     }
 
     return complete;

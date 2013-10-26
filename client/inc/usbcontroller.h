@@ -13,15 +13,24 @@ private:
             void run();
     };
 
+    class WorkerGetDebug : public QThread
+    {
+        public:
+            void run();
+    };
+
     static UsbController* instance;
 
     WorkerGetMessage workerGetMessage;
+    WorkerGetDebug workerGetDebug;
 
     usb_dev_handle* deviceHandle;
     char vendorName[256];
     int vendorId;
     char deviceName[256];
     int deviceId;
+
+    QMutex mutexReadWrite;
 
     UsbController();
 
@@ -51,6 +60,9 @@ public:
 
     void startGetMessages();
     void stopGetMessages();
+
+    void startGetDebug();
+    void stopGetDebug();
 };
 
 #endif

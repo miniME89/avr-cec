@@ -22,6 +22,7 @@ private:
     void setupUiPageConnection();
     void setupUiPageActions();
     void setupUiPageSniffer();
+    void setupUiPageDebug();
     void setupUiPageSettings();
 
 private slots:

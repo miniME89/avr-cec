@@ -32,8 +32,6 @@
 //==========================================
 // Variables
 //==========================================
-static CharQueue* queueUartWrite;
-static CharQueue* queueUartRead;
 static uint8_t timerOverflowCounter = 0;
 
 //==========================================
@@ -203,86 +201,4 @@ ISR(TIMER1_COMPB_vect)
 ISR(TIMER1_OVF_vect)
 {
     timerOverflowCounter++;
-}
-
-//uart
-void initUart(void)
-{
-    unsigned int regubrr = UBRR_REGISTER;                   //set baud rate
-    UBRRH = (unsigned char) (regubrr >> 8);
-    UBRRL = (unsigned char) regubrr;
-
-    UCSRB = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);       //enable receiver + transmitter + receiver interrupt
-
-    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);     //set frame format: 8data
-
-    queueUartWrite = newQueueChar(2);
-    queueUartRead = newQueueChar(2);
-}
-
-void uartSendChar(char c)
-{
-    putChar(queueUartWrite, c);
-}
-
-void uartSendString(char* str)
-{
-    while (*str)
-    {
-        putChar(queueUartWrite, *str);
-        str++;
-    }
-}
-
-void uartFlush()
-{
-    char c;
-    uint8_t charCount = 0;
-
-    while (charCount < FLUSH_MAX_CHARS && !isEmptyQueueChar(queueUartWrite))
-    {
-        while (!(UCSRA & (1 << UDRE)))                      //wait till UART is ready
-        {
-            if (isEvent())                                  //cancel if there is a state machine event
-            {
-                return;
-            }
-        }
-
-        getChar(queueUartWrite, &c);
-
-        UDR = c;
-        charCount++;
-    }
-}
-
-bool uartReadChar(char* c)
-{
-    return getChar(queueUartRead, c);
-}
-
-bool uartReadString(char* str, uint8_t size)
-{
-    uint8_t count = 0;
-    while (getChar(queueUartRead, str) && count < size)
-    {
-        str++;
-    }
-
-    if (count > 0)
-    {
-        str++;
-        *str = '\0';
-
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-ISR(USART_RXC_vect)
-{
-    putChar(queueUartRead, UDR);
 }

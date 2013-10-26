@@ -16,43 +16,30 @@
  */
 
 /**
- * @file utils.h
+ * @file debug.h
  * @author Marcel
  * @brief
  *
- * TODO implement generic queue
  */
 
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef DEBUG_H_
+#define DEBUG_H_
 
-#include "cec.h"
-#include "debug.h"
 #include <inttypes.h>
 #include <stdbool.h>
 
-typedef struct QueueDebug {
-    DebugData* data;
+
+typedef struct DebugData
+{
+    char data[8];
     uint8_t size;
-    uint8_t read;
-    uint8_t write;
-} QueueDebug;
+} DebugData;
 
-typedef struct MessageQueue {
-    Message* data;
-    uint8_t size;
-    uint8_t read;
-    uint8_t write;
-} MessageQueue;
-
-QueueDebug* newQueueDebug(uint8_t size);
-bool putDebug(QueueDebug* queue, DebugData data);
-bool getDebug(QueueDebug* queue, DebugData* data);
-bool isEmptyQueueDebug(QueueDebug* buffer);
-
-MessageQueue* newQueueMessage(uint8_t size);
-bool putMessage(MessageQueue* queue, Message message);
-bool getMessage(MessageQueue* queue, Message* message);
-bool isEmptyQueueMessage(MessageQueue* buffer);
+void initDebug(void);
+void debug(DebugData data);
+void debug_char(uint8_t c);
+void debug_word(uint16_t w);
+void debug_string(char* str);
+bool readDebug(DebugData* data);
 
 #endif

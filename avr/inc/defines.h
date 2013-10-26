@@ -25,7 +25,7 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
-#define DEBUG_AVR_CEC               0
+#define DEBUG_AVR_CEC               1
 #define F_CLK                       16000000                                //CPU clock speed
 
 //IO
@@ -74,8 +74,6 @@
 #define COMMAND_PUT_MESSAGE         2
 #define COMMAND_GET_CONFIG          3
 #define COMMAND_PUT_CONFIG          4
-
-//macros
-#define debug(message) if (DEBUG_AVR_CEC) {uartSendString(message); uartSendChar('\n');}
+#define COMMAND_GET_DEBUG           5
 
 #endif

@@ -26,6 +26,7 @@
 #include "defines.h"
 #include "peripherals.h"
 #include "utils.h"
+#include "debug.h"
 
 //==========================================
 // Declarations
@@ -173,7 +174,7 @@ static Level shouldLevel = HIGH;
 void initCec(void)
 {
     messageQueueRead = newQueueMessage(32);
-    messageQueueWrite = newQueueMessage(32);
+    messageQueueWrite = newQueueMessage(4);
 }
 
 void processCec()
@@ -184,7 +185,7 @@ void processCec()
         case START:
             if (isEventTransistionIn())
             {
-                debug("a");
+                debug_string("ST A");
             }
 
             Message message;
@@ -198,26 +199,26 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug("a");
+                debug_string("ST A");
             }
         break;
         //============================================================================================================
         case EXIT:
             if (isEventTransistionIn())
             {
-                debug("b");
+                debug_string("ST B");
             }
 
             if (isEventTransistionOut())
             {
-                debug("b");
+                debug_string("ST B");
             }
         break;
         //============================================================================================================
         case READ_START_BIT:
             if (isEventTransistionIn())
             {
-                debug("c");
+                debug_string("ST C");
             }
 
             if (isEventInputToggled())
@@ -277,14 +278,14 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug("c");
+                debug_string("ST C");
             }
         break;
         //============================================================================================================
         case READ_DATA_BIT:
             if (isEventTransistionIn())
             {
-                debug("d");
+                debug_string("ST D");
 
                 messageBufferRead.size = 0;
                 bitCounter = 0;
@@ -373,14 +374,14 @@ void processCec()
             if (isEventTriggeredTimerB())
             {
                 #if ENABLE_ASSERTION == 1
-                    uartSendChar('R');
+                    debug_string("R");
                     high();                                                 //assert ACK bit (end)
                 #endif
             }
 
             if (isEventTransistionOut())
             {
-                debug("d");
+                debug_string("ST D");
 
                 messageBufferRead.size = 0;
                 bitCounter = 0;
@@ -391,7 +392,7 @@ void processCec()
         case WRITE_SIGNAL_FREE_TIME:
             if (isEventTransistionIn())
             {
-                debug("e");
+                debug_string("ST E");
 
                 //TODO check for correct signal free time: SFT_PRESENT_INITIATOR, SFT_NEW_INITIATOR or SFT_RETRANSMISSION
                 resetTimer();
@@ -403,7 +404,7 @@ void processCec()
                 clearTimeout(TIMER_A);
                 setState(READ_START_BIT);
                 events.toggledEdge = true;
-                uartSendChar('S');
+                debug_string("S");
             }
 
             if (isEventTriggeredTimerA())
@@ -413,14 +414,14 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug("e");
+                debug_string("ST E");
             }
         break;
         //============================================================================================================
         case WRITE_START_BIT:
             if (isEventTransistionIn())
             {
-                debug("f");
+                debug_string("ST F");
 
                 low();
                 resetTimer();
@@ -443,7 +444,7 @@ void processCec()
                     setState(READ_START_BIT);
                     events.toggledEdge = true;
 
-                    uartSendChar('L');
+                    debug_string("L");
                 }
             }
 
@@ -459,14 +460,14 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug("f");
+                debug_string("ST F");
             }
         break;
         //============================================================================================================
         case WRITE_DATA_BIT:
             if (isEventTransistionIn())
             {
-                debug("g");
+                debug_string("ST G");
 
                 bitCounter = 0;
                 byteCounter = 0;
@@ -571,7 +572,7 @@ void processCec()
                         setState(READ_START_BIT);
                         events.toggledEdge = true;
 
-                        uartSendChar('L');
+                        debug_string("L");
                     }
                 }
                 else                                                                        //don't verify ACK bit
@@ -579,14 +580,14 @@ void processCec()
                     if (lastEdgeLevel == HIGH)                                              //ACK bit not asserted by follower?
                     {
                         //TODO error handling: ACK bit not asserted by follower
-                        uartSendChar('E');
+                        debug_string("E");
                     }
                 }
             }
 
             if (isEventTransistionOut())
             {
-                debug("g");
+                debug_string("ST G");
 
                 messageBufferWrite.size = 0;
                 bitCounter = 0;
