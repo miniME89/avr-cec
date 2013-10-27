@@ -52,14 +52,14 @@ void setInterrupts(bool enable)
 //IO
 void initIO(void)
 {
-    INFO_LED_PORT_DDR |= (1 << INFO_LED_PIN);
+    __CONCAT(DDR, INFO_LED_PORT) |= (1 << INFO_LED_PIN);
     setDataDirectionCEC(INPUT);
     setInfoLED(HIGH);
 }
 
 Level getInputCaptureState()
 {
-    return (CEC_INPUT_CAPTURE_PORT & (1 << CEC_INPUT_CAPTURE_PIN));
+    return (__CONCAT(PIN, CEC_INPUT_CAPTURE_PORT) & (1 << CEC_INPUT_CAPTURE_PIN));
 }
 
 void setInputCaptureTriggerEdge(Edge edge)
@@ -78,11 +78,11 @@ void setInfoLED(Level level)
 {
     if (((1 << INFO_LED_PIN) & (level << INFO_LED_PIN)) > 0)
     {
-        INFO_LED_PORT |= (1 << INFO_LED_PIN);
+        __CONCAT(PORT, INFO_LED_PORT) |= (1 << INFO_LED_PIN);
     }
     else
     {
-        INFO_LED_PORT &= ~(1 << INFO_LED_PIN);
+        __CONCAT(PORT, INFO_LED_PORT) &= ~(1 << INFO_LED_PIN);
     }
 
 }
@@ -91,13 +91,13 @@ void setDataDirectionCEC(DataDirection direction)
 {
     if (direction == OUTPUT)
     {
-        CEC_BUS_PULL_PORT &= ~(1 << CEC_BUS_PULL_PIN);      //LOW
-        CEC_BUS_PULL_PORT_DDR |= (1 << CEC_BUS_PULL_PIN);   //output
+        __CONCAT(PORT, CEC_BUS_PULL_PORT) &= ~(1 << CEC_BUS_PULL_PIN);      //LOW
+        __CONCAT(DDR, CEC_BUS_PULL_PORT) |= (1 << CEC_BUS_PULL_PIN);   //output
     }
     else
     {
-        CEC_BUS_PULL_PORT &= ~(1 << CEC_BUS_PULL_PIN);      //disable pull up
-        CEC_BUS_PULL_PORT_DDR &= ~(1 << CEC_BUS_PULL_PIN);  //input
+        __CONCAT(PORT, CEC_BUS_PULL_PORT) &= ~(1 << CEC_BUS_PULL_PIN);      //disable pull up
+        __CONCAT(DDR, CEC_BUS_PULL_PORT) &= ~(1 << CEC_BUS_PULL_PIN);  //input
     }
 }
 

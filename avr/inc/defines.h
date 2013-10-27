@@ -30,15 +30,13 @@
 #define DEBUG_QUEUE_SIZE            8                                       //size of the debug data queue (Note: each queue item will allocate 10 bytes of memory on the heap, if debugging is enabled)
 
 //IO
-#define INFO_LED_PORT_DDR           DDRB
-#define INFO_LED_PORT               PORTB
+#define INFO_LED_PORT               B
 #define INFO_LED_PIN                PINB4
 
-#define CEC_BUS_PULL_PORT_DDR       DDRD
-#define CEC_BUS_PULL_PORT           PORTD
+#define CEC_BUS_PULL_PORT           D
 #define CEC_BUS_PULL_PIN            PIND6
 
-#define CEC_INPUT_CAPTURE_PORT      PINB
+#define CEC_INPUT_CAPTURE_PORT      B
 #define CEC_INPUT_CAPTURE_PIN       PINB0
 
 //Timer
