@@ -32,8 +32,7 @@
         <InterfaceProperties>
           <JtagEnableExtResetOnStartSession>false</JtagEnableExtResetOnStartSession>
         </InterfaceProperties>
-        <InterfaceName>
-        </InterfaceName>
+        <InterfaceName>ISP</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.simulator</ToolType>
       <ToolNumber>
@@ -174,6 +173,10 @@ cp main.elf ../avr-cec.elf
       <SubType>compile</SubType>
       <Link>inc\cec.h</Link>
     </Compile>
+    <Compile Include="..\..\..\avr\inc\debug.h">
+      <SubType>compile</SubType>
+      <Link>inc\debug.h</Link>
+    </Compile>
     <Compile Include="..\..\..\avr\inc\defines.h">
       <SubType>compile</SubType>
       <Link>inc\defines.h</Link>
@@ -209,6 +212,10 @@ cp main.elf ../avr-cec.elf
     <Compile Include="..\..\..\avr\src\cec.c">
       <SubType>compile</SubType>
       <Link>src\cec.c</Link>
+    </Compile>
+    <Compile Include="..\..\..\avr\src\debug.c">
+      <SubType>compile</SubType>
+      <Link>src\debug.c</Link>
     </Compile>
     <Compile Include="..\..\..\avr\src\main.c">
       <SubType>compile</SubType>

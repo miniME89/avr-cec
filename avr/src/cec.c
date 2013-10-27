@@ -155,10 +155,10 @@ static Events events = {.triggeredTimerA = false, .triggeredTimerB = false, .tog
 static TimerOptions timerOptionsA = {.repeat = false, .reset = false};
 static TimerOptions timerOptionsB = {.repeat = false, .reset = false};
 
-static MessageQueue* messageQueueRead;
-static MessageQueue* messageQueueWrite;
-static Message messageBufferWrite;
-static Message messageBufferRead;
+static Queue* messageQueueRead;
+static Queue* messageQueueWrite;
+static CECMessage messageBufferWrite;
+static CECMessage messageBufferRead;
 static uint8_t bitCounter;
 static uint8_t byteCounter;
 static Level EOM;
@@ -173,8 +173,8 @@ static Level shouldLevel = HIGH;
 //==========================================
 void initCec(void)
 {
-    messageQueueRead = newQueueMessage(32);
-    messageQueueWrite = newQueueMessage(4);
+    messageQueueRead = newQueue(CEC_READ_QUEUE_SIZE, sizeof(CECMessage));
+    messageQueueWrite = newQueue(CEC_WRITE_QUEUE_SIZE, sizeof(CECMessage));
 }
 
 void processCec()
@@ -185,13 +185,13 @@ void processCec()
         case START:
             if (isEventTransistionIn())
             {
-                debug_string("ST A");
+
             }
 
-            Message message;
-            message.header = 0x05;
-            message.opcode = 0x44;
-            message.operands[0] = 0x43;
+            CECMessage message;
+            message.data[0] = 0x05;
+            message.data[1] = 0x44;
+            message.data[2] = 0x43;
             message.size = 3;
             //putMessage(messageQueueWrite, message);
 
@@ -199,26 +199,26 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug_string("ST A");
+
             }
         break;
         //============================================================================================================
         case EXIT:
             if (isEventTransistionIn())
             {
-                debug_string("ST B");
+
             }
 
             if (isEventTransistionOut())
             {
-                debug_string("ST B");
+
             }
         break;
         //============================================================================================================
         case READ_START_BIT:
             if (isEventTransistionIn())
             {
-                debug_string("ST C");
+
             }
 
             if (isEventInputToggled())
@@ -249,7 +249,7 @@ void processCec()
                         if ((START_BIT_T2 + START_BIT_TOLERANCE) > lastEdgeTicks && lastEdgeTicks > (START_BIT_T2 - START_BIT_TOLERANCE))   //t2 valid time?
                         {
                             readStartBitState = READ_T2;
-                            //uartSendChar('F');
+                            //debug_char('F');
 
                             setState(READ_DATA_BIT);
                         }
@@ -265,7 +265,7 @@ void processCec()
             {
                 if (messageBufferWrite.size == 0)                           //no message in write buffer?
                 {
-                    if (getMessage(messageQueueWrite, &messageBufferWrite)) //get message from queue
+                    if (getQueue(messageQueueWrite, &messageBufferWrite)) //get message from queue
                     {
                         setState(WRITE_SIGNAL_FREE_TIME);
                     }
@@ -278,15 +278,13 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug_string("ST C");
+
             }
         break;
         //============================================================================================================
         case READ_DATA_BIT:
             if (isEventTransistionIn())
             {
-                debug_string("ST D");
-
                 messageBufferRead.size = 0;
                 bitCounter = 0;
                 byteCounter = 0;
@@ -303,7 +301,7 @@ void processCec()
                     resetTimer();
                     setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_A, false, false);
 
-                    if (bitCounter == 9 && (messageBufferRead.header & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
+                    if (bitCounter == 9 && (messageBufferRead.data[0] & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
                     {
                         #if ENABLE_ASSERTION == 1
                             low();                                          //assert ACK bit (start)
@@ -317,7 +315,7 @@ void processCec()
                     clearTimeout(TIMER_B);
 
                     messageBufferRead.size = byteCounter;
-                    putMessage(messageQueueRead, messageBufferRead);
+                    putQueue(messageQueueRead, &messageBufferRead);
 
                     readStartBitState = NOT_FOUND;
                     setState(READ_START_BIT);
@@ -329,18 +327,7 @@ void processCec()
             {
                 if (bitCounter <= 7)                                        //data bit
                 {
-                    if (byteCounter == 0)                                   //1 byte header
-                    {
-                        messageBufferRead.header = (messageBufferRead.header << 1) | lastEdgeLevel;
-                    }
-                    else if (byteCounter == 1)                              //0-1 byte opcode
-                    {
-                        messageBufferRead.opcode = (messageBufferRead.opcode << 1) | lastEdgeLevel;
-                    }
-                    else                                                    //0-14 bytes operands
-                    {
-                        messageBufferRead.operands[byteCounter - 2] = (messageBufferRead.operands[byteCounter - 2] << 1) | lastEdgeLevel;
-                    }
+                    messageBufferRead.data[byteCounter] = (messageBufferRead.data[byteCounter] << 1) | lastEdgeLevel;
                 }
 
                 if (bitCounter == 7)
@@ -381,8 +368,6 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug_string("ST D");
-
                 messageBufferRead.size = 0;
                 bitCounter = 0;
                 byteCounter = 0;
@@ -392,8 +377,6 @@ void processCec()
         case WRITE_SIGNAL_FREE_TIME:
             if (isEventTransistionIn())
             {
-                debug_string("ST E");
-
                 //TODO check for correct signal free time: SFT_PRESENT_INITIATOR, SFT_NEW_INITIATOR or SFT_RETRANSMISSION
                 resetTimer();
                 setTimeout(SFT_NEW_INITIATOR, TIMER_A, true, false);
@@ -414,15 +397,13 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug_string("ST E");
+
             }
         break;
         //============================================================================================================
         case WRITE_START_BIT:
             if (isEventTransistionIn())
             {
-                debug_string("ST F");
-
                 low();
                 resetTimer();
 
@@ -460,15 +441,13 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug_string("ST F");
+
             }
         break;
         //============================================================================================================
         case WRITE_DATA_BIT:
             if (isEventTransistionIn())
             {
-                debug_string("ST G");
-
                 bitCounter = 0;
                 byteCounter = 0;
 
@@ -499,18 +478,7 @@ void processCec()
                         setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample information bit (for verification)
 
                         bool dataBit;
-                        if (byteCounter == 0)                                               //1 byte header
-                        {
-                            dataBit = (messageBufferWrite.header & (0b10000000 >> bitCounter)) > 0;
-                        }
-                        else if (byteCounter == 1)                                          //0-1 byte opcode
-                        {
-                            dataBit = (messageBufferWrite.opcode & (0b10000000 >> bitCounter)) > 0;
-                        }
-                        else                                                                //0-14 bytes operands
-                        {
-                            dataBit = (messageBufferWrite.operands[byteCounter - 2] & (0b10000000 >> bitCounter)) > 0;
-                        }
+                        dataBit = (messageBufferWrite.data[byteCounter] & (0b10000000 >> bitCounter)) > 0;
 
                         if (dataBit)                                                        //logic 1
                         {
@@ -587,8 +555,6 @@ void processCec()
 
             if (isEventTransistionOut())
             {
-                debug_string("ST G");
-
                 messageBufferWrite.size = 0;
                 bitCounter = 0;
                 byteCounter = 0;
@@ -602,11 +568,6 @@ void setState(State state)
     currentState = state;
     events.transistionIn = true;
     events.transistionOut = true;
-}
-
-bool isEvent(void)
-{
-    return (events.triggeredTimerA || events.triggeredTimerB || events.toggledEdge || events.transistionIn || events.transistionOut);
 }
 
 bool isEventTriggeredTimerA()
@@ -664,14 +625,14 @@ bool isEventTransistionOut()
     return false;
 }
 
-bool writeMessage(Message message)
+bool writeCECMessage(CECMessage* message)
 {
-    return putMessage(messageQueueWrite, message);
+    return putQueue(messageQueueWrite, message);
 }
 
-bool readMessage(Message* message)
+bool readCECMessage(CECMessage* message)
 {
-    return getMessage(messageQueueRead, message);
+    return getQueue(messageQueueRead, message);
 }
 
 void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)

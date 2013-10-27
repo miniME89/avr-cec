@@ -34,6 +34,7 @@ OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 DUDE = avrdude
 NM = avr-nm
+SIZE = avr-size
 
 # Compiler flags
 CFLAGS = -g$(DEBUG)
@@ -65,7 +66,7 @@ OBJECTS = $(SOURCES_C:%.c=$(BUILDDIR)/%.o) $(SOURCES_ASM:%.asm=$(BUILDDIR)/%.o)
 
 #====================================== Targets =======================================
 # Default
-all: elf hex eep lss sym
+all: elf hex eep lss sym size
 
 elf: $(BUILDDIR)/$(TARGET).elf
 
@@ -118,6 +119,9 @@ $(BUILDDIR)/%.o: %.S
 	@echo
 	@echo Create sym output:
 	$(NM) -n $< > $@
+
+size:
+	@if test -f $(BUILDDIR)/$(TARGET).elf; then echo; $(SIZE) --mcu=$(MCU) --format=avr $(BUILDDIR)/$(TARGET).elf; 2>/dev/null; echo; fi
 
 # Clean
 clean:

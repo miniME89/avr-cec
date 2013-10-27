@@ -25,7 +25,14 @@
 #ifndef USB_H_
 #define USB_H_
 
+/**
+ * Initialize usb.
+ */
 void initUsb(void);
+
+/**
+ * Process usb actions.
+ */
 void processUsb(void);
 
 #endif

@@ -29,8 +29,8 @@
 #include "usbdrv.h"
 #include <util/delay.h>
 
-static Message messageRead;
-static Message messageWrite;
+static CECMessage messageRead;
+static CECMessage messageWrite;
 static DebugData debugData;
 
 static char bufferData[16];
@@ -63,24 +63,13 @@ usbMsgLen_t usbFunctionSetup(uchar setupData[8])
     switch (rq->bRequest)
     {
         case COMMAND_GET_MESSAGE:
-            if (readMessage(&messageRead))
+            if (readCECMessage(&messageRead))
             {
                 for (uint8_t i = 0; i < messageRead.size; i++)
                 {
-                    if (i == 0)
-                    {
-                        bufferData[i] = messageRead.header;
-                    }
-                    else if (i == 1)
-                    {
-                        bufferData[i] = messageRead.opcode;
-                    }
-                    else
-                    {
-                        bufferData[i] = messageRead.operands[i - 2];
-                    }
+                    bufferData[i] = messageRead.data[i];
                 }
-                usbMsgPtr = bufferData;
+                usbMsgPtr = (usbMsgPtr_t)bufferData;
 
                 return messageRead.size;
             }
@@ -104,13 +93,13 @@ usbMsgLen_t usbFunctionSetup(uchar setupData[8])
 
         break;
         case COMMAND_GET_DEBUG:
-            if (readDebug(&debugData))
+            if (readDebugData(&debugData))
             {
                 for (uint8_t i = 0; i < debugData.size; i++)
                 {
                     bufferData[i] = debugData.data[i];
                 }
-                usbMsgPtr = bufferData;
+                usbMsgPtr = (usbMsgPtr_t)bufferData;
 
                 return debugData.size;
             }
@@ -139,22 +128,11 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             case COMMAND_PUT_MESSAGE:
                 for (uint8_t i = 0; i < currentPosition; i++)
                 {
-                    if (i == 0)
-                    {
-                        messageWrite.header = bufferData[i];
-                    }
-                    else if (i == 1)
-                    {
-                        messageWrite.opcode = bufferData[i];
-                    }
-                    else
-                    {
-                        messageWrite.operands[i - 2] = bufferData[i];
-                    }
+                    messageWrite.data[i] = bufferData[i];
                 }
 
                 messageWrite.size = currentPosition;
-                writeMessage(messageWrite);
+                writeCECMessage(&messageWrite);
             break;
             case COMMAND_PUT_CONFIG:
                 //...

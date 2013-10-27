@@ -31,28 +31,18 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-typedef struct QueueDebug {
-    DebugData* data;
+typedef struct Queue {
+    void** data;
     uint8_t size;
+    uint8_t sizeEach;
     uint8_t read;
     uint8_t write;
-} QueueDebug;
+} Queue;
 
-typedef struct MessageQueue {
-    Message* data;
-    uint8_t size;
-    uint8_t read;
-    uint8_t write;
-} MessageQueue;
+Queue* newQueue(uint8_t size, uint8_t sizeEach);
+bool putQueue(Queue* queue, void* data);
+bool getQueue(Queue* queue, void* data);
+bool isEmptyQueue(Queue* queue);
 
-QueueDebug* newQueueDebug(uint8_t size);
-bool putDebug(QueueDebug* queue, DebugData data);
-bool getDebug(QueueDebug* queue, DebugData* data);
-bool isEmptyQueueDebug(QueueDebug* buffer);
-
-MessageQueue* newQueueMessage(uint8_t size);
-bool putMessage(MessageQueue* queue, Message message);
-bool getMessage(MessageQueue* queue, Message* message);
-bool isEmptyQueueMessage(MessageQueue* buffer);
 
 #endif

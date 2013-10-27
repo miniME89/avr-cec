@@ -27,61 +27,52 @@
 #include "utils.h"
 
 #if DEBUG_AVR_CEC == 1
-    static QueueDebug* debugQueue;
+static Queue* debugDataQueue;
+
+//==========================================
+// Definitions
+//==========================================
+void _initDebug()
+{
+    debugDataQueue = newQueue(DEBUG_QUEUE_SIZE, sizeof(DebugData));
+}
+
+void _debug(DebugData* data)
+{
+
+    putQueue(debugDataQueue, data);
+
+}
+
+void _debug_char(uint8_t c)
+{
+    DebugData data;
+    data.data[0] = c;
+    data.size = 1;
+    putQueue(debugDataQueue, &data);
+}
+
+void _debug_word(uint16_t w)
+{
+    DebugData data;
+    data.data[0] = (uint8_t) (w >> 8);
+    data.data[1] = (uint8_t) w;
+    data.size = 2;
+    putQueue(debugDataQueue, &data);
+}
+
+void _debug_string(char* str)
+{
+    DebugData data;
+    for (data.size = 0; *str; str++, data.size++)
+    {
+        data.data[data.size] = *str;
+    }
+    putQueue(debugDataQueue, &data);
+}
+
+bool _readDebugData(DebugData* data)
+{
+    return getQueue(debugDataQueue, data);
+}
 #endif
-
-void initDebug()
-{
-    #if DEBUG_AVR_CEC == 1
-        debugQueue = newQueueDebug(16);
-    #endif
-}
-
-void debug(DebugData data)
-{
-    #if DEBUG_AVR_CEC == 1
-        putDebug(debugQueue, data);
-    #endif
-}
-
-void debug_char(uint8_t c)
-{
-    #if DEBUG_AVR_CEC == 1
-        DebugData data;
-        data.data[0] = c;
-        data.size = 1;
-        putDebug(debugQueue, data);
-    #endif
-}
-
-void debug_word(uint16_t w)
-{
-    #if DEBUG_AVR_CEC == 1
-        DebugData data;
-        data.data[0] = (uint8_t)(w >> 8);
-        data.data[1] = (uint8_t)w;
-        data.size = 2;
-        putDebug(debugQueue, data);
-    #endif
-}
-
-void debug_string(char* str)
-{
-    #if DEBUG_AVR_CEC == 1
-        DebugData data;
-        for (data.size = 0; *str; str++, data.size++)
-        {
-            data.data[data.size] = *str;
-        }
-        putDebug(debugQueue, data);
-    #endif
-}
-
-bool readDebug(DebugData* data)
-{
-    #if DEBUG_AVR_CEC == 1
-        return getDebug(debugQueue, data);
-    #else
-        return false;
-    #endif
-}

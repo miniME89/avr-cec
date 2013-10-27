@@ -70,12 +70,4 @@ uint8_t getTimerOverflowCounter(void);
 void setTimerCompareMatch(Timer timer, uint16_t ticks);
 void setTimerCompareMatchInterrupt(Timer timer, bool enable);
 
-//UART
-void initUart(void);
-void uartSendChar(char c);
-void uartSendString(char* str);
-void uartFlush(void);
-bool uartReadChar(char* c);
-bool uartReadString(char* str, uint8_t size);
-
 #endif

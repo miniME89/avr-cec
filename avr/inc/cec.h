@@ -30,14 +30,15 @@
 
 /**
  * CEC Message
+ * data[0] = header
+ * data[1] = opcode
+ * data[2-14] = operands
  */
-typedef struct Message
+typedef struct CECMessage
 {
-    char header;
-    char opcode;
-    char operands[14];
+    char data[16];
     uint8_t size;
-} Message;
+} CECMessage;
 
 /**
  * Initialize the driver
@@ -50,25 +51,18 @@ void initCec(void);
 void processCec(void);
 
 /**
- * Check whether there are events to process of the internal state machine. If this is the case, any delaying actions of
- * other modules should be canceled.
- * @return Returns true if there are unprocessed events.
- */
-bool isEvent(void);
-
-/**
  * Write a CEC message on the bus. The message will be put into the send queue and processed later.
  * @param message The CEC message to write.
  * @return Returns true if the message was successful put into a send queue.
  */
-bool writeMessage(Message message);
+bool writeCECMessage(CECMessage* message);
 
 /**
  * Read the next message from the receive queue of messages read from the bus.
  * @param message A pointer to a Message where the data should be copied.
  * @return Returns true if the message was successful read from the queue. Returns false if the receive queue is empty.
  */
-bool readMessage(Message* message);
+bool readCECMessage(CECMessage* message);
 
 /**
  * Called when input capture interrupt is executed.

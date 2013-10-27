@@ -29,7 +29,7 @@ void UsbController::WorkerGetMessage::run()
 
             counterBytesRead += readBytes;
             qDebug() <<"total bytes read: " <<counterBytesRead <<" message: " <<++counterMessagesRead <<" bytes read: "<<readBytes <<" data: " <<dataStr;
-            msleep(50);
+            msleep(40);
         }
         else
         {
@@ -50,7 +50,7 @@ void UsbController::WorkerGetDebug::run()
         {
             data[readBytes] = '\0';
             qDebug() <<"Debug: " <<QString(data);
-            msleep(50);
+            msleep(40);
         }
         else
         {

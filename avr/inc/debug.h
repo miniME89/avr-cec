@@ -25,21 +25,72 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
+#include "defines.h"
 #include <inttypes.h>
 #include <stdbool.h>
 
-
+/**
+ * Debug data.
+ */
 typedef struct DebugData
 {
     char data[8];
     uint8_t size;
 } DebugData;
 
-void initDebug(void);
-void debug(DebugData data);
-void debug_char(uint8_t c);
-void debug_word(uint16_t w);
-void debug_string(char* str);
-bool readDebug(DebugData* data);
+#if DEBUG_AVR_CEC == 1
+/**
+ * Initialize debug. Don't use this function, use the macro "initDebug" instead.
+ */
+void _initDebug();
+
+/**
+ * Add debug data. Don't use this function, use the macro "debug" instead.
+ * @param data
+ */
+void _debug(DebugData* data);
+
+/**
+ * Add debug char (1 byte). Don't use this function, use the macro "debug_char" instead.
+ * @param c
+ */
+void _debug_char(uint8_t c);
+
+/**
+ * Add debug word (2 bytes). Don't use this function, use the macro "debug_word" instead.
+ * @param w
+ */
+void _debug_word(uint16_t w);
+
+/**
+ * Add debug string. Don't use this function, use the macro "debug_string" instead.
+ * @param str String of max 8 characters.
+ */
+void _debug_string(char* str);
+
+/**
+ * Get the next debug data from the debug queue. Don't use this function, use the macro "readDebugData" instead.
+ * @param data
+ * @return
+ */
+bool _readDebugData(DebugData* data);
+#endif
+
+//macros
+#if DEBUG_AVR_CEC == 1
+    #define initDebug() _initDebug()
+    #define debug(data) _debug(data)
+    #define debug_char(c) _debug_char(c)
+    #define debug_word(w) _debug_word(w)
+    #define debug_string(str) _debug_string(str)
+    #define readDebugData(data) _readDebugData(data)
+#else
+    #define initDebug()
+    #define debug(data)
+    #define debug_char(c)
+    #define debug_word(w)
+    #define debug_string(str)
+    #define readDebugData(data) false
+#endif
 
 #endif

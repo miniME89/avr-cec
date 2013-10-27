@@ -31,91 +31,71 @@
 //==========================================
 // Definitions
 //==========================================
-QueueDebug* newQueueDebug(uint8_t size)
+Queue* newQueue(uint8_t size, uint8_t sizeEach)
 {
-    QueueDebug* queue = malloc(sizeof(QueueDebug));
-    queue->data = malloc(size * sizeof(DebugData));
+    Queue* queue = malloc(sizeof(Queue));
+    queue->data = malloc(size * sizeof(void*));
     queue->size = size;
+    queue->sizeEach = sizeEach;
     queue->read = 0;
     queue->write = 0;
-    
-    return queue;
-}
 
-bool putDebug(QueueDebug* queue, DebugData data)
-{
-    uint8_t next = ((queue->write + 1) & (queue->size - 1));
-    
-    if (queue->read == next)
+    for (uint8_t i = 0; i < size; i++)
     {
-        return false;
+        queue->data[i] = malloc(sizeEach);
+        if (queue->data[i] == NULL)
+        {
+            return NULL;
+        }
     }
-    
-    queue->data[queue->write] = data;
-    queue->write = next;
-    
-    return true;
-}
-
-bool getDebug(QueueDebug* queue, DebugData* data)
-{
-    if (queue->read == queue->write)
-    {
-        return false;
-    }
-    
-    *data = queue->data[queue->read];
-    queue->read = (queue->read+1) & (queue->size - 1);
-    
-    return true;
-}
-
-bool isEmptyQueueDebug(QueueDebug* queue)
-{
-    return (queue->read == queue->write);
-}
-
-MessageQueue* newQueueMessage(uint8_t size)
-{
-    MessageQueue* queue = malloc(sizeof(MessageQueue));
-    queue->data = malloc(size * sizeof(Message));
-    queue->size = size;
-    queue->read = 0;
-    queue->write = 0;
 
     return queue;
 }
 
-bool putMessage(MessageQueue* queue, Message message)
+bool putQueue(Queue* queue, void* data)
 {
     uint8_t next = ((queue->write + 1) & (queue->size - 1));
 
     if (queue->read == next)
     {
-        debug_string("O");
+        debug_string("OV");
         return false;
     }
 
-    queue->data[queue->write] = message;
+    char* dst = queue->data[queue->write];
+    char* src = data;
+    uint8_t num = queue->sizeEach;
+    while (num--)
+    {
+        *dst++ = *src++;
+    }
+
     queue->write = next;
 
     return true;
 }
 
-bool getMessage(MessageQueue* queue, Message* message)
+bool getQueue(Queue* queue, void* data)
 {
     if (queue->read == queue->write)
     {
         return false;
     }
 
-    *message = queue->data[queue->read];
+    char* dst = data;
+    char* src = queue->data[queue->read];
+    uint8_t num = queue->sizeEach;
+    while (num--)
+    {
+        *dst++ = *src++;
+    }
+
     queue->read = (queue->read+1) & (queue->size - 1);
 
     return true;
 }
 
-bool isEmptyQueueMessage(MessageQueue* queue)
+bool isEmptyQueue(Queue* queue)
 {
     return (queue->read == queue->write);
 }

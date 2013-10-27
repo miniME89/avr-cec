@@ -25,8 +25,9 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
-#define DEBUG_AVR_CEC               1
-#define F_CLK                       16000000                                //CPU clock speed
+//Debug
+#define DEBUG_AVR_CEC               1                                       //enable/disable debugging
+#define DEBUG_QUEUE_SIZE            8                                       //size of the debug data queue (Note: each queue item will allocate 10 bytes of memory on the heap, if debugging is enabled)
 
 //IO
 #define INFO_LED_PORT_DDR           DDRB
@@ -41,15 +42,13 @@
 #define CEC_INPUT_CAPTURE_PIN       PINB0
 
 //Timer
-#define TIMER_PRESCALER            64                                       //prescaler (1, 8, 64, 256 or 1024)
-#define TIMER_TICK_VALUE           (1000000 / (F_CLK/TIMER_PRESCALER))      //time value of 1 timer tick (in us)
-
-//UART
-#define BAUD                        19200                                   //baud rate
-#define UBRR_REGISTER               (F_CLK/16/BAUD-1)                       //content of UBRR register
-#define FLUSH_MAX_CHARS             5                                       //max characters send when output buffer is flushed
+#define TIMER_PRESCALER             64                                      //prescaler (1, 8, 64, 256 or 1024)
+#define TIMER_TICK_VALUE            (1000000 / (F_CPU/TIMER_PRESCALER))     //time value of 1 timer tick (in us)
 
 //CEC
+#define CEC_READ_QUEUE_SIZE         8                                       //size of the cec messages read queue (Note: each queue item will allocate 18 bytes of memory on the heap)
+#define CEC_WRITE_QUEUE_SIZE        8                                       //size of the cec messages write queue (Note: each queue item will allocate 18 bytes of memory on the heap)
+
 #define ENABLE_ASSERTION            0                                       //enable/disable assertion of data blocks send to the specified logical address
 
 #define PHYSICAL_ADDRESS            0xFFFF
