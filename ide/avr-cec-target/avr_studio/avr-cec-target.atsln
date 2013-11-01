@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Atmel Studio Solution File, Format Version 11.00
-Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "avr-cec", "avr-cec.cproj", "{1C9F1E36-A65A-4D67-AFAE-C7B49BA2A5C3}"
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "avr-cec-target", "avr-cec-target.cproj", "{1C9F1E36-A65A-4D67-AFAE-C7B49BA2A5C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

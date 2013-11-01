@@ -26,9 +26,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>avr</name>
+			<name>avr-cec-target</name>
 			<type>2</type>
-			<locationURI>PARENT-3-PROJECT_LOC/avr</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/avr-cec-target</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

@@ -13,7 +13,7 @@
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
     <AssemblyName>avr-cec</AssemblyName>
-    <Name>avr-cec</Name>
+    <Name>avr-cec-target</Name>
     <RootNamespace>avr-cec</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
@@ -43,7 +43,7 @@
       <ToolOptions>
         <InterfaceProperties>
           <JtagEnableExtResetOnStartSession>false</JtagEnableExtResetOnStartSession>
-          <IspClock>125000</IspClock>
+          <IspClock>126000</IspClock>
         </InterfaceProperties>
         <InterfaceName>ISP</InterfaceName>
       </ToolOptions>
@@ -81,13 +81,13 @@
       </AvrGcc>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <OutputDirectory>..\..\..\avr\</OutputDirectory>
+    <OutputDirectory>..\..\..\avr-cec-target\</OutputDirectory>
     <BuildTarget>all</BuildTarget>
     <CleanTarget>clean</CleanTarget>
-    <ExternalMakeFilePath>..\..\..\avr\Makefile</ExternalMakeFilePath>
+    <ExternalMakeFilePath>..\..\..\avr-cec-target\Makefile</ExternalMakeFilePath>
     <PostBuildEvent>pwd
 cd bin
-cp main.elf ../avr-cec.elf
+cp main.elf ../avr-cec-target.elf
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -120,13 +120,13 @@ cp main.elf ../avr-cec.elf
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <BuildTarget>all</BuildTarget>
     <CleanTarget>clean</CleanTarget>
-    <ExternalMakeFilePath>..\..\..\avr\Makefile</ExternalMakeFilePath>
-    <OutputDirectory>..\..\..\avr\</OutputDirectory>
+    <ExternalMakeFilePath>..\..\..\avr-cec-target\Makefile</ExternalMakeFilePath>
+    <OutputDirectory>..\..\..\avr-cec-target\</OutputDirectory>
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>pwd
 cd bin
-cp main.elf ../avr-cec.elf
+cp main.elf ../avr-cec-target.elf
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Sim' ">
@@ -159,89 +159,89 @@ cp main.elf ../avr-cec.elf
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <BuildTarget>all</BuildTarget>
     <CleanTarget>clean</CleanTarget>
-    <ExternalMakeFilePath>..\..\..\avr\Makefile</ExternalMakeFilePath>
-    <OutputDirectory>E..\..\..\avr\</OutputDirectory>
+    <ExternalMakeFilePath>..\..\..\avr-cec-target\Makefile</ExternalMakeFilePath>
+    <OutputDirectory>E..\..\..\avr-cec-target\</OutputDirectory>
     <PreBuildEvent />
     <PostBuildEvent>pwd
 cd bin
-cp main.elf ../avr-cec.elf
+cp main.elf ../avr-cec-target.elf
 </PostBuildEvent>
     <OutputPath>bin\Sim\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\avr\inc\cec.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\cec.h">
       <SubType>compile</SubType>
       <Link>inc\cec.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\debug.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\debug.h">
       <SubType>compile</SubType>
       <Link>inc\debug.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\defines.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\defines.h">
       <SubType>compile</SubType>
       <Link>inc\defines.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\peripherals.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\peripherals.h">
       <SubType>compile</SubType>
       <Link>inc\peripherals.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\usb.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\usb.h">
       <SubType>compile</SubType>
       <Link>inc\usb.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\usbdrv\oddebug.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\usbdrv\oddebug.h">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\oddebug.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\usbdrv\usbconfig.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\usbdrv\usbconfig.h">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbconfig.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\usbdrv\usbdrv.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrv.h">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrv.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\usbdrv\usbportability.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\usbdrv\usbportability.h">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbportability.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\inc\utils.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\utils.h">
       <SubType>compile</SubType>
       <Link>inc\utils.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\cec.c">
+    <Compile Include="..\..\..\avr-cec-target\src\cec.c">
       <SubType>compile</SubType>
       <Link>src\cec.c</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\debug.c">
+    <Compile Include="..\..\..\avr-cec-target\src\debug.c">
       <SubType>compile</SubType>
       <Link>src\debug.c</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\main.c">
+    <Compile Include="..\..\..\avr-cec-target\src\main.c">
       <SubType>compile</SubType>
       <Link>src\main.c</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\peripherals.c">
+    <Compile Include="..\..\..\avr-cec-target\src\peripherals.c">
       <SubType>compile</SubType>
       <Link>src\peripherals.c</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\usb.c">
+    <Compile Include="..\..\..\avr-cec-target\src\usb.c">
       <SubType>compile</SubType>
       <Link>src\usb.c</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\usbdrv\oddebug.c">
+    <Compile Include="..\..\..\avr-cec-target\src\usbdrv\oddebug.c">
       <SubType>compile</SubType>
       <Link>src\usbdrv\oddebug.c</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\usbdrv\usbdrv.c">
+    <Compile Include="..\..\..\avr-cec-target\src\usbdrv\usbdrv.c">
       <SubType>compile</SubType>
       <Link>src\usbdrv\usbdrv.c</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\usbdrv\usbdrvasm.S">
+    <Compile Include="..\..\..\avr-cec-target\src\usbdrv\usbdrvasm.S">
       <SubType>compile</SubType>
       <Link>src\usbdrv\usbdrvasm.S</Link>
     </Compile>
-    <Compile Include="..\..\..\avr\src\utils.c">
+    <Compile Include="..\..\..\avr-cec-target\src\utils.c">
       <SubType>compile</SubType>
       <Link>src\utils.c</Link>
     </Compile>
@@ -253,39 +253,39 @@ cp main.elf ../avr-cec.elf
     <Folder Include="src\usbdrv" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\avr\inc\usbdrv\asmcommon.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\asmcommon.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\asmcommon.inc</Link>
     </None>
-    <None Include="..\..\..\avr\inc\usbdrv\usbdrvasm12.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrvasm12.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrvasm12.inc</Link>
     </None>
-    <None Include="..\..\..\avr\inc\usbdrv\usbdrvasm128.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrvasm128.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrvasm128.inc</Link>
     </None>
-    <None Include="..\..\..\avr\inc\usbdrv\usbdrvasm15.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrvasm15.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrvasm15.inc</Link>
     </None>
-    <None Include="..\..\..\avr\inc\usbdrv\usbdrvasm16.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrvasm16.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrvasm16.inc</Link>
     </None>
-    <None Include="..\..\..\avr\inc\usbdrv\usbdrvasm165.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrvasm165.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrvasm165.inc</Link>
     </None>
-    <None Include="..\..\..\avr\inc\usbdrv\usbdrvasm18-crc.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrvasm18-crc.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrvasm18-crc.inc</Link>
     </None>
-    <None Include="..\..\..\avr\inc\usbdrv\usbdrvasm20.inc">
+    <None Include="..\..\..\avr-cec-target\inc\usbdrv\usbdrvasm20.inc">
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbdrvasm20.inc</Link>
     </None>
-    <None Include="..\..\..\avr\src\usbdrv\usbdrvasm.asm">
+    <None Include="..\..\..\avr-cec-target\src\usbdrv\usbdrvasm.asm">
       <SubType>compile</SubType>
       <Link>src\usbdrv\usbdrvasm.asm</Link>
     </None>
