@@ -8,28 +8,31 @@ TEMPLATE = app
 
 SOURCES += src/main.cpp \
     src/windowmain.cpp \
-    src/dialogaction.cpp \
-    src/usbcontroller.cpp
+    src/dialogaction.cpp
 
 HEADERS  += inc/windowmain.h \
-    inc/dialogaction.h \
-    inc/usbcontroller.h
+    inc/dialogaction.h
 
 FORMS    += ui/windowmain.ui \
     ui/dialogaction.ui
 
 INCLUDEPATH += inc
 INCLUDEPATH += ..
+INCLUDEPATH += ../avr-cec-lib/inc
+
+LIBS += -L$$PWD/../avr-cec-lib/bin
+LIBS += -lavrcec -lusb -lpthread
 
 RESOURCES += res/res.qrc
 
 win32 {
     INCLUDEPATH += inc/windows
-    LIBS += -L$$PWD/lib/windows -llibusb
+    LIBS += -L$$PWD/lib/windows
 }
 
 unix {
-
+    INCLUDEPATH += inc/linux
+    LIBS += -L$$PWD/lib/linux
 }
 
 release: DESTDIR = ./build/release

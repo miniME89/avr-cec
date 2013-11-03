@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QItemSelection>
+#include "avr_cec_lib.h"
 
 namespace Ui {
     class WindowMain;
@@ -17,7 +18,14 @@ public:
     ~WindowMain();
 
 private:
+    avrcec::Connector connector;
+
     Ui::WindowMain *ui;
+
+    void listenerCECMessage(void* data);
+    void listenerDebugMessage(void* data);
+    void listenerConfig(void* data);
+
     void setupUi();
     void setupUiPageConnection();
     void setupUiPageActions();

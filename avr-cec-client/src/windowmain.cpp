@@ -3,7 +3,8 @@
 #include "dialogaction.h"
 #include <QStandardItemModel>
 #include <QDebug>
-#include "usbcontroller.h"
+
+using namespace avrcec;
 
 WindowMain::WindowMain(QWidget *parent) : QMainWindow(parent), ui(new Ui::WindowMain)
 {
@@ -14,6 +15,38 @@ WindowMain::WindowMain(QWidget *parent) : QMainWindow(parent), ui(new Ui::Window
 WindowMain::~WindowMain()
 {
     delete ui;
+}
+
+int counterMessagesRead = 0;
+void WindowMain::listenerCECMessage(void* data)
+{
+    CECMessage* message = (CECMessage*)data;
+
+    printf("message: %i    bytes read: %i    data: ", ++counterMessagesRead , message->size);
+    for (int i = 0; i < message->size; i++)
+    {
+        printf("%02X ", message->data[i]);
+    }
+    printf("\n");
+    fflush(stdout);
+}
+
+void WindowMain::listenerDebugMessage(void* data)
+{
+    DebugMessage* message = (DebugMessage*)data;
+
+    printf("Debug: ");
+    for (int i = 0; i < message->size; i++)
+    {
+        printf("%c", message->data[i]);
+    }
+    printf("\n");
+    fflush(stdout);
+}
+
+void WindowMain::listenerConfig(void* data)
+{
+
 }
 
 void WindowMain::setupUi()
@@ -33,6 +66,18 @@ void WindowMain::setupUi()
 
     connect(ui->mainMenu->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(selectionChangedMainMenu(QItemSelection)));
     //ui->mainMenu->selectionModel()->select(ui->mainMenu->rootIndex(), QItemSelectionModel::Select);
+
+    if (connector.connect())
+    {
+        printf("connected: vendorName=%s, deviceName=%s, vendorId=%i, deviceId=%i\n", connector.getVendorName(), connector.getDeviceName(), connector.getVendorId(), connector.getDeviceId());
+
+        connector.addListenerCECMessage(&WindowMain::listenerCECMessage, *this);
+        connector.addListenerDebugMessage(&WindowMain::listenerDebugMessage, *this);
+    }
+    else
+    {
+        printf("couldn't connect!\n");
+    }
 
     setupUiPageConnection();
     setupUiPageActions();
@@ -83,20 +128,8 @@ void WindowMain::selectionChangedMainMenu(QItemSelection selection)
     ui->stackedContent->setCurrentIndex(ui->mainMenu->currentIndex().row());
 }
 
-char dataBuffer[16];
 void WindowMain::clickedButtonAdd()
 {
     //DialogAction* dialogAction = new DialogAction();
     //dialogAction->open();
-
-    if(UsbController::getInstance()->connect()) {
-        qDebug() <<"Found USB device";
-    }
-    else
-    {
-        qDebug() <<"Could not find USB device";
-    }
-
-    //char d[] = {0x05, 0x44, 0x43};
-    //UsbController::getInstance()->sendData(2, d, 3);
 }

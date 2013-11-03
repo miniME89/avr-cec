@@ -12,10 +12,10 @@ SRCDIR = src
 INCDIRS = inc
 
 # Optimization level [0, 1, 2, 3, s]
-OPT = s
+OPT = 0
 
 # Debugging format [dwarf-2, stabs]
-DEBUG = dwarf-2
+DEBUG =
 
 ifeq ($(OS), Windows_NT)
 	INCDIRS += inc/windows
