@@ -8,7 +8,7 @@ all: example
 example:
 	@echo
 	@echo Create example program output:
-	g++ -I../../inc -o $(BUILDDIR)/example_cpp example.cpp -L$(BUILDDIR) -lavrcec -lusb -lpthread
+	g++ -g -I../../inc -o $(BUILDDIR)/example_cpp example.cpp -L$(BUILDDIR) -lavrcec -lusb -lpthread
 
 # Clean
 clean:

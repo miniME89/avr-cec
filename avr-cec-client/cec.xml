@@ -1,18 +1,63 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <cec>
-    <parameters>
-        <parameter name="Physical Address" length="16">
+    <addresses>
+        <address id="0">
+            <name>TV</name>
+        </address>
+        <address id="1">
+            <name>Recording Device 1</name>
+        </address>
+        <address id="2">
+            <name>Recording Device 2</name>
+        </address>
+        <address id="3">
+            <name>Tuner 1</name>
+        </address>
+        <address id="4">
+            <name>Playback Device 1</name>
+        </address>
+        <address id="5">
+            <name>Audio System</name>
+        </address>
+        <address id="6">
+            <name>Tuner 2</name>
+        </address>
+        <address id="7">
+            <name>Tuner 3</name>
+        </address>
+        <address id="8">
+            <name>Playback Device 2</name>
+        </address>
+        <address id="9">
+            <name>Recording Device 3</name>
+        </address>
+        <address id="10">
+            <name>Tuner 4</name>
+        </address>
+        <address id="11">
+            <name>Playback Device 3</name>
+        </address>
+        <address id="15">
+            <name>Unregistered/Broadcast</name>
+        </address>
+    </addresses>
+
+    <operands>
+        <operand id="1" length="16">
+            <name>Physical Address</name>
             <description>The physical address of the device.</description>
-        </parameter>
-        <parameter name="Record Source Type" length="8">
+        </operand>
+        <operand id="2" length="8">
+            <name>Record Source Type</name>
             <description>Source to record, either analogue service, digital service, external source or own source (ie currently selected source).</description>
             <option value="1">Own source</option>
             <option value="2">Digital Service</option>
             <option value="3">Analogue Service</option>
             <option value="4">External Plug</option>
             <option value="5">External Physical Address</option>
-        </parameter>
-        <parameter name="Record Status Info" length="8">
+        </operand>
+        <operand id="3" length="8">
+            <name>Record Status Info</name>
             <description>The recording status of the device.</description>
             <option value="1">Recording currently selected source</option>
             <option value="2">Recording Digital Service</option>
@@ -38,26 +83,33 @@
             <option value="26">Recording terminated normally</option>
             <option value="27">Recording has already terminated</option>
             <option value="31">No recording - other reason</option>
-        </parameter>
-        <parameter name="Day of Month" length="8">
+        </operand>
+        <operand id="4" length="8">
+            <name>Day of Month</name>
             <description></description>
-        </parameter>
-        <parameter name="Month of Year" length="8">
+        </operand>
+        <operand id="5" length="8">
+            <name>Month of Year</name>
             <description></description>
-        </parameter>
-        <parameter name="Time Hour" length="8">                 <!-- Note: BSD format! -->
+        </operand>
+        <operand id="6" length="8">
+            <name>Time Hour</name>                 <!-- Note: BSD format! -->
             <description></description>
-        </parameter>
-        <parameter name="Time Minute" length="8">               <!-- Note: BSD format! -->
+        </operand>
+        <operand id="7" length="8">
+            <name>Time Minute</name>               <!-- Note: BSD format! -->
             <description></description>
-        </parameter>
-        <parameter name="Duration Hours" length="8">            <!-- Note: BSD format! -->
+        </operand>
+        <operand id="8" length="8">
+            <name>Duration Hours</name>            <!-- Note: BSD format! -->
             <description></description>
-        </parameter>
-        <parameter name="Duration Minutes" length="8">          <!-- Note: BSD format! -->
+        </operand>
+        <operand id="9" length="8">
+            <name>Duration Minutes</name>          <!-- Note: BSD format! -->
             <description></description>
-        </parameter>
-       <parameter name="Recording Sequence" length="8">
+        </operand>
+       <operand id="10" length="8">
+            <name>Recording Sequence</name>
             <description></description>
             <option value="1">Sunday</option>
             <option value="2">Monday</option>
@@ -67,17 +119,20 @@
             <option value="32">Friday</option>
             <option value="64">Saturday</option>
             <option value="0">Once only</option>
-        </parameter>
-        <parameter name="Analogue Broadcast Type" length="8">
+        </operand>
+        <operand id="11" length="8">
+            <name>Analogue Broadcast Type</name>
             <description></description>
             <option value="0">Cable</option>
             <option value="1">Satellite</option>
             <option value="2">Terrestrial</option>
-        </parameter>
-        <parameter name="Analogue Frequency" length="16">
+        </operand>
+        <operand id="12" length="16">
+            <name>Analogue Frequency</name>
             <description></description>
-        </parameter>
-        <parameter name="Broadcast System" length="8">
+        </operand>
+        <operand id="13" length="8">
+            <name>Broadcast System</name>
             <description></description>
             <option value="0">PAL B/G</option>
             <option value="1">SECAM L&apos;</option>
@@ -89,13 +144,15 @@
             <option value="7">SECAM L</option>
             <option value="8">PAL DK</option>
             <option value="31">Other System</option>
-        </parameter>
-        <parameter name="Service Identification Method" length="1">
+        </operand>
+        <operand id="14" length="1">
+            <name>Service Identification Method</name>
             <description></description>
             <option value="0">Service identified by Digital IDs</option>
             <option value="1">Service identified by Channel</option>
-        </parameter>
-        <parameter name="Digital Broadcast System" length="7">
+        </operand>
+        <operand id="15" length="7">
+            <name>Digital Broadcast System</name>
             <description></description>
             <option value="0">ARIB generic</option>
             <option value="1">ATSC generic</option>
@@ -110,61 +167,74 @@
             <option value="25">DVB-S</option>
             <option value="26">DVB-S2</option>
             <option value="27">DVB-T</option>
-        </parameter>
-        <parameter name="ARIB data" length="48">
+        </operand>
+        <operand id="16" length="48">
+            <name>ARIB data</name>
             <description></description>
-        </parameter>
-        <parameter name="ATSC data" length="48">
+        </operand>
+        <operand id="17" length="48">
+            <name>ATSC data</name>
             <description></description>
-        </parameter>
-        <parameter name="DVB data" length="48">
+        </operand>
+        <operand id="18" length="48">
+            <name>DVB data</name>
             <description></description>
-        </parameter>
-        <parameter name="Channel data" length="48">
+        </operand>
+        <operand id="19" length="48">
+            <name>Channel data</name>
             <description></description>
-        </parameter>
-        <parameter name="External Source Specifier" length="8">
+        </operand>
+        <operand id="20" length="8">
+            <name>External Source Specifier</name>
             <description></description>
             <option value="4">External Plug</option>
             <option value="5">External Physical Address</option>
-        </parameter>
-        <parameter name="External Plug" length="8">
+        </operand>
+        <operand id="21" length="8">
+            <name>External Plug</name>
             <description></description>
-        </parameter>
-        <parameter name="Program Title String" length="112">            <!-- Note: variable: 1-14 bytes -->
+        </operand>
+        <operand id="22" length="112">            <!-- Note: variable: 1-14 bytes -->
+            <name>Program Title String</name>
             <description>Program title</description>
-        </parameter>
-        <parameter name="Timer Cleared Status Data" length="8">
+        </operand>
+        <operand id="23" length="8">
+            <name>Timer Cleared Status Data</name>
             <description>Indicates if the timer was cleared successfully.</description>
             <option value="0">Timer not cleared - recording</option>
             <option value="1">Timer not cleared - no matching</option>
             <option value="2">Timer not cleared - no info available</option>
             <option value="128">Timer cleared</option>
-        </parameter>
-        <parameter name="Timer Overlap Warning" length="1">
+        </operand>
+        <operand id="24" length="1">
+            <name>Timer Overlap Warning</name>
             <description></description>
             <option value="0">No overlap</option>
             <option value="1">Timer blocks overlap</option>
-        </parameter>
-        <parameter name="Media Info" length="2">
+        </operand>
+        <operand id="25" length="2">
+            <name>Media Info</name>
             <description></description>
             <option value="0">Media present and not protected</option>
             <option value="1">Media present, but protected</option>
             <option value="2">Media not present</option>
-        </parameter>
-        <parameter name="Programmed Indicator" length="1">
+        </operand>
+        <operand id="26" length="1">
+            <name>Programmed Indicator</name>
             <description></description>
             <option value="0">Not programmed</option>
             <option value="1">Programmed</option>
-        </parameter>
-        <parameter name="Programmed Info" length="4">
+        </operand>
+        <operand id="27" length="4">
+            <name>Programmed Info</name>
             <description></description>
             <option value="8">Enough space available for recording</option>
             <option value="9">Not enough space available for recording</option>
             <option value="10">No Media info available</option>
             <option value="11">May not be enough space available</option>
-        </parameter>
-        <parameter name="Not Programmed Error Info" length="4">
+        </operand>
+        <operand id="28" length="4">
+            <name>Not Programmed Error Info</name>
             <description></description>
             <option value="1">No free timer available</option>
             <option value="2">Date out of range</option>
@@ -177,37 +247,43 @@
             <option value="9">Parental Lock on</option>
             <option value="10">Clock Failure</option>
             <option value="14">Duplicate: already programmed</option>
-        </parameter>
-        <parameter name="Duration Available" length="16">
+        </operand>
+        <operand id="29" length="16">
+            <name>Duration Available</name>
             <description></description>
-        </parameter>
-        <parameter name="CEC Version" length="8">
+        </operand>
+        <operand id="30" length="8">
+            <name>CEC Version</name>
             <description>Indicates the supported CEC version</description>
             <option value="0">Version 1.1</option>
             <option value="1">Version 1.2</option>
             <option value="2">Version 1.2a</option>
             <option value="3">Version 1.3</option>
             <option value="4">Version 1.3a</option>
-        </parameter>
-        <parameter name="Device Type" length="8">
+        </operand>
+        <operand id="31" length="8">
+            <name>Device Type</name>
             <description></description>
             <option value="0">TV</option>
             <option value="1">Recording Device</option>
             <option value="2">Tuner</option>
             <option value="3">Playback Device</option>
             <option value="4">Audio System</option>
-        </parameter>
-        <parameter name="Language" length="24">
+        </operand>
+        <operand id="32" length="24">
+            <name>Language</name>
             <description>Menu language as 3 ASCII characters (see ISO/FDIS 639-2 [ref 1n])</description>
-        </parameter>
-        <parameter name="Deck Control Mode" length="8">
+        </operand>
+        <operand id="33" length="8">
+            <name>Deck Control Mode</name>
             <description></description>
             <option value="1">Skip Forward / Wind</option>
             <option value="2">Skip Reverse / Rewind</option>
             <option value="3">Stop</option>
             <option value="4">Eject</option>
-        </parameter>
-        <parameter name="Deck Info" length="8">
+        </operand>
+        <operand id="34" length="8">
+            <name>Deck Info</name>
             <description></description>
             <option value="17">Play</option>
             <option value="18">Record</option>
@@ -224,14 +300,16 @@
             <option value="29">Index Search Forward</option>
             <option value="30">Index Search Reverse</option>
             <option value="31">Other Status</option>
-        </parameter>
-        <parameter name="Status Request" length="8">
+        </operand>
+        <operand id="37" length="8">
+            <name>Status Request</name>
             <description></description>
             <option value="1">On</option>
             <option value="2">Off</option>
             <option value="3">Once</option>
-        </parameter>
-        <parameter name="Play Mode" length="8">
+        </operand>
+        <operand id="36" length="8">
+            <name>Play Mode</name>
             <description></description>
             <option value="36">Play Forward</option>
             <option value="32">Play Reverse</option>
@@ -248,57 +326,69 @@
             <option value="25">Slow Reverse Min Speed</option>
             <option value="26">Slow Reverse Medium Speed</option>
             <option value="27">Slow Reverse Max Speed</option>
-        </parameter>
-        <parameter name="Status Request" length="8">
+        </operand>
+        <operand id="37" length="8">
+            <name>Status Request</name>
             <description></description>
             <option value="1">On</option>
             <option value="2">Off</option>
             <option value="3">Once</option>
-        </parameter>
-        <parameter name="Recording Flag" length="1">
+        </operand>
+        <operand id="38" length="1">
+            <name>Recording Flag</name>
             <description></description>
             <option value="0">Not being used for recording</option>
             <option value="1">Being used for recording</option>
-        </parameter>
-        <parameter name="Tuner Display Info" length="7">
+        </operand>
+        <operand id="39" length="7">
+            <name>Tuner Display Info</name>
             <description></description>
             <option value="0">Displaying Digital Tuner</option>
             <option value="1">Not displaying Tuner</option>
             <option value="2">Displaying Analogue tuner</option>
-        </parameter>
-        <parameter name="Vendor ID" length="24">
+        </operand>
+        <operand id="40" length="24">
+            <name>Vendor ID</name>
             <description>N from 0x000000 to 0xFFFFFF (N is the 24-bit unique company ID obtained from the IEEE Registration Authority Committee (RAC)).</description>
-        </parameter>
-        <parameter name="Vendor Specific Data" length="112">        <!-- Note: variable: 1-14 bytes -->
+        </operand>
+        <operand id="41" length="112">        <!-- Note: variable: 1-14 bytes -->
+            <name>Vendor Specific Data</name>
             <description></description>
-        </parameter>
-        <parameter name="Vendor Specific RC Code" length="112">     <!-- Note: variable: 1-14 bytes -->
+        </operand>
+        <operand id="42" length="112">     <!-- Note: variable: 1-14 bytes -->
+            <name>Vendor Specific RC Code</name>
             <description></description>
-        </parameter>
-        <parameter name="Display Control" length="8">
+        </operand>
+        <operand id="43" length="8">
+            <name>Display Control</name>
             <description></description>
             <option value="0">Display for default time</option>
             <option value="1">Display until cleared</option>
             <option value="2">Clear previous message</option>
-        </parameter>
-        <parameter name="OSD String" length="104">          <!-- Note: variable: 1-13 bytes -->
+        </operand>
+        <operand id="44" length="104">          <!-- Note: variable: 1-13 bytes -->
+            <name>OSD String</name>
             <description></description>
-        </parameter>
-        <parameter name="OSD Name" length="112">            <!-- Note: variable: 1-14 bytes -->
+        </operand>
+        <operand id="45" length="112">            <!-- Note: variable: 1-14 bytes -->
+            <name>OSD Name</name>
             <description></description>
-        </parameter>
-        <parameter name="Menu Request Type" length="8">
+        </operand>
+        <operand id="46" length="8">
+            <name>Menu Request Type</name>
             <description></description>
             <option value="0">Activate</option>
             <option value="1">Deactivate</option>
             <option value="2">Query</option>
-        </parameter>
-        <parameter name="Menu State" length="8">
+        </operand>
+        <operand id="47" length="8">
+            <name>Menu State</name>
             <description></description>
             <option value="0">Activated</option>
             <option value="1">Deactivated</option>
-        </parameter>
-        <parameter name="UI Command" length="8">
+        </operand>
+        <operand id="48" length="8">
+            <name>UI Command</name>
             <description></description>
             <option value="1">Up</option>
             <option value="2">Down</option>
@@ -377,39 +467,46 @@
             <option value="116">F4 (Yellow)</option>
             <option value="117">F5</option>
             <option value="118">Data</option>
-        </parameter>
-        <parameter name="Power Status" length="8">
+        </operand>
+        <operand id="49" length="8">
+            <name>Power Status</name>
             <description></description>
             <option value="0">On</option>
             <option value="1">Standby</option>
             <option value="2">In transition Standby to On</option>
             <option value="3">In transition On to Standby</option>
-        </parameter>
-        <parameter name="Feature Opcode" length="8">
+        </operand>
+        <operand id="50" length="8">
+            <name>Feature Opcode</name>
             <description>The Opcode of the aborted message.</description>
-        </parameter>
-        <parameter name="Abort Reason" length="8">
+        </operand>
+        <operand id="51" length="8">
+            <name>Abort Reason</name>
             <description></description>
             <option value="0">Unrecognized opcode</option>
             <option value="1">Not in correct mode to respond</option>
             <option value="2">Cannot provide source</option>
             <option value="3">Invalid operand</option>
             <option value="4">Refused</option>
-        </parameter>
-        <parameter name="Audio Mute Status" length="1">
+        </operand>
+        <operand id="52" length="1">
+            <name>Audio Mute Status</name>
             <description></description>
             <option value="0">Audio Mute Off</option>
             <option value="1">Audio Mute On</option>
-        </parameter>
-        <parameter name="Audio Volume Status" length="7">
+        </operand>
+        <operand id="53" length="7">
+            <name>Audio Volume Status</name>
             <description></description>
-        </parameter>
-        <parameter name="System Audio Status" length="8">
+        </operand>
+        <operand id="54" length="8">
+            <name>System Audio Status</name>
             <description></description>
             <option value="0">Off</option>
             <option value="1">On</option>
-        </parameter>
-        <parameter name="Audio Rate" length="8">
+        </operand>
+        <operand id="55" length="8">
+            <name>Audio Rate</name>
             <description></description>
             <option value="0">Rate Control Off</option>
             <option value="1">Standard Rate: 100% rate</option>
@@ -418,610 +515,615 @@
             <option value="4">Standard Rate: 100.0% rate </option>
             <option value="5">Fast Rate: Max 100.1% rate</option>
             <option value="6">Slow Rate: Min 99.9% rate</option>
-        </parameter>
-    </parameters>
+        </operand>
+    </operands>
 
     <messages>
-        <message>
-            <direct>false</direct>
-            <broadcast>true</broadcast>
-            <identifier>130</identifier>
+        <message id="130">
             <name>Active Source</name>
             <description>Used by a new source to indicate that it has started to transmit a stream OR used in response to a &lt;Request Active Source&gt;</description>
-            <parameter name="Physical Address" />
+            <direct>false</direct>
+            <broadcast>true</broadcast>
+            <operand id="1" />
         </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>4</identifier>
+        <message id="4">
             <name>Image View On</name>
             <description>Sent by a source device to the TV whenever it enters the active state (alternatively it may send &lt;Text View On&gt;).</description>
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>13</identifier>
+        </message>
+        <message id="13">
             <name>Text View On</name>
             <description>As &lt;Image View On&gt;, but should also remove any text, menus and PIP windows from the TV’s display.</description>
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>157</identifier>
+        </message>
+        <message id="157">
             <name>Inactive Source</name>
             <description>Used by the currently active source to inform the TV that it has no video to be presented to the user, or is going into standby as the result of a local user command on the device.</description>
-            <parameter name="Physical Address" />
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="1" />
         </message>
-        <message>
-            <direct>false</direct>
-            <broadcast>true</broadcast>
-            <identifier>133</identifier>
+        <message id="133">
             <name>Request Active Source</name>
             <description>Used by a new device to discover the status of the system.</description>
-        </message>
-        <message>
             <direct>false</direct>
             <broadcast>true</broadcast>
-            <identifier>128</identifier>
+        </message>
+        <message id="128">
             <name>Routing Change</name>
             <description>Sent by a CEC Switch when it is manually switched to inform all other devices on the network that the active route below the switch has changed.</description>
-            <parameter name="Physical Address" />
-            <parameter name="Physical Address" />
-        </message>
-        <message>
             <direct>false</direct>
             <broadcast>true</broadcast>
-            <identifier>129</identifier>
+            <operand id="1" />
+            <operand id="1" />
+        </message>
+        <message id="129">
             <name>Routing Information</name>
             <description>Sent by a CEC Switch to indicate the active route below the switch.</description>
-            <parameter name="Physical Address" />
-        </message>
-        <message>
             <direct>false</direct>
             <broadcast>true</broadcast>
-            <identifier>134</identifier>
+            <operand id="1" />
+        </message>
+        <message id="134">
             <name>Set Stream Path</name>
             <description>Used by the TV to request a streaming path from the specified physical address.</description>
-            <parameter name="Physical Address" />
-        </message>
-        <message>
-            <direct>true</direct>
+            <direct>false</direct>
             <broadcast>true</broadcast>
-            <identifier>54</identifier>
+            <operand id="1" />
+        </message>
+        <message id="54">
             <name>Standby</name>
             <description>Switches one or all devices into standby mode. Can be used as a broadcast message or be addressed to a specific device.</description>
-        </message>
-        <message>
             <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>11</identifier>
+            <broadcast>true</broadcast>
+        </message>
+        <message id="11">
             <name>Record Off</name>
             <description>Requests a device to stop a recording.</description>
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>9</identifier>
+        </message>
+        <message id="9">
             <name>Record On</name>
             <description>Attempt to record the specified source.</description>
-            <parameter name="Record Source Type" />
-
-            <!-- Note: dependency -->
-            <parameter name="Analogue Broadcast Type" />
-            <parameter name="Analogue Frequency" />
-            <parameter name="Broadcast System" />
-
-            <parameter name="Service Identification Method" />
-            <parameter name="Digital Broadcast System" />
-
-            <!-- Note: dependency -->
-            <parameter name="ARIB data" />
-            <parameter name="ATSC data" />
-            <parameter name="DVB data" />
-            <parameter name="Channel data" />
-
-            <parameter name="External Plug" />
-            <parameter name="Physical Address" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>10</identifier>
+            <operand id="2" />
+
+            <!-- Note: dependency -->
+            <operand id="14">
+                <constraint operand="2">
+                    <value>2</value>
+                </constraint>
+            </operand>
+            <operand id="15">
+                <constraint operand="2">
+                    <value>2</value>
+                </constraint>
+            </operand>
+
+            <!-- Note: dependency -->
+            <operand id="16">
+                <constraint operand="14">
+                    <value>0</value>
+                </constraint>
+                <constraint operand="15">
+                    <value>0</value>
+                    <value>8</value>
+                    <value>9</value>
+                    <value>10</value>
+                </constraint>
+            </operand>
+            <operand id="17">
+                <constraint operand="14">
+                    <value>0</value>
+                </constraint>
+                <constraint operand="15">
+                    <value>1</value>
+                    <value>16</value>
+                    <value>17</value>
+                    <value>18</value>
+                </constraint>
+            </operand>
+            <operand id="18">
+                <constraint operand="14">
+                    <value>0</value>
+                </constraint>
+                <constraint operand="15">
+                    <value>2</value>
+                    <value>24</value>
+                    <value>25</value>
+                    <value>26</value>
+                    <value>27</value>
+                </constraint>
+            </operand>
+            <operand id="19">
+                <constraint operand="14">
+                    <value>1</value>
+                </constraint>
+            </operand>
+
+
+            <operand id="11">
+                <constraint operand="2">
+                    <value>3</value>
+                </constraint>
+            </operand>
+            <operand id="12">
+                <constraint operand="2">
+                    <value>3</value>
+                </constraint>
+            </operand>
+            <operand id="13">
+                <constraint operand="2">
+                    <value>3</value>
+                </constraint>
+            </operand>
+
+
+            <operand id="21">
+                <constraint operand="2">
+                    <value>4</value>
+                </constraint>
+            </operand>
+
+
+            <operand id="1">
+                <constraint operand="2">
+                    <value>5</value>
+                </constraint>
+            </operand>
+        </message>
+        <message id="10">
             <name>Record Status</name>
             <description>Used by a Recording Device to inform the initiator of the message &lt;Record On&gt; about its status.</description>
-            <parameter name="Record Status Info" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>15</identifier>
+            <operand id="3" />
+        </message>
+        <message id="15">
             <name>Record TV Screen</name>
             <description>Request by the Recording Device to record the presently displayed source.</description>
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>51</identifier>
+        </message>
+        <message id="51">
             <name>Clear Analogue Timer</name>
             <description>Used to clear an Analogue timer block of a device.</description>
-            <parameter name="Day of Month" />
-            <parameter name="Month of Year" />
-            <parameter name="Time Hour" />
-            <parameter name="Time Minute" />
-            <parameter name="Duration Hours" />
-            <parameter name="Duration Minutes" />
-            <parameter name="Recording Sequence" />
-            <parameter name="Analogue Broadcast Type" />
-            <parameter name="Analogue Frequency" />
-            <parameter name="Broadcast System" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>153</identifier>
+            <operand id="4" />
+            <operand id="5" />
+            <operand id="6" />
+            <operand id="7" />
+            <operand id="8" />
+            <operand id="9" />
+            <operand id="10" />
+            <operand id="11" />
+            <operand id="12" />
+            <operand id="13" />
+        </message>
+        <message id="153">
             <name>Clear Digital Timer</name>
             <description>Used to clear a Digital timer block of a device.</description>
-            <parameter name="Day of Month" />
-            <parameter name="Month of Year" />
-            <parameter name="Time Hour" />
-            <parameter name="Time Minute" />
-            <parameter name="Duration Hours" />
-            <parameter name="Duration Minutes" />
-            <parameter name="Recording Sequence" />
-            <parameter name="Service Identification Method" />
-            <parameter name="Digital Broadcast System" />
-
-            <!-- Note: dependency -->
-            <parameter name="ARIB data" />
-            <parameter name="ATSC data" />
-            <parameter name="DVB data" />
-            <parameter name="Channel data" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>161</identifier>
+            <operand id="4" />
+            <operand id="5" />
+            <operand id="6" />
+            <operand id="7" />
+            <operand id="8" />
+            <operand id="9" />
+            <operand id="10" />
+            <operand id="14" />
+            <operand id="15" />
+
+            <!-- Note: dependency -->
+            <operand id="16" />
+            <operand id="17" />
+            <operand id="18" />
+            <operand id="19" />
+        </message>
+        <message id="161">
             <name>Clear External Timer</name>
             <description>Used to clear an External timer block of a device.</description>
-            <parameter name="Day of Month" />
-            <parameter name="Month of Year" />
-            <parameter name="Time Hour" />
-            <parameter name="Time Minute" />
-            <parameter name="Duration Hours" />
-            <parameter name="Duration Minutes" />
-            <parameter name="Recording Sequence" />
-            <parameter name="External Source Specifier" />
-
-            <!-- Note: dependency -->
-            <parameter name="External Plug" />
-            <parameter name="Physical Address" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>52</identifier>
+            <operand id="4" />
+            <operand id="5" />
+            <operand id="6" />
+            <operand id="7" />
+            <operand id="8" />
+            <operand id="9" />
+            <operand id="10" />
+            <operand id="20" />
+
+            <!-- Note: dependency -->
+            <operand id="21" />
+            <operand id="1" />
+        </message>
+        <message id="52">
             <name>Set Analogue Timer</name>
             <description>Used to set a single timer block on an Analogue Recording Device.</description>
-            <parameter name="Day of Month" />
-            <parameter name="Month of Year" />
-            <parameter name="Time Hour" />
-            <parameter name="Time Minute" />
-            <parameter name="Duration Hours" />
-            <parameter name="Duration Minutes" />
-            <parameter name="Recording Sequence" />
-            <parameter name="Analogue Broadcast Type" />
-            <parameter name="Analogue Frequency" />
-            <parameter name="Broadcast System" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>151</identifier>
+            <operand id="4" />
+            <operand id="5" />
+            <operand id="6" />
+            <operand id="7" />
+            <operand id="8" />
+            <operand id="9" />
+            <operand id="10" />
+            <operand id="11" />
+            <operand id="12" />
+            <operand id="13" />
+        </message>
+        <message id="151">
             <name>Set Digital Timer</name>
             <description>Used to set a single timer block on a Digital Recording Device.</description>
-            <parameter name="Day of Month" />
-            <parameter name="Month of Year" />
-            <parameter name="Time Hour" />
-            <parameter name="Time Minute" />
-            <parameter name="Duration Hours" />
-            <parameter name="Duration Minutes" />
-            <parameter name="Recording Sequence" />
-            <parameter name="Service Identification Method" />
-            <parameter name="Digital Broadcast System" />
-
-            <!-- Note: dependency -->
-            <parameter name="ARIB data" />
-            <parameter name="ATSC data" />
-            <parameter name="DVB data" />
-            <parameter name="Channel data" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>162</identifier>
+            <operand id="4" />
+            <operand id="5" />
+            <operand id="6" />
+            <operand id="7" />
+            <operand id="8" />
+            <operand id="9" />
+            <operand id="10" />
+            <operand id="14" />
+            <operand id="15" />
+
+            <!-- Note: dependency -->
+            <operand id="16" />
+            <operand id="17" />
+            <operand id="18" />
+            <operand id="19" />
+        </message>
+        <message id="162">
             <name>Set External Timer</name>
             <description>Used to set a single timer block to record from an external device.</description>
-            <parameter name="Day of Month" />
-            <parameter name="Month of Year" />
-            <parameter name="Time Hour" />
-            <parameter name="Time Minute" />
-            <parameter name="Duration Hours" />
-            <parameter name="Duration Minutes" />
-            <parameter name="Recording Sequence" />
-            <parameter name="External Source Specifier" />
-
-            <!-- Note: dependency -->
-            <parameter name="External Plug" />
-            <parameter name="Physical Address" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>103</identifier>
+            <operand id="4" />
+            <operand id="5" />
+            <operand id="6" />
+            <operand id="7" />
+            <operand id="8" />
+            <operand id="9" />
+            <operand id="10" />
+            <operand id="20" />
+
+            <!-- Note: dependency -->
+            <operand id="21" />
+            <operand id="1" />
+        </message>
+        <message id="103">
             <name>Set Timer Program Title</name>
             <description>Used to set the name of a program associated with a timer block. Sent directly after sending a &lt;Set Analogue Timer&gt; or &lt;Set Digital Timer&gt; message. The name is then associated with that timer block.</description>
-            <parameter name="Program Title String" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>67</identifier>
+            <operand id="22" />
+        </message>
+        <message id="67">
             <name>Timer Cleared Status</name>
             <description>Used to give the status of a &lt;Clear Analogue Timer&gt;, &lt;Clear Digital Timer&gt; or &lt;Clear External Timer&gt; message.</description>
-            <parameter name="Timer Cleared Status Data" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>53</identifier>
+            <operand id="23" />
+        </message>
+        <message id="53">
             <name>Timer Status</name>
             <description>Used to send timer status to the initiator of a &lt;Set Timer&gt; message.</description>
-            <parameter name="Timer Overlap Warning" />
-            <parameter name="Media Info" />
-            <parameter name="Programmed Indicator" />
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="24" />
+            <operand id="25" />
+            <operand id="26" />
 
             <!-- Note: dependency -->
-            <parameter name="Programmed Info" />
-            <parameter name="Not Programmed Error Info" />
+            <operand id="27" />
+            <operand id="28" />
 
             <!-- Note: optional -->
-            <parameter name="Duration Available" />
+            <operand id="29" />
         </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>158</identifier>
+        <message id="158">
             <name>CEC Version</name>
             <description>Used to indicate the supported CEC version, in response to a &lt;Get CEC Version&gt;</description>
-            <parameter name="CEC Version" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>159</identifier>
+            <operand id="30" />
+        </message>
+        <message id="159">
             <name>Get CEC Version</name>
             <description>Used by a device to enquire which version of CEC the target supports</description>
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>131</identifier>
+        </message>
+        <message id="131">
             <name>Give Physical Address</name>
             <description>A request to a device to return its physical address.</description>
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>145</identifier>
+        </message>
+        <message id="145">
             <name>Get Menu Language</name>
             <description>Sent by a device capable of character generation (for OSD and Menus) to a TV in order to discover the currently selected Menu language. Also used by a TV during installation to discover the currently set menu language of other devices.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
         </message>
-        <message>
-            <direct>false</direct>
-            <broadcast>true</broadcast>
-            <identifier>132</identifier>
+        <message id="132">
             <name>Report Physical Address</name>
             <description>Used to inform all other devices of the mapping between physical and logical address of the initiator.</description>
-            <parameter name="Physical Address" />
-            <parameter name="Device Type" />
-        </message>
-        <message>
             <direct>false</direct>
             <broadcast>true</broadcast>
-            <identifier>50</identifier>
+            <operand id="1" />
+            <operand id="31" />
+        </message>
+        <message id="50">
             <name>Set Menu Language</name>
             <description>Used by a TV or another device to indicate the menu language.</description>
-            <parameter name="Language" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>66</identifier>
-            <name>Deck Control</name>
-            <description>Used to control a device&apos;s media functions.</description>
-            <parameter name="Deck Control Mode" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>27</identifier>
-            <name>Deck Status</name>
-            <description>Used to provide a deck&apos;s status to the initiator of the &lt;Give Deck Status&gt; message.</description>
-            <parameter name="Deck Info" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>26</identifier>
-            <name>Give Deck Status</name>
-            <description>Used to request the status of a device, regardless of whether or not it is the current active source.</description>
-            <parameter name="Status Request" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>65</identifier>
-            <name>Play</name>
-            <description>Used to control the playback behaviour of a source device.</description>
-            <parameter name="Play Mode" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>8</identifier>
-            <name>Give Tuner Device Status</name>
-            <description>Used to request the status of a tuner device.</description>
-            <parameter name="Status Request" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>146</identifier>
-            <name>Select Analogue Service</name>
-            <description>Directly selects an Analogue TV service</description>
-            <parameter name="Analogue Broadcast Type" />
-            <parameter name="Analogue Frequency" />
-            <parameter name="Broadcast System" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>147</identifier>
-            <name>Select Digital Service</name>
-            <description>Directly selects a Digital TV, Radio or Data Broadcast Service</description>
-            <parameter name="Service Identification Method" />
-            <parameter name="Digital Broadcast System" />
-
-            <!-- Note: dependencies! -->
-            <parameter name="ARIB data" />
-            <parameter name="ATSC data" />
-            <parameter name="DVB data" />
-            <parameter name="Channel data" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>7</identifier>
-            <name>Tuner Device Status</name>
-            <description>Use by a tuner device to provide its status to the initiator of the &lt;Give Tuner Device Status&gt; message.</description>
-            <parameter name="Recording Flag" />
-            <parameter name="Tuner Display Info" />
-
-            <!-- Note: dependency -->
-            <parameter name="Analogue Broadcast Type" />
-            <parameter name="Analogue Frequency" />
-            <parameter name="Broadcast System" />
-
-            <parameter name="Service Identification Method" />
-            <parameter name="Digital Broadcast System" />
-
-            <!-- Note: dependency -->
-            <parameter name="ARIB data" />
-            <parameter name="ATSC data" />
-            <parameter name="DVB data" />
-            <parameter name="Channel data" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>6</identifier>
-            <name>Tuner Step Decrement</name>
-            <description>Used to tune to next lowest service in a tuner’s service list. Can be used for PIP.</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>5</identifier>
-            <name>Tuner Step Increment</name>
-            <description>Used to tune to next highest service in a tuner’s service list. Can be used for PIP.</description>
-        </message>
-        <message>
             <direct>false</direct>
             <broadcast>true</broadcast>
-            <identifier>135</identifier>
+            <operand id="32" />
+        </message>
+        <message id="66">
+            <name>Deck Control</name>
+            <description>Used to control a device&apos;s media functions.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="33" />
+        </message>
+        <message id="27">
+            <name>Deck Status</name>
+            <description>Used to provide a deck&apos;s status to the initiator of the &lt;Give Deck Status&gt; message.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="34" />
+        </message>
+        <message id="26">
+            <name>Give Deck Status</name>
+            <description>Used to request the status of a device, regardless of whether or not it is the current active source.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="37" />
+        </message>
+        <message id="65">
+            <name>Play</name>
+            <description>Used to control the playback behaviour of a source device.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="36" />
+        </message>
+        <message id="8">
+            <name>Give Tuner Device Status</name>
+            <description>Used to request the status of a tuner device.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="37" />
+        </message>
+        <message id="146">
+            <name>Select Analogue Service</name>
+            <description>Directly selects an Analogue TV service</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="11" />
+            <operand id="12" />
+            <operand id="13" />
+        </message>
+        <message id="147">
+            <name>Select Digital Service</name>
+            <description>Directly selects a Digital TV, Radio or Data Broadcast Service</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="14" />
+            <operand id="15" />
+
+            <!-- Note: dependencies! -->
+            <operand id="16" />
+            <operand id="17" />
+            <operand id="18" />
+            <operand id="19" />
+        </message>
+        <message id="7">
+            <name>Tuner Device Status</name>
+            <description>Use by a tuner device to provide its status to the initiator of the &lt;Give Tuner Device Status&gt; message.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="38" />
+            <operand id="39" />
+
+            <!-- Note: dependency -->
+            <operand id="11" />
+            <operand id="12" />
+            <operand id="13" />
+
+            <operand id="14" />
+            <operand id="15" />
+
+            <!-- Note: dependency -->
+            <operand id="16" />
+            <operand id="17" />
+            <operand id="18" />
+            <operand id="19" />
+        </message>
+        <message id="6">
+            <name>Tuner Step Decrement</name>
+            <description>Used to tune to next lowest service in a tuner’s service list. Can be used for PIP.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="5">
+            <name>Tuner Step Increment</name>
+            <description>Used to tune to next highest service in a tuner’s service list. Can be used for PIP.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="135">
             <name>Device Vendor ID</name>
             <description>Reports the vendor ID of this device.</description>
-            <parameter name="Vendor ID" />
+            <direct>false</direct>
+            <broadcast>true</broadcast>
+            <operand id="40" />
         </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>140</identifier>
+        <message id="140">
             <name>Give Device Vendor ID</name>
             <description>Requests the Vendor ID from a device.</description>
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>137</identifier>
+        </message>
+        <message id="137">
             <name>Vendor Command</name>
             <description>Allows vendor specific commands to be sent between two devices.</description>
-            <parameter name="Vendor Specific Data" /> <!-- Note: variable: 1-14 bytes -->
-        </message>
-        <message>
             <direct>true</direct>
-            <broadcast>true</broadcast>
-            <identifier>160</identifier>
+            <broadcast>false</broadcast>
+            <operand id="41" /> <!-- Note: variable: 1-14 bytes -->
+        </message>
+        <message id="160">
             <name>Vendor Command</name>
             <description>Allows vendor specific commands to be sent between two devices or broadcast.</description>
-            <parameter name="Vendor ID" />
-            <parameter name="Vendor Specific Data" /> <!-- Note: variable: 1-11 bytes -->
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>true</broadcast>
-            <identifier>138</identifier>
+            <operand id="40" />
+            <operand id="41" /> <!-- Note: variable: 1-11 bytes -->
+        </message>
+        <message id="138">
             <name>Vendor Remote Button Down</name>
             <description>Indicates that a remote control button has been depressed.</description>
-            <parameter name="Vendor Specific RC Code" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>true</broadcast>
-            <identifier>139</identifier>
+            <operand id="42" />
+        </message>
+        <message id="139">
             <name>Vendor Remote Button Up</name>
             <description>Indicates that a remote control button (the last button pressed indicated by the Vendor Remote Button Down message) has been released.</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>100</identifier>
-            <name>Set OSD String</name>
-            <description>Used to send a text message to output on a TV.</description>
-            <parameter name="Display Control" />
-            <parameter name="OSD String" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>70</identifier>
-            <name>Give OSD Name</name>
-            <description>Used to request the preferred OSD name of a device for use in menus associated with that device.</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>71</identifier>
-            <name>Set OSD Name</name>
-            <description>Used to set the preferred OSD name of a device for use in menus associated with that device.</description>
-            <parameter name="OSD Name" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>141</identifier>
-            <name>Menu Request</name>
-            <description>A request from the TV for a device to show/remove a menu or to query if a device is currently showing a menu.</description>
-            <parameter name="Menu Request Type" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>142</identifier>
-            <name>Menu Status</name>
-            <description>Used to indicate to the TV that the device is showing/has removed a menu and requests the remote control keys to be passed though.</description>
-            <parameter name="Menu State" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>68</identifier>
-            <name>User Control Pressed</name>
-            <description>Used to indicate that the user pressed a remote control button or switched from one remote control button to another.</description>
-            <parameter name="UI Command" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>69</identifier>
-            <name>User Control Released</name>
-            <description>Indicates that user released a remote control button (the last one indicated by the &lt;User Control Pressed&gt; message)</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>143</identifier>
-            <name>Give Device Power Status</name>
-            <description>Used to determine the current power status of a target device</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>144</identifier>
-            <name>Report Power Status</name>
-            <description>Used to inform a requesting device of the current power status</description>
-            <parameter name="Power Status" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>0</identifier>
-            <name>Feature Abort</name>
-            <description>Used as a response to indicate that the device does not support the requested message type, or that it cannot execute it at the present time.</description>
-            <parameter name="Feature Opcode" />
-            <parameter name="Abort Reason" />
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>255</identifier>
-            <name>Abort</name>
-            <description>This message is reserved for testing purposes.</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>113</identifier>
-            <name>Give Audio Status</name>
-            <description>Requests an amplifier to send its volume and mute status</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>125</identifier>
-            <name>Give System Audio Mode Status</name>
-            <description>Requests the status of the System Audio Mode</description>
-        </message>
-        <message>
-            <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>122</identifier>
-            <name>Report Audio Status</name>
-            <description>Reports an amplifier&apos;s volume and mute status</description>
-            <parameter name="Audio Mute Status" />
-            <parameter name="Audio Volume Status" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>true</broadcast>
-            <identifier>114</identifier>
+        </message>
+        <message id="100">
+            <name>Set OSD String</name>
+            <description>Used to send a text message to output on a TV.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="43" />
+            <operand id="44" />
+        </message>
+        <message id="70">
+            <name>Give OSD Name</name>
+            <description>Used to request the preferred OSD name of a device for use in menus associated with that device.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="71">
+            <name>Set OSD Name</name>
+            <description>Used to set the preferred OSD name of a device for use in menus associated with that device.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="45" />
+        </message>
+        <message id="141">
+            <name>Menu Request</name>
+            <description>A request from the TV for a device to show/remove a menu or to query if a device is currently showing a menu.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="46" />
+        </message>
+        <message id="142">
+            <name>Menu Status</name>
+            <description>Used to indicate to the TV that the device is showing/has removed a menu and requests the remote control keys to be passed though.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="47" />
+        </message>
+        <message id="68">
+            <name>User Control Pressed</name>
+            <description>Used to indicate that the user pressed a remote control button or switched from one remote control button to another.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="48" />
+        </message>
+        <message id="69">
+            <name>User Control Released</name>
+            <description>Indicates that user released a remote control button (the last one indicated by the &lt;User Control Pressed&gt; message)</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="143">
+            <name>Give Device Power Status</name>
+            <description>Used to determine the current power status of a target device</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="144">
+            <name>Report Power Status</name>
+            <description>Used to inform a requesting device of the current power status</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="49" />
+        </message>
+        <message id="0">
+            <name>Feature Abort</name>
+            <description>Used as a response to indicate that the device does not support the requested message type, or that it cannot execute it at the present time.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="50" />
+            <operand id="51" />
+        </message>
+        <message id="255">
+            <name>Abort</name>
+            <description>This message is reserved for testing purposes.</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="113">
+            <name>Give Audio Status</name>
+            <description>Requests an amplifier to send its volume and mute status</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="125">
+            <name>Give System Audio Mode Status</name>
+            <description>Requests the status of the System Audio Mode</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+        </message>
+        <message id="122">
+            <name>Report Audio Status</name>
+            <description>Reports an amplifier&apos;s volume and mute status</description>
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="52" />
+            <operand id="53" />
+        </message>
+        <message id="114">
             <name>Set System Audio Mode</name>
             <description>Turns the System Audio Mode On or Off.</description>
-            <parameter name="System Audio Status" />
-        </message>
-        <message>
             <direct>true</direct>
-            <broadcast>false</broadcast>
-            <identifier>112</identifier>
+            <broadcast>true</broadcast>
+            <operand id="54" />
+        </message>
+        <message id="112">
             <name>System Audio Mode Request</name>
             <description>A device implementing System Audio Control and which has volume control RC buttons (eg TV or STB) requests to use System Audio Mode to the amplifier</description>
-            <parameter name="Physical Address" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>126</identifier>
+            <operand id="1" />
+        </message>
+        <message id="126">
             <name>System Audio Mode Status</name>
             <description>Reports the current status of the System Audio Mode</description>
-            <parameter name="System Audio Status" />
-        </message>
-        <message>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <identifier>154</identifier>
+            <operand id="54" />
+        </message>
+        <message id="154">
             <name>Set Audio Rate</name>
             <description>Used to control audio rate from Source Device.</description>
-            <parameter name="Audio Rate" />
+            <direct>true</direct>
+            <broadcast>false</broadcast>
+            <operand id="55" />
         </message>
     </messages>
 </cec>

@@ -16,7 +16,7 @@
  */
 
 /**
- * @file avr_cec_lib.h
+ * @file avrcec.h
  * @author Marcel
  * @brief
  *
@@ -26,35 +26,23 @@
 #define USBCONTROLLER_H
 
 #include <pthread.h>
+#include <unistd.h>
+#include <string>
 #include <vector>
+#include <map>
 
 namespace avrcec
 {
+    typedef unsigned char byte;
+
     enum Commands
     {
-        REQUEST_CEC_MESSAGE = 1,
+        READ_CEC_MESSAGE = 1,
         SEND_CEC_MESSAGE = 2,
-        REQUEST_CONFIG = 3,
+        READ_CONFIG = 3,
         SEND_CONFIG = 4,
-        REQUEST_DEBUG_MESSAGE = 5
+        READ_DEBUG_MESSAGE = 5
     };
-
-    typedef struct CECMessage
-    {
-        unsigned char data[16];
-        int size;
-    } CECMessage;
-
-    typedef struct DebugMessage
-    {
-        unsigned char data[8];
-        int size;
-    } DebugMessage;
-
-    typedef struct Config
-    {
-        //...
-    } Config;
 
     /**
      * Abstract class to register a callback. The derived classes BindFunction and BindMember are used to hold function pointers and member function pointers.
@@ -85,12 +73,102 @@ namespace avrcec
     class BindMember : public Bind
     {
         private:
-            T& object;
             void (T::*member)(void*);
+            T* object;
 
         public:
-            BindMember(void (T::*member)(void*), T& object) : member(member), object(object) { }
-            void call(void* data) { ((object).*(member))(data); }
+            BindMember(void (T::*member)(void*), T* object) : member(member), object(object) { }
+            void call(void* data) { ((*object).*(member))(data); }
+    };
+
+    class DebugMessage
+    {
+        public:
+            unsigned char data[8];
+            int size;
+    };
+
+    class Config
+    {
+        //...
+    };
+
+    /**
+     *
+     */
+    class Header
+    {
+        private:
+            byte header;
+
+        public:
+            Header();
+            Header(byte header);
+            Header(byte initiator, byte destination);
+            ~Header();
+
+            byte getHeader();
+            void setHeader(byte header);
+
+            byte getInitiator();
+            void setInitiator(byte initiator);
+            byte getDestination();
+            void setDestination(byte destination);
+    };
+
+    /**
+     *
+     */
+    class Opcode
+    {
+        private:
+            byte opcode;
+
+        public:
+            Opcode();
+            Opcode(byte opcode);
+            ~Opcode();
+
+            byte getOpcode();
+            void setOpcode(byte opcode);
+    };
+
+    /**
+     *
+     */
+    class Operand
+    {
+        private:
+            byte* operand;
+            int length;
+
+        public:
+            Operand();
+            Operand(byte* operand, int length);
+            ~Operand();
+
+            byte* getOperand();
+            void setOperand(byte* operand, int length);
+
+            int getLength();
+            void setLength(int length);
+    };
+
+    /**
+     *
+     */
+    class CECMessage
+    {
+        private:
+            //Header header;
+            //Opcode opcode;
+            //std::vector<Operand> operands;
+
+        public:
+            byte data[16];
+            int size;
+
+            void setData(byte* data, int size) {memcpy(this->data, data, size); this->size = size;}
     };
 
     /**
@@ -115,8 +193,8 @@ namespace avrcec
 
             pthread_mutex_t lockControlMessage;
 
-            int readData(int commandId, char* data, int size);
-            int sendData(int commandId, char* data, int size);
+            int readData(int commandId, byte* data, int size);
+            int sendData(int commandId, byte* data, int size);
 
             static void* wrapperThreadPoll(void* arg);
             void* workerThreadPoll();
@@ -126,6 +204,7 @@ namespace avrcec
 
         public:
             Connector();
+            ~Connector();
 
             bool connect();
             bool connect(char vendorName[], char deviceName[], int vendorId, int deviceId);
@@ -134,28 +213,28 @@ namespace avrcec
 
             void spin();
 
-            bool requestCECMessage(CECMessage* message);
+            bool readCECMessage(CECMessage* message);
             bool sendCECMessage(CECMessage message);
-            bool requestConfig(Config* config);
+            bool readConfig(Config* config);
             bool sendConfig(Config config);
-            bool requestDebugMessage(DebugMessage* message);
+            bool readDebugMessage(DebugMessage* message);
 
             void addListenerCECMessage(void (*listener)(void*));
             void addListenerDebugMessage(void (*listener)(void*));
             void addListenerConfig(void (*listener)(void*));
 
             template <typename T>
-            void addListenerCECMessage(void (T::*member)(void*), T& object)
+            void addListenerCECMessage(void (T::*member)(void*), T* object)
             {
                 listenersCECMessage.push_back(new BindMember<T>(member, object));
             }
             template <typename T>
-            void addListenerDebugMessage(void (T::*member)(void*), T& object)
+            void addListenerDebugMessage(void (T::*member)(void*), T* object)
             {
                 listenersDebugMessage.push_back(new BindMember<T>(member, object));
             }
             template <typename T>
-            void addListenerConfig(void (T::*member)(void*), T& object)
+            void addListenerConfig(void (T::*member)(void*), T* object)
             {
                 listenersConfig.push_back(new BindMember<T>(member, object));
             }
@@ -168,6 +247,69 @@ namespace avrcec
             char* getDeviceName();
             int getVendorId();
             int getDeviceId();
+    };
+
+    /**
+     *
+     */
+    class CECDefinitionAddress
+    {
+        public:
+            int id;
+            std::string name;
+    };
+
+    /**
+     *
+     */
+    class CECDefinitionOperand
+    {
+        public:
+            int id;
+            int length;
+            std::string name;
+            std::string description;
+            std::map<int, std::string> options;
+            std::map<CECDefinitionOperand*, std::vector<int> > constraints;
+    };
+
+    /**
+     *
+     */
+    class CECDefinitionMessage
+    {
+        public:
+            int id;
+            std::string name;
+            std::string description;
+            bool direct;
+            bool broadcast;
+            std::vector<CECDefinitionOperand*> operands;
+
+            std::string toString();
+    };
+
+    /**
+     *
+     */
+    class CECFactory
+    {
+        private:
+            static CECFactory* instance;
+
+            std::vector<CECDefinitionAddress*> addressDefinitions;
+            std::vector<CECDefinitionMessage*> messageDefinitions;
+
+            CECFactory();
+
+            bool loadDefinitions();
+            bool unloadDefinitions();
+
+        public:
+            static CECFactory* getInstance();
+            ~CECFactory();
+
+            CECMessage decode(byte* data, int size);
     };
 }
 

@@ -71,8 +71,8 @@ void WindowMain::setupUi()
     {
         printf("connected: vendorName=%s, deviceName=%s, vendorId=%i, deviceId=%i\n", connector.getVendorName(), connector.getDeviceName(), connector.getVendorId(), connector.getDeviceId());
 
-        connector.addListenerCECMessage(&WindowMain::listenerCECMessage, *this);
-        connector.addListenerDebugMessage(&WindowMain::listenerDebugMessage, *this);
+        connector.addListenerCECMessage(&WindowMain::listenerCECMessage, this);
+        connector.addListenerDebugMessage(&WindowMain::listenerDebugMessage, this);
     }
     else
     {

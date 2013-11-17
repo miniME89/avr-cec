@@ -36,7 +36,6 @@ CPPFLAGS = -g$(DEBUG)
 CPPFLAGS += -O$(OPT)
 CPPFLAGS += -funsigned-char
 CPPFLAGS += -funsigned-bitfields
-CPPFLAGS += -fpack-struct
 CPPFLAGS += -fshort-enums
 CPPFLAGS += -Wall
 CPPFLAGS += $(patsubst %,-I%,$(INCDIRS))
@@ -54,7 +53,7 @@ LIB = lib$(LIBOUTPUT).a
 all: $(LIB)
 
 # From C source to .o object file
-$(OBJECTS): $(SOURCES_C)
+$(BUILDDIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 

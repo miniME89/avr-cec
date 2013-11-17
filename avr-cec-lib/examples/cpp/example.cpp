@@ -22,20 +22,36 @@
  *
  */
 
-#include "avr_cec_lib.h"
+#include "avrcec.h"
 #include <stdio.h>
 
 using namespace avrcec;
 
-class Listeners
+class ExampleClass
 {
     private:
+        Connector connector;
         int counterMessagesRead;
 
     public:
-        Listeners() : counterMessagesRead(0)
+        ExampleClass()
         {
+            counterMessagesRead = 0;
 
+            if (connector.connect())
+            {
+                printf("connected: vendorName=%s, deviceName=%s, vendorId=%i, deviceId=%i\n", connector.getVendorName(), connector.getDeviceName(), connector.getVendorId(), connector.getDeviceId());
+
+                connector.addListenerCECMessage(&ExampleClass::listenerCECMessage, this);
+                connector.addListenerDebugMessage(&ExampleClass::listenerDebugMessage, this);
+                connector.addListenerConfig(&ExampleClass::listenerConfig, this);
+
+                connector.spin();
+            }
+            else
+            {
+                printf("couldn't connect!\n");
+            }
         }
 
         void listenerCECMessage(void* data)
@@ -70,22 +86,7 @@ class Listeners
 
 int main(int argc, char** argv)
 {
-	Connector connector;
-	if (connector.connect())
-	{
-	    printf("connected: vendorName=%s, deviceName=%s, vendorId=%i, deviceId=%i\n", connector.getVendorName(), connector.getDeviceName(), connector.getVendorId(), connector.getDeviceId());
-
-	    Listeners listeners;
-	    connector.addListenerCECMessage(&Listeners::listenerCECMessage, listeners);
-	    connector.addListenerDebugMessage(&Listeners::listenerDebugMessage, listeners);
-	    connector.addListenerConfig(&Listeners::listenerConfig, listeners);
-
-	    connector.spin();
-	}
-	else
-	{
-	    printf("couldn't connect!\n");
-	}
+    ExampleClass obj;
 
     return 0;
 }
