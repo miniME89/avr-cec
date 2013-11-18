@@ -556,8 +556,9 @@
             <description>Sent by a CEC Switch when it is manually switched to inform all other devices on the network that the active route below the switch has changed.</description>
             <direct>false</direct>
             <broadcast>true</broadcast>
-            <operand id="1" />
-            <operand id="1" />
+            <operand id="1">
+                <operand id="1" />
+            </operand>
         </message>
         <message id="129">
             <name>Routing Information</name>
@@ -590,90 +591,71 @@
             <description>Attempt to record the specified source.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="2" />
-
-            <!-- Note: dependency -->
-            <operand id="14">
-                <constraint operand="2">
-                    <value>2</value>
-                </constraint>
-            </operand>
-            <operand id="15">
-                <constraint operand="2">
-                    <value>2</value>
-                </constraint>
-            </operand>
-
-            <!-- Note: dependency -->
-            <operand id="16">
-                <constraint operand="14">
-                    <value>0</value>
-                </constraint>
-                <constraint operand="15">
-                    <value>0</value>
-                    <value>8</value>
-                    <value>9</value>
-                    <value>10</value>
-                </constraint>
-            </operand>
-            <operand id="17">
-                <constraint operand="14">
-                    <value>0</value>
-                </constraint>
-                <constraint operand="15">
-                    <value>1</value>
-                    <value>16</value>
-                    <value>17</value>
-                    <value>18</value>
-                </constraint>
-            </operand>
-            <operand id="18">
-                <constraint operand="14">
-                    <value>0</value>
-                </constraint>
-                <constraint operand="15">
-                    <value>2</value>
-                    <value>24</value>
-                    <value>25</value>
-                    <value>26</value>
-                    <value>27</value>
-                </constraint>
-            </operand>
-            <operand id="19">
-                <constraint operand="14">
-                    <value>1</value>
-                </constraint>
-            </operand>
-
-
-            <operand id="11">
-                <constraint operand="2">
-                    <value>3</value>
-                </constraint>
-            </operand>
-            <operand id="12">
-                <constraint operand="2">
-                    <value>3</value>
-                </constraint>
-            </operand>
-            <operand id="13">
-                <constraint operand="2">
-                    <value>3</value>
-                </constraint>
-            </operand>
-
-
-            <operand id="21">
-                <constraint operand="2">
-                    <value>4</value>
-                </constraint>
-            </operand>
-
-
-            <operand id="1">
-                <constraint operand="2">
-                    <value>5</value>
-                </constraint>
+            <operand id="2">
+                <operand id="14">
+                    <constraint operand="2">
+                        <value>2</value>
+                    </constraint>
+                    <operand id="15">
+                        <operand id="16">
+                            <constraint operand="14">
+                                <value>0</value>
+                            </constraint>
+                            <constraint operand="15">
+                                <value>0</value>
+                                <value>8</value>
+                                <value>9</value>
+                                <value>10</value>
+                            </constraint>
+                        </operand>
+                        <operand id="17">
+                            <constraint operand="14">
+                                <value>0</value>
+                            </constraint>
+                            <constraint operand="15">
+                                <value>1</value>
+                                <value>16</value>
+                                <value>17</value>
+                                <value>18</value>
+                            </constraint>
+                        </operand>
+                        <operand id="18">
+                            <constraint operand="14">
+                                <value>0</value>
+                            </constraint>
+                            <constraint operand="15">
+                                <value>2</value>
+                                <value>24</value>
+                                <value>25</value>
+                                <value>26</value>
+                                <value>27</value>
+                            </constraint>
+                        </operand>
+                        <operand id="19">
+                            <constraint operand="14">
+                                <value>1</value>
+                            </constraint>
+                        </operand>
+                    </operand>
+                </operand>
+                <operand id="11">
+                    <constraint operand="2">
+                        <value>3</value>
+                    </constraint>
+                    <operand id="12">
+                        <operand id="13" />
+                    </operand>
+                </operand>
+                <operand id="21">
+                    <constraint operand="2">
+                        <value>4</value>
+                    </constraint>
+                </operand>
+                <operand id="1">
+                    <constraint operand="2">
+                        <value>5</value>
+                    </constraint>
+                </operand>
             </operand>
         </message>
         <message id="10">
@@ -694,110 +676,241 @@
             <description>Used to clear an Analogue timer block of a device.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="4" />
-            <operand id="5" />
-            <operand id="6" />
-            <operand id="7" />
-            <operand id="8" />
-            <operand id="9" />
-            <operand id="10" />
-            <operand id="11" />
-            <operand id="12" />
-            <operand id="13" />
+            <operand id="4">
+                <operand id="5">
+                    <operand id="6">
+                        <operand id="7">
+                            <operand id="8">
+                                <operand id="9">
+                                    <operand id="10">
+                                        <operand id="11">
+                                            <operand id="12">
+                                                <operand id="13" />
+                                            </operand>
+                                        </operand>
+                                    </operand>
+                                </operand>
+                            </operand>
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="153">
             <name>Clear Digital Timer</name>
             <description>Used to clear a Digital timer block of a device.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="4" />
-            <operand id="5" />
-            <operand id="6" />
-            <operand id="7" />
-            <operand id="8" />
-            <operand id="9" />
-            <operand id="10" />
-            <operand id="14" />
-            <operand id="15" />
-
-            <!-- Note: dependency -->
-            <operand id="16" />
-            <operand id="17" />
-            <operand id="18" />
-            <operand id="19" />
+            <operand id="4">
+                <operand id="5">
+                    <operand id="6">
+                        <operand id="7">
+                            <operand id="8">
+                                <operand id="9">
+                                    <operand id="10">
+                                        <operand id="14">
+                                            <operand id="15">
+                                                <operand id="16">
+                                                    <constraint operand="14">
+                                                        <value>0</value>
+                                                    </constraint>
+                                                    <constraint operand="15">
+                                                        <value>0</value>
+                                                        <value>8</value>
+                                                        <value>9</value>
+                                                        <value>10</value>
+                                                    </constraint>
+                                                </operand>
+                                                <operand id="17">
+                                                    <constraint operand="14">
+                                                        <value>0</value>
+                                                    </constraint>
+                                                    <constraint operand="15">
+                                                        <value>1</value>
+                                                        <value>16</value>
+                                                        <value>17</value>
+                                                        <value>18</value>
+                                                    </constraint>
+                                                </operand>
+                                                <operand id="18">
+                                                    <constraint operand="14">
+                                                        <value>0</value>
+                                                    </constraint>
+                                                    <constraint operand="15">
+                                                        <value>2</value>
+                                                        <value>24</value>
+                                                        <value>25</value>
+                                                        <value>26</value>
+                                                        <value>27</value>
+                                                    </constraint>
+                                                </operand>
+                                                <operand id="19">
+                                                    <constraint operand="14">
+                                                        <value>1</value>
+                                                    </constraint>
+                                                </operand>
+                                            </operand>
+                                        </operand>
+                                    </operand>
+                                </operand>
+                            </operand>
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="161">
             <name>Clear External Timer</name>
             <description>Used to clear an External timer block of a device.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="4" />
-            <operand id="5" />
-            <operand id="6" />
-            <operand id="7" />
-            <operand id="8" />
-            <operand id="9" />
-            <operand id="10" />
-            <operand id="20" />
 
-            <!-- Note: dependency -->
-            <operand id="21" />
-            <operand id="1" />
+            <operand id="4">
+                <operand id="5">
+                    <operand id="6">
+                        <operand id="7">
+                            <operand id="8">
+                                <operand id="9">
+                                    <operand id="10">
+                                        <operand id="20">
+                                            <operand id="21">
+                                                <constraint operand="20">
+                                                    <value>4</value>
+                                                </constraint>
+                                            </operand>
+                                            <operand id="1">
+                                                <constraint operand="20">
+                                                    <value>5</value>
+                                                </constraint>
+                                            </operand>
+                                        </operand>
+                                    </operand>
+                                </operand>
+                            </operand>
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="52">
             <name>Set Analogue Timer</name>
             <description>Used to set a single timer block on an Analogue Recording Device.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="4" />
-            <operand id="5" />
-            <operand id="6" />
-            <operand id="7" />
-            <operand id="8" />
-            <operand id="9" />
-            <operand id="10" />
-            <operand id="11" />
-            <operand id="12" />
-            <operand id="13" />
+            <operand id="4">
+                <operand id="5">
+                    <operand id="6">
+                        <operand id="7">
+                            <operand id="8">
+                                <operand id="9">
+                                    <operand id="10">
+                                        <operand id="11">
+                                            <operand id="12">
+                                                <operand id="13" />
+                                            </operand>
+                                        </operand>
+                                    </operand>
+                                </operand>
+                            </operand>
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="151">
             <name>Set Digital Timer</name>
             <description>Used to set a single timer block on a Digital Recording Device.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="4" />
-            <operand id="5" />
-            <operand id="6" />
-            <operand id="7" />
-            <operand id="8" />
-            <operand id="9" />
-            <operand id="10" />
-            <operand id="14" />
-            <operand id="15" />
-
-            <!-- Note: dependency -->
-            <operand id="16" />
-            <operand id="17" />
-            <operand id="18" />
-            <operand id="19" />
+            <operand id="4">
+                <operand id="5">
+                    <operand id="6">
+                        <operand id="7">
+                            <operand id="8">
+                                <operand id="9">
+                                    <operand id="10">
+                                        <operand id="14">
+                                            <operand id="15">
+                                                <operand id="16">
+                                                    <constraint operand="14">
+                                                        <value>0</value>
+                                                    </constraint>
+                                                    <constraint operand="15">
+                                                        <value>0</value>
+                                                        <value>8</value>
+                                                        <value>9</value>
+                                                        <value>10</value>
+                                                    </constraint>
+                                                </operand>
+                                                <operand id="17">
+                                                    <constraint operand="14">
+                                                        <value>0</value>
+                                                    </constraint>
+                                                    <constraint operand="15">
+                                                        <value>1</value>
+                                                        <value>16</value>
+                                                        <value>17</value>
+                                                        <value>18</value>
+                                                    </constraint>
+                                                </operand>
+                                                <operand id="18">
+                                                    <constraint operand="14">
+                                                        <value>0</value>
+                                                    </constraint>
+                                                    <constraint operand="15">
+                                                        <value>2</value>
+                                                        <value>24</value>
+                                                        <value>25</value>
+                                                        <value>26</value>
+                                                        <value>27</value>
+                                                    </constraint>
+                                                </operand>
+                                                <operand id="19">
+                                                    <constraint operand="14">
+                                                        <value>1</value>
+                                                    </constraint>
+                                                </operand>
+                                            </operand>
+                                        </operand>
+                                    </operand>
+                                </operand>
+                            </operand>
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="162">
             <name>Set External Timer</name>
             <description>Used to set a single timer block to record from an external device.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="4" />
-            <operand id="5" />
-            <operand id="6" />
-            <operand id="7" />
-            <operand id="8" />
-            <operand id="9" />
-            <operand id="10" />
-            <operand id="20" />
-
-            <!-- Note: dependency -->
-            <operand id="21" />
-            <operand id="1" />
+            <operand id="4">
+                <operand id="5">
+                    <operand id="6">
+                        <operand id="7">
+                            <operand id="8">
+                                <operand id="9">
+                                    <operand id="10">
+                                        <operand id="20">
+                                            <operand id="21">
+                                                <constraint operand="20">
+                                                    <value>4</value>
+                                                </constraint>
+                                            </operand>
+                                            <operand id="1">
+                                                <constraint operand="20">
+                                                    <value>5</value>
+                                                </constraint>
+                                            </operand>
+                                        </operand>
+                                    </operand>
+                                </operand>
+                            </operand>
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="103">
             <name>Set Timer Program Title</name>
@@ -818,16 +931,26 @@
             <description>Used to send timer status to the initiator of a &lt;Set Timer&gt; message.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="24" />
-            <operand id="25" />
-            <operand id="26" />
-
-            <!-- Note: dependency -->
-            <operand id="27" />
-            <operand id="28" />
-
-            <!-- Note: optional -->
-            <operand id="29" />
+            <operand id="24">
+                <operand id="25">
+                    <operand id="26">
+                        <operand id="27">
+                            <constraint operand="26">
+                                <value>1</value>
+                            </constraint>
+                            <!-- Note: optional -->
+                            <operand id="29" />
+                        </operand>
+                        <operand id="28">
+                            <constraint operand="26">
+                                <value>0</value>
+                            </constraint>
+                            <!-- Note: optional -->
+                            <operand id="29" />
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="158">
             <name>CEC Version</name>
@@ -859,8 +982,9 @@
             <description>Used to inform all other devices of the mapping between physical and logical address of the initiator.</description>
             <direct>false</direct>
             <broadcast>true</broadcast>
-            <operand id="1" />
-            <operand id="31" />
+            <operand id="1">
+                <operand id="31" />
+            </operand>
         </message>
         <message id="50">
             <name>Set Menu Language</name>
@@ -909,45 +1033,124 @@
             <description>Directly selects an Analogue TV service</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="11" />
-            <operand id="12" />
-            <operand id="13" />
+            <operand id="11">
+                <operand id="12">
+                    <operand id="13" />
+                </operand>
+            </operand>
         </message>
         <message id="147">
             <name>Select Digital Service</name>
             <description>Directly selects a Digital TV, Radio or Data Broadcast Service</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="14" />
-            <operand id="15" />
-
-            <!-- Note: dependencies! -->
-            <operand id="16" />
-            <operand id="17" />
-            <operand id="18" />
-            <operand id="19" />
+            <operand id="14">
+                <operand id="15">
+                    <operand id="16">
+                        <constraint operand="14">
+                            <value>0</value>
+                        </constraint>
+                        <constraint operand="15">
+                            <value>0</value>
+                            <value>8</value>
+                            <value>9</value>
+                            <value>10</value>
+                        </constraint>
+                    </operand>
+                    <operand id="17">
+                        <constraint operand="14">
+                            <value>0</value>
+                        </constraint>
+                        <constraint operand="15">
+                            <value>1</value>
+                            <value>16</value>
+                            <value>17</value>
+                            <value>18</value>
+                        </constraint>
+                    </operand>
+                    <operand id="18">
+                        <constraint operand="14">
+                            <value>0</value>
+                        </constraint>
+                        <constraint operand="15">
+                            <value>2</value>
+                            <value>24</value>
+                            <value>25</value>
+                            <value>26</value>
+                            <value>27</value>
+                        </constraint>
+                    </operand>
+                    <operand id="19">
+                        <constraint operand="14">
+                            <value>1</value>
+                        </constraint>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="7">
             <name>Tuner Device Status</name>
             <description>Use by a tuner device to provide its status to the initiator of the &lt;Give Tuner Device Status&gt; message.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="38" />
-            <operand id="39" />
-
-            <!-- Note: dependency -->
-            <operand id="11" />
-            <operand id="12" />
-            <operand id="13" />
-
-            <operand id="14" />
-            <operand id="15" />
-
-            <!-- Note: dependency -->
-            <operand id="16" />
-            <operand id="17" />
-            <operand id="18" />
-            <operand id="19" />
+            <operand id="38">
+                <operand id="39">
+                    <operand id="11">
+                        <constraint operand="39">
+                            <value>2</value>
+                        </constraint>
+                        <operand id="12">
+                            <operand id="13" />
+                        </operand>
+                    </operand>
+                    <operand id="14">
+                        <constraint operand="39">
+                            <value>0</value>
+                        </constraint>
+                        <operand id="15">
+                            <operand id="16">
+                                <constraint operand="14">
+                                    <value>0</value>
+                                </constraint>
+                                <constraint operand="15">
+                                    <value>0</value>
+                                    <value>8</value>
+                                    <value>9</value>
+                                    <value>10</value>
+                                </constraint>
+                            </operand>
+                            <operand id="17">
+                                <constraint operand="14">
+                                    <value>0</value>
+                                </constraint>
+                                <constraint operand="15">
+                                    <value>1</value>
+                                    <value>16</value>
+                                    <value>17</value>
+                                    <value>18</value>
+                                </constraint>
+                            </operand>
+                            <operand id="18">
+                                <constraint operand="14">
+                                    <value>0</value>
+                                </constraint>
+                                <constraint operand="15">
+                                    <value>2</value>
+                                    <value>24</value>
+                                    <value>25</value>
+                                    <value>26</value>
+                                    <value>27</value>
+                                </constraint>
+                            </operand>
+                            <operand id="19">
+                                <constraint operand="14">
+                                    <value>1</value>
+                                </constraint>
+                            </operand>
+                        </operand>
+                    </operand>
+                </operand>
+            </operand>
         </message>
         <message id="6">
             <name>Tuner Step Decrement</name>
@@ -986,8 +1189,10 @@
             <description>Allows vendor specific commands to be sent between two devices or broadcast.</description>
             <direct>true</direct>
             <broadcast>true</broadcast>
-            <operand id="40" />
-            <operand id="41" /> <!-- Note: variable: 1-11 bytes -->
+            <operand id="40">
+                <!-- Note: variable: 1-11 bytes -->
+                <operand id="41" />
+            </operand>
         </message>
         <message id="138">
             <name>Vendor Remote Button Down</name>
@@ -1007,8 +1212,9 @@
             <description>Used to send a text message to output on a TV.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="43" />
-            <operand id="44" />
+            <operand id="43">
+                <operand id="44" />
+            </operand>
         </message>
         <message id="70">
             <name>Give OSD Name</name>
@@ -1068,8 +1274,9 @@
             <description>Used as a response to indicate that the device does not support the requested message type, or that it cannot execute it at the present time.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="50" />
-            <operand id="51" />
+            <operand id="50">
+                <operand id="51" />
+            </operand>
         </message>
         <message id="255">
             <name>Abort</name>
@@ -1094,8 +1301,9 @@
             <description>Reports an amplifier&apos;s volume and mute status</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-            <operand id="52" />
-            <operand id="53" />
+            <operand id="52">
+                <operand id="53" />
+            </operand>
         </message>
         <message id="114">
             <name>Set System Audio Mode</name>

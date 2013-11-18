@@ -386,25 +386,29 @@ namespace avrcec
         return deviceId;
     }
 
-
-
-
-    std::string CECDefinitionMessage::toString()
+    string CECDefinitionOperand::toString(CECDefinitionOperand* operand, int level)
     {
         std::stringstream ss;
 
-        //print message
-        ss <<"message: " <<name <<" [id: " <<id <<", description: " <<description.substr(0, 20) <<"..., direct: " <<(direct ? "true" : "false") <<", broadcast: " <<(broadcast ? "true" : "false") <<", operands: " <<operands.size() <<"]"  <<"\n";
-
-        //print operands
-        for (unsigned int i = 0; i < operands.size(); i++)
+        if (operand->parent != NULL)
         {
-            ss <<"  |--> operand: " <<operands[i]->name <<" [id: " <<operands[i]->id <<", length: " <<operands[i]->length <<", description: " <<operands[i]->description.substr(0, 20) <<"..., options: " <<operands[i]->options.size() <<", constraints: " <<operands[i]->constraints.size() <<"]" <<"\n";
+            for (int i = 0; i < level; i++)
+            {
+                ss <<"  ";
+            }
+
+            ss <<"|--> operand: " <<operand->name <<" [id: " <<operand->id <<", length: " <<operand->length <<", description: " <<operand->description.substr(0, 20) <<"...]" <<"\n";
+
 
             //print operand constraints
-            for(map<CECDefinitionOperand*, vector<int> >::iterator j = operands[i]->constraints.begin(); j != operands[i]->constraints.end(); j++)
+            for(map<CECDefinitionOperand*, vector<int> >::iterator j = operand->constraints.begin(); j != operand->constraints.end(); j++)
             {
-                ss <<"    |--> constraint: " <<j->first->name <<" [values: ";
+                for (int i = 0; i < level; i++)
+                {
+                    ss <<"  ";
+                }
+
+                ss <<"! constraint: " <<j->first->name <<" [values: ";
                 for (unsigned int k = 0; k < j->second.size(); k++)
                 {
                     if (k != 0)
@@ -416,14 +420,37 @@ namespace avrcec
                 }
                 ss <<"]\n";
             }
-
-            //print operand options
-            for(map<int, string>::iterator j = operands[i]->options.begin(); j != operands[i]->options.end(); j++)
-            {
-                ss <<"    |--> option: " <<j->second <<" [value: " <<j->first <<"]\n";
-            }
         }
-        ss <<"\n";
+
+        for (unsigned int i = 0; i < operand->childs.size(); i++)
+        {
+            ss <<toString(operand->childs[i], level + 1);
+        }
+
+        return ss.str();
+    }
+
+    CECDefinitionOperand::CECDefinitionOperand()
+    {
+        id = 0;
+        length = 0;
+        parent = NULL;
+    }
+
+    string CECDefinitionOperand::toString()
+    {
+        return toString(this, 1);
+    }
+
+    string CECDefinitionMessage::toString()
+    {
+        std::stringstream ss;
+
+        //print message
+        ss <<"message: " <<name <<" [id: " <<id <<", description: " <<description.substr(0, 20) <<"..., direct: " <<(direct ? "true" : "false") <<", broadcast: " <<(broadcast ? "true" : "false") <<"]"  <<"\n";
+
+        //print operands
+        ss <<operands->toString();
 
         return ss.str();
     }
@@ -450,19 +477,93 @@ namespace avrcec
         unloadDefinitions();
     }
 
+    CECDefinitionOperand* CECFactory::getOperandDefinition(void* nodeRoot, int id)
+    {
+        xml_node<>* operands = ((xml_node<>*)nodeRoot)->first_node("operands");
+
+        //get the operand definition
+        for (xml_node<>* node = operands->first_node("operand"); node; node = node->next_sibling())
+        {
+            int currentOperandId = atoi(node->first_attribute("id")->value());
+            if (id == currentOperandId)
+            {
+                CECDefinitionOperand* operandDefinition = new CECDefinitionOperand;
+                operandDefinition->id = currentOperandId;
+                operandDefinition->length = atoi(node->first_attribute("length")->value());
+                operandDefinition->name = node->first_node("name")->value();
+                operandDefinition->description = node->first_node("description")->value();
+
+                for (xml_node<>* subNode = node->first_node("option"); subNode; subNode = subNode->next_sibling())
+                {
+                    operandDefinition->options.insert(std::pair<int, string>(atoi(subNode->first_attribute("value")->value()), subNode->value()));
+                }
+
+                return operandDefinition;
+            }
+        }
+
+        return NULL;
+    }
+
+    void CECFactory::getOperands(void* nodeRoot, void* nodeCurrent, CECDefinitionOperand* parent)
+    {
+        //loop through operands
+        for (xml_node<>* nodeOperand = ((xml_node<>*)nodeCurrent)->first_node("operand"); nodeOperand; nodeOperand = nodeOperand->next_sibling())
+        {
+            //get the operand definition
+            CECDefinitionOperand* operandDefinition = getOperandDefinition(nodeRoot, atoi(nodeOperand->first_attribute("id")->value()));
+            if (operandDefinition != NULL)
+            {
+                operandDefinition->parent = parent;
+                parent->childs.push_back(operandDefinition);
+
+                //loop through constraints
+                for (xml_node<>* nodeConstraint = nodeOperand->first_node("constraint"); nodeConstraint; nodeConstraint = nodeConstraint->next_sibling("constraint"))
+                {
+                    //loop through previously added operands and get the dependent operand
+                    int operandId = atoi(nodeConstraint->first_attribute("operand")->value());
+                    CECDefinitionOperand* operand = operandDefinition->parent;
+                    while(operand != NULL)
+                    {
+                        if (operand->id == operandId)
+                        {
+                            vector<int> values;
+
+                            //loop through all values of the constraint
+                            for (xml_node<>* nodeValue = nodeConstraint->first_node("value"); nodeValue; nodeValue = nodeValue->next_sibling("value"))
+                            {
+                                values.push_back(atoi(nodeValue->value()));
+                            }
+
+                            if (values.size() > 0)
+                            {
+                                operandDefinition->constraints.insert(pair<CECDefinitionOperand*, vector<int> >(operand, values));
+                            }
+
+                            break;
+                        }
+
+                        operand = operand->parent;
+                    }
+                }
+
+                getOperands(nodeRoot, nodeOperand, operandDefinition);
+            }
+        }
+    }
+
     bool CECFactory::loadDefinitions()
     {
         file<> xmlFile("E:/Programmierung/Microcontroller/avr-cec/avr-cec/avr-cec-client/cec.xml");
         xml_document<> xmlDoc;
         xmlDoc.parse<0>(xmlFile.data());
 
-        xml_node<>* root = xmlDoc.first_node("cec");
-        xml_node<>* addresses = root->first_node("addresses");
-        xml_node<>* operands = root->first_node("operands");
-        xml_node<>* messages = root->first_node("messages");
+        xml_node<>* nodeRoot = xmlDoc.first_node("cec");
+        xml_node<>* nodeAddresses = nodeRoot->first_node("addresses");
+        xml_node<>* nodeMessages = nodeRoot->first_node("messages");
 
         //loop through addresses
-        for (xml_node<>* nodeAdress = addresses->first_node("address"); nodeAdress; nodeAdress = nodeAdress->next_sibling())
+        for (xml_node<>* nodeAdress = nodeAddresses->first_node("address"); nodeAdress; nodeAdress = nodeAdress->next_sibling())
         {
             CECDefinitionAddress* address = new CECDefinitionAddress;
             address->id = atoi(nodeAdress->first_attribute("id")->value());
@@ -471,8 +572,8 @@ namespace avrcec
             addressDefinitions.push_back(address);
         }
 
-        //loop through messages
-        for (xml_node<>* nodeMessage = messages->first_node("message"); nodeMessage; nodeMessage = nodeMessage->next_sibling())
+        //loop through nodeMessages
+        for (xml_node<>* nodeMessage = nodeMessages->first_node("message"); nodeMessage; nodeMessage = nodeMessage->next_sibling())
         {
             CECDefinitionMessage* messageDefinition = new CECDefinitionMessage;
             messageDefinition->id = atoi(nodeMessage->first_attribute("id")->value());
@@ -481,65 +582,8 @@ namespace avrcec
             messageDefinition->direct = strcmp(nodeMessage->first_node("direct")->value(), "true") == 0;
             messageDefinition->broadcast = strcmp(nodeMessage->first_node("broadcast")->value(), "true") == 0;
 
-            //loop through operands in message
-            for (xml_node<>* nodeOperand = nodeMessage->first_node("operand"); nodeOperand; nodeOperand = nodeOperand->next_sibling())
-            {
-                CECDefinitionOperand* operandDefinition = NULL;
-
-                //get the operand definition
-                int operandId = atoi(nodeOperand->first_attribute("id")->value());
-                for (xml_node<>* node = operands->first_node("operand"); node; node = node->next_sibling())
-                {
-                    int currentOperandId = atoi(node->first_attribute("id")->value());
-                    if (operandId == currentOperandId)
-                    {
-                        operandDefinition = new CECDefinitionOperand;
-                        operandDefinition->id = currentOperandId;
-                        operandDefinition->length = atoi(node->first_attribute("length")->value());
-                        operandDefinition->name = node->first_node("name")->value();
-                        operandDefinition->description = node->first_node("description")->value();
-
-                        for (xml_node<>* subNode = node->first_node("option"); subNode; subNode = subNode->next_sibling())
-                        {
-                            operandDefinition->options.insert(std::pair<int, string>(atoi(subNode->first_attribute("value")->value()), subNode->value()));
-                        }
-
-                        break;
-                    }
-                }
-
-                if (operandDefinition != NULL)
-                {
-                    //loop through constraints
-                    for (xml_node<>* nodeConstraint = nodeOperand->first_node("constraint"); nodeConstraint; nodeConstraint = nodeConstraint->next_sibling())
-                    {
-                        //loop through previously added operands and get the dependent operand
-                        operandId = atoi(nodeConstraint->first_attribute("operand")->value());
-                        for (unsigned int i = 0; i < messageDefinition->operands.size(); i++)
-                        {
-                            if (messageDefinition->operands[i]->id == operandId)
-                            {
-                                vector<int> values;
-
-                                //loop through all values of the constraint
-                                for (xml_node<>* nodeValue = nodeConstraint->first_node("value"); nodeValue; nodeValue = nodeValue->next_sibling())
-                                {
-                                    values.push_back(atoi(nodeValue->value()));
-                                }
-
-                                if (values.size() > 0)
-                                {
-                                    operandDefinition->constraints.insert(pair<CECDefinitionOperand*, vector<int> >(messageDefinition->operands[i], values));
-                                }
-
-                                break;
-                            }
-                        }
-                    }
-
-                    messageDefinition->operands.push_back(operandDefinition);
-                }
-            }
+            messageDefinition->operands = new CECDefinitionOperand;
+            getOperands(nodeRoot, nodeMessage, messageDefinition->operands);
 
             messageDefinitions.push_back(messageDefinition);
             printf("%s", messageDefinition->toString().c_str());
@@ -560,10 +604,12 @@ namespace avrcec
 
         for (unsigned int i = 0; i < messageDefinitions.size(); i++)
         {
+            /*TODO unload!
             for (unsigned int j = 0; j < messageDefinitions[i]->operands.size(); j++)
             {
                 delete messageDefinitions[i]->operands[j];
             }
+            */
 
             delete messageDefinitions[i];
         }

@@ -264,6 +264,9 @@ namespace avrcec
      */
     class CECDefinitionOperand
     {
+        private:
+            std::string toString(CECDefinitionOperand* operand, int level);
+
         public:
             int id;
             int length;
@@ -271,6 +274,11 @@ namespace avrcec
             std::string description;
             std::map<int, std::string> options;
             std::map<CECDefinitionOperand*, std::vector<int> > constraints;
+            CECDefinitionOperand* parent;
+            std::vector<CECDefinitionOperand*> childs;
+
+            CECDefinitionOperand();
+            std::string toString();
     };
 
     /**
@@ -284,7 +292,7 @@ namespace avrcec
             std::string description;
             bool direct;
             bool broadcast;
-            std::vector<CECDefinitionOperand*> operands;
+            CECDefinitionOperand* operands;
 
             std::string toString();
     };
@@ -301,6 +309,9 @@ namespace avrcec
             std::vector<CECDefinitionMessage*> messageDefinitions;
 
             CECFactory();
+
+            CECDefinitionOperand* getOperandDefinition(void* nodeRoot, int id);
+            void getOperands(void* nodeRoot, void* nodeCurrent, CECDefinitionOperand* parent);
 
             bool loadDefinitions();
             bool unloadDefinitions();
