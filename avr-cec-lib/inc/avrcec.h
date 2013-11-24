@@ -33,16 +33,13 @@
 
 namespace avrcec
 {
+    typedef bool bit;
     typedef unsigned char byte;
 
-    enum Commands
-    {
-        READ_CEC_MESSAGE = 1,
-        SEND_CEC_MESSAGE = 2,
-        READ_CONFIG = 3,
-        SEND_CONFIG = 4,
-        READ_DEBUG_MESSAGE = 5
-    };
+    //forward declaration
+    class CECDefinitionAddress;
+    class CECDefinitionOperand;
+    class CECDefinitionMessage;
 
     /**
      * Abstract class to register a callback. The derived classes BindFunction and BindMember are used to hold function pointers and member function pointers.
@@ -99,21 +96,22 @@ namespace avrcec
     class Header
     {
         private:
-            byte header;
+            byte value;
+            CECDefinitionAddress* definitionInitiator;
+            CECDefinitionAddress* definitionDestination;
 
         public:
             Header();
+            Header(Header& obj);
             Header(byte header);
             Header(byte initiator, byte destination);
             ~Header();
 
-            byte getHeader();
-            void setHeader(byte header);
-
+            byte getValue();
             byte getInitiator();
-            void setInitiator(byte initiator);
             byte getDestination();
-            void setDestination(byte destination);
+            CECDefinitionAddress* getDefinitionInitiator();
+            CECDefinitionAddress* getDefinitionDestination();
     };
 
     /**
@@ -122,15 +120,17 @@ namespace avrcec
     class Opcode
     {
         private:
-            byte opcode;
+            byte value;
+            CECDefinitionMessage* definition;
 
         public:
             Opcode();
+            Opcode(Opcode& obj);
             Opcode(byte opcode);
             ~Opcode();
 
-            byte getOpcode();
-            void setOpcode(byte opcode);
+            byte getValue();
+            CECDefinitionMessage* getDefinition();
     };
 
     /**
@@ -139,32 +139,46 @@ namespace avrcec
     class Operand
     {
         private:
-            byte* operand;
-            int length;
+            friend class CECMessageFactory;
+
+            std::vector<bit> value;
+            CECDefinitionOperand* definition;
 
         public:
             Operand();
-            Operand(byte* operand, int length);
+            Operand(std::vector<bit> operand);
             ~Operand();
 
-            byte* getOperand();
-            void setOperand(byte* operand, int length);
-
+            std::vector<bit> getValue();
             int getLength();
-            void setLength(int length);
+            CECDefinitionOperand* getDefinition();
     };
 
-    /**
-     *
-     */
     class CECMessage
     {
         private:
-            //Header header;
-            //Opcode opcode;
-            //std::vector<Operand> operands;
+            friend class CECMessageFactory;
+
+            Header header;
+            Opcode opcode;
+            std::vector<Operand> operands;
+
+            CECMessage(Header header, Opcode opcode);
+            CECMessage(Header header, Opcode opcode, std::vector<Operand> operands);
 
         public:
+            CECMessage(CECMessage& obj);
+            ~CECMessage();
+
+            Header getHeader();
+            Opcode getOpcode();
+            std::vector<Operand> getOperands();
+            CECDefinitionMessage* getDefinition();
+
+            std::string toString();
+
+            //TODO remove
+            CECMessage();
             byte data[16];
             int size;
 
@@ -279,6 +293,8 @@ namespace avrcec
 
             CECDefinitionOperand();
             std::string toString();
+            int getPosStart();
+            int getPosEnd();
     };
 
     /**
@@ -300,27 +316,41 @@ namespace avrcec
     /**
      *
      */
-    class CECFactory
+    class CECMessageFactory
     {
         private:
-            static CECFactory* instance;
+            static CECMessageFactory* instance;
 
-            std::vector<CECDefinitionAddress*> addressDefinitions;
-            std::vector<CECDefinitionMessage*> messageDefinitions;
+            std::vector<CECDefinitionAddress*> definitionsAddress;
+            std::vector<CECDefinitionOperand*> definitionsOperand;
+            std::vector<CECDefinitionMessage*> definitionsMessage;
 
-            CECFactory();
+            CECMessageFactory();
 
-            CECDefinitionOperand* getOperandDefinition(void* nodeRoot, int id);
-            void getOperands(void* nodeRoot, void* nodeCurrent, CECDefinitionOperand* parent);
+            void loadOperands(void* nodeCurrent, CECDefinitionOperand* parent);
 
             bool loadDefinitions();
             bool unloadDefinitions();
 
         public:
-            static CECFactory* getInstance();
-            ~CECFactory();
+            static CECMessageFactory* getInstance();
+            ~CECMessageFactory();
 
-            CECMessage decode(byte* data, int size);
+            CECMessage create(byte* data, int size);
+            CECMessage create(Header header, Opcode opcode);
+            CECMessage create(Header header, Opcode opcode, std::vector<Operand> operands);
+
+            std::vector<CECDefinitionAddress*> getDefinitionsAddress();
+            std::vector<CECDefinitionOperand*> getDefinitionsOperand();
+            std::vector<CECDefinitionMessage*> getDefinitionsMessage();
+
+            CECDefinitionAddress* getDefinitionAddress(int id);
+            CECDefinitionOperand* getDefinitionOperand(int id);
+            CECDefinitionMessage* getDefinitionMessage(int id);
+
+            CECDefinitionAddress* getDefinitionAddress(std::string name);
+            CECDefinitionOperand* getDefinitionOperand(std::string name);
+            CECDefinitionMessage* getDefinitionMessage(std::string name);
     };
 }
 

@@ -34,6 +34,211 @@ using namespace rapidxml;
 
 namespace avrcec
 {
+
+    enum Commands
+    {
+        READ_CEC_MESSAGE = 1,
+        SEND_CEC_MESSAGE = 2,
+        READ_CONFIG = 3,
+        SEND_CONFIG = 4,
+        READ_DEBUG_MESSAGE = 5
+    };
+
+    //==============================================================
+    // Header
+    //==============================================================
+    Header::Header()
+    {
+        value = 0x00;
+        definitionInitiator = NULL;
+        definitionDestination = NULL;
+    }
+
+    Header::Header(Header& obj)
+    {
+        value = obj.value;
+        definitionInitiator = obj.definitionInitiator;
+        definitionDestination = obj.definitionDestination;
+    }
+
+    Header::Header(byte header)
+    {
+        value = header;
+        definitionInitiator = CECMessageFactory::getInstance()->getDefinitionAddress((header & 0xF0) >> 4);
+        definitionDestination = CECMessageFactory::getInstance()->getDefinitionAddress(header & 0x0F);
+    }
+
+    Header::Header(byte initiator, byte destination)
+    {
+        initiator = initiator & 0x0F;
+        destination = destination & 0x0F;
+        value = (initiator << 4) | destination;
+        definitionInitiator = CECMessageFactory::getInstance()->getDefinitionAddress(initiator);
+        definitionDestination = CECMessageFactory::getInstance()->getDefinitionAddress(destination);
+    }
+
+    Header::~Header()
+    {
+    }
+
+    byte Header::getValue()
+    {
+        return value;
+    }
+
+    byte Header::getInitiator()
+    {
+        return ((value & 0xF0) >> 4);
+    }
+
+    byte Header::getDestination()
+    {
+        return (value & 0x0F);
+    }
+
+    CECDefinitionAddress* Header::getDefinitionInitiator()
+    {
+        return definitionInitiator;
+    }
+
+    CECDefinitionAddress* Header::getDefinitionDestination()
+    {
+        return definitionDestination;
+    }
+
+    //==============================================================
+    // Opcode
+    //==============================================================
+    Opcode::Opcode()
+    {
+        value = 0;
+        definition = NULL;
+    }
+
+    Opcode::Opcode(Opcode& obj)
+    {
+        value = obj.value;
+        definition = obj.definition;
+    }
+
+    Opcode::Opcode(byte opcode)
+    {
+        value = opcode;
+        definition = CECMessageFactory::getInstance()->getDefinitionMessage(opcode);
+    }
+
+    Opcode::~Opcode()
+    {
+    }
+
+    byte Opcode::getValue()
+    {
+        return value;
+    }
+
+    CECDefinitionMessage* Opcode::getDefinition()
+    {
+        return definition;
+    }
+
+    //==============================================================
+    // Operand
+    //==============================================================
+    Operand::Operand()
+    {
+        definition = NULL;
+    }
+
+    Operand::Operand(std::vector<bit> operand)
+    {
+        value = operand;
+        definition = NULL;
+    }
+
+    Operand::~Operand()
+    {
+    }
+
+    std::vector<bit> Operand::getValue()
+    {
+        return value;
+    }
+
+    int Operand::getLength()
+    {
+        return value.size();
+    }
+
+    CECDefinitionOperand* Operand::getDefinition()
+    {
+        return definition;
+    }
+
+    std::string CECMessage::toString()
+    {
+        std::stringstream ss;
+
+        ss <<"header: initiator=" <<header.getDefinitionInitiator()->name <<" [" <<(int)header.getInitiator() <<"], destination=" <<header.getDefinitionDestination()->name <<" [" <<(int)header.getDestination() <<"]\n";
+        ss <<"opcode:" <<opcode.getDefinition()->name <<" [" <<(int)opcode.getValue() <<"]\n";
+        for (unsigned int i = 0; i < operands.size(); i++)
+        {
+            ss <<"operand " <<i <<": " <<operands[i].getDefinition()->name <<" [";
+            for (unsigned int j = 0; j < operands[i].getValue().size(); j++)
+            {
+                ss <<((operands[i].getValue()[j]) ? 1 : 0);
+            }
+            ss <<"]\n";
+        }
+
+        return ss.str();
+    }
+
+    //==============================================================
+    // CECMessage
+    //==============================================================
+    CECMessage::CECMessage()
+    {
+    }
+
+    CECMessage::CECMessage(CECMessage& obj)
+    {
+    }
+
+    CECMessage::CECMessage(Header header, Opcode opcode)
+    {
+    }
+
+    CECMessage::CECMessage(Header header, Opcode opcode, std::vector<Operand> operands)
+    {
+    }
+
+    CECMessage::~CECMessage()
+    {
+    }
+
+    Header CECMessage::getHeader()
+    {
+        return header;
+    }
+
+    Opcode CECMessage::getOpcode()
+    {
+        return opcode;
+    }
+
+    std::vector<Operand> CECMessage::getOperands()
+    {
+        return operands;
+    }
+
+    CECDefinitionMessage* CECMessage::getDefinition()
+    {
+        return opcode.getDefinition();
+    }
+
+    //==============================================================
+    // Connector
+    //==============================================================
     int Connector::readData(int commandId, byte* data, int size)
     {
         if (!isConnected())
@@ -262,7 +467,7 @@ namespace avrcec
         if (readBytes > 0)
         {
             message->setData(data, readBytes);
-            CECFactory::getInstance()->decode(data, readBytes);
+            CECMessageFactory::getInstance()->create(data, readBytes);
 
             notifyListenersCECMessage(*message);
 
@@ -386,6 +591,9 @@ namespace avrcec
         return deviceId;
     }
 
+    //==============================================================
+    // CECDefinitionOperand
+    //==============================================================
     string CECDefinitionOperand::toString(CECDefinitionOperand* operand, int level)
     {
         std::stringstream ss;
@@ -442,12 +650,30 @@ namespace avrcec
         return toString(this, 1);
     }
 
+    int CECDefinitionOperand::getPosStart()
+    {
+        if (parent != NULL)
+        {
+            return length + parent->length;
+        }
+
+        return 0;
+    }
+
+    int CECDefinitionOperand::getPosEnd()
+    {
+        return getPosStart() + length;
+    }
+
+    //==============================================================
+    // CECDefinitionOpcode
+    //==============================================================
     string CECDefinitionMessage::toString()
     {
         std::stringstream ss;
 
         //print message
-        ss <<"message: " <<name <<" [id: " <<id <<", description: " <<description.substr(0, 20) <<"..., direct: " <<(direct ? "true" : "false") <<", broadcast: " <<(broadcast ? "true" : "false") <<"]"  <<"\n";
+        ss <<"opcode: " <<name <<" [id: " <<id <<", description: " <<description.substr(0, 20) <<"..., direct: " <<(direct ? "true" : "false") <<", broadcast: " <<(broadcast ? "true" : "false") <<"]"  <<"\n";
 
         //print operands
         ss <<operands->toString();
@@ -455,77 +681,58 @@ namespace avrcec
         return ss.str();
     }
 
-    CECFactory* CECFactory::instance = NULL;
+    //==============================================================
+    // CECFactory
+    //==============================================================
+    CECMessageFactory* CECMessageFactory::instance = NULL;
 
-    CECFactory::CECFactory()
+    CECMessageFactory::CECMessageFactory()
     {
         loadDefinitions();
     }
 
-    CECFactory* CECFactory::getInstance()
+    CECMessageFactory* CECMessageFactory::getInstance()
     {
         if (instance == NULL)
         {
-            instance = new CECFactory();
+            instance = new CECMessageFactory();
         }
 
         return instance;
     }
 
-    CECFactory::~CECFactory()
+    CECMessageFactory::~CECMessageFactory()
     {
         unloadDefinitions();
     }
 
-    CECDefinitionOperand* CECFactory::getOperandDefinition(void* nodeRoot, int id)
-    {
-        xml_node<>* operands = ((xml_node<>*)nodeRoot)->first_node("operands");
-
-        //get the operand definition
-        for (xml_node<>* node = operands->first_node("operand"); node; node = node->next_sibling())
-        {
-            int currentOperandId = atoi(node->first_attribute("id")->value());
-            if (id == currentOperandId)
-            {
-                CECDefinitionOperand* operandDefinition = new CECDefinitionOperand;
-                operandDefinition->id = currentOperandId;
-                operandDefinition->length = atoi(node->first_attribute("length")->value());
-                operandDefinition->name = node->first_node("name")->value();
-                operandDefinition->description = node->first_node("description")->value();
-
-                for (xml_node<>* subNode = node->first_node("option"); subNode; subNode = subNode->next_sibling())
-                {
-                    operandDefinition->options.insert(std::pair<int, string>(atoi(subNode->first_attribute("value")->value()), subNode->value()));
-                }
-
-                return operandDefinition;
-            }
-        }
-
-        return NULL;
-    }
-
-    void CECFactory::getOperands(void* nodeRoot, void* nodeCurrent, CECDefinitionOperand* parent)
+    void CECMessageFactory::loadOperands(void* nodeCurrent, CECDefinitionOperand* parent)
     {
         //loop through operands
-        for (xml_node<>* nodeOperand = ((xml_node<>*)nodeCurrent)->first_node("operand"); nodeOperand; nodeOperand = nodeOperand->next_sibling())
+        for (xml_node<>* nodeOperand = ((xml_node<>*)nodeCurrent)->first_node("operand"); nodeOperand; nodeOperand = nodeOperand->next_sibling("operand"))
         {
             //get the operand definition
-            CECDefinitionOperand* operandDefinition = getOperandDefinition(nodeRoot, atoi(nodeOperand->first_attribute("id")->value()));
+            CECDefinitionOperand* operandDefinition = getDefinitionOperand(atoi(nodeOperand->first_attribute("id")->value()));
             if (operandDefinition != NULL)
             {
-                operandDefinition->parent = parent;
-                parent->childs.push_back(operandDefinition);
+                CECDefinitionOperand* operand = new CECDefinitionOperand();
+                operand->id = operandDefinition->id;
+                operand->length = operandDefinition->length;
+                operand->name = operandDefinition->name;
+                operand->description = operandDefinition->description;
+                operand->options.insert(operandDefinition->options.begin(), operandDefinition->options.end());
+                operand->parent = parent;
+                parent->childs.push_back(operand);
 
                 //loop through constraints
                 for (xml_node<>* nodeConstraint = nodeOperand->first_node("constraint"); nodeConstraint; nodeConstraint = nodeConstraint->next_sibling("constraint"))
                 {
                     //loop through previously added operands and get the dependent operand
                     int operandId = atoi(nodeConstraint->first_attribute("operand")->value());
-                    CECDefinitionOperand* operand = operandDefinition->parent;
-                    while(operand != NULL)
+                    CECDefinitionOperand* operandParent = operand->parent;
+                    while(operandParent != NULL)
                     {
-                        if (operand->id == operandId)
+                        if (operandParent->id == operandId)
                         {
                             vector<int> values;
 
@@ -537,22 +744,22 @@ namespace avrcec
 
                             if (values.size() > 0)
                             {
-                                operandDefinition->constraints.insert(pair<CECDefinitionOperand*, vector<int> >(operand, values));
+                                operand->constraints.insert(pair<CECDefinitionOperand*, vector<int> >(operandParent, values));
                             }
 
                             break;
                         }
 
-                        operand = operand->parent;
+                        operandParent = operandParent->parent;
                     }
                 }
 
-                getOperands(nodeRoot, nodeOperand, operandDefinition);
+                loadOperands(nodeOperand, operand);
             }
         }
     }
 
-    bool CECFactory::loadDefinitions()
+    bool CECMessageFactory::loadDefinitions()
     {
         file<> xmlFile("E:/Programmierung/Microcontroller/avr-cec/avr-cec/avr-cec-client/cec.xml");
         xml_document<> xmlDoc;
@@ -560,20 +767,38 @@ namespace avrcec
 
         xml_node<>* nodeRoot = xmlDoc.first_node("cec");
         xml_node<>* nodeAddresses = nodeRoot->first_node("addresses");
+        xml_node<>* nodeOperands = nodeRoot->first_node("operands");
         xml_node<>* nodeMessages = nodeRoot->first_node("messages");
 
         //loop through addresses
-        for (xml_node<>* nodeAdress = nodeAddresses->first_node("address"); nodeAdress; nodeAdress = nodeAdress->next_sibling())
+        for (xml_node<>* nodeAdress = nodeAddresses->first_node("address"); nodeAdress; nodeAdress = nodeAdress->next_sibling("address"))
         {
             CECDefinitionAddress* address = new CECDefinitionAddress;
             address->id = atoi(nodeAdress->first_attribute("id")->value());
             address->name = nodeAdress->first_node("name")->value();
 
-            addressDefinitions.push_back(address);
+            definitionsAddress.push_back(address);
         }
 
-        //loop through nodeMessages
-        for (xml_node<>* nodeMessage = nodeMessages->first_node("message"); nodeMessage; nodeMessage = nodeMessage->next_sibling())
+        //loop through operands
+        for (xml_node<>* nodeOperand = nodeOperands->first_node("operand"); nodeOperand; nodeOperand = nodeOperand->next_sibling("operand"))
+        {
+            CECDefinitionOperand* operand = new CECDefinitionOperand;
+            operand->id = atoi(nodeOperand->first_attribute("id")->value());
+            operand->length = atoi(nodeOperand->first_attribute("length")->value());
+            operand->name = nodeOperand->first_node("name")->value();
+            operand->description = nodeOperand->first_node("description")->value();
+
+            for (xml_node<>* subNode = nodeOperand->first_node("option"); subNode; subNode = subNode->next_sibling())
+            {
+                operand->options.insert(std::pair<int, string>(atoi(subNode->first_attribute("value")->value()), subNode->value()));
+            }
+
+            definitionsOperand.push_back(operand);
+        }
+
+        //loop through opcodes
+        for (xml_node<>* nodeMessage = nodeMessages->first_node("message"); nodeMessage; nodeMessage = nodeMessage->next_sibling("message"))
         {
             CECDefinitionMessage* messageDefinition = new CECDefinitionMessage;
             messageDefinition->id = atoi(nodeMessage->first_attribute("id")->value());
@@ -581,11 +806,11 @@ namespace avrcec
             messageDefinition->description = nodeMessage->first_node("description")->value();
             messageDefinition->direct = strcmp(nodeMessage->first_node("direct")->value(), "true") == 0;
             messageDefinition->broadcast = strcmp(nodeMessage->first_node("broadcast")->value(), "true") == 0;
-
             messageDefinition->operands = new CECDefinitionOperand;
-            getOperands(nodeRoot, nodeMessage, messageDefinition->operands);
 
-            messageDefinitions.push_back(messageDefinition);
+            loadOperands(nodeMessage, messageDefinition->operands);
+
+            definitionsMessage.push_back(messageDefinition);
             printf("%s", messageDefinition->toString().c_str());
             fflush(stdout);
         }
@@ -593,33 +818,117 @@ namespace avrcec
         return true;
     }
 
-    bool CECFactory::unloadDefinitions()
+    bool CECMessageFactory::unloadDefinitions()
     {
-        for (unsigned int i = 0; i < addressDefinitions.size(); i++)
+        for (unsigned int i = 0; i < definitionsAddress.size(); i++)
         {
-            delete addressDefinitions[i];
+            delete definitionsAddress[i];
         }
 
-        addressDefinitions.clear();
+        definitionsAddress.clear();
 
-        for (unsigned int i = 0; i < messageDefinitions.size(); i++)
+        for (unsigned int i = 0; i < definitionsMessage.size(); i++)
         {
             /*TODO unload!
-            for (unsigned int j = 0; j < messageDefinitions[i]->operands.size(); j++)
+            for (unsigned int j = 0; j < opcodeDefinitions[i]->operands.size(); j++)
             {
-                delete messageDefinitions[i]->operands[j];
+                delete opcodeDefinitions[i]->operands[j];
             }
             */
 
-            delete messageDefinitions[i];
+            delete definitionsMessage[i];
         }
 
-        messageDefinitions.clear();
+        definitionsMessage.clear();
 
         return true;
     }
 
-    CECMessage CECFactory::decode(byte* data, int size)
+    CECMessage CECMessageFactory::create(byte* data, int size)
+    {
+        CECMessage message;
+
+        message.header = Header(data[0]);
+        if (message.header.getDefinitionDestination() == NULL || message.header.getDefinitionInitiator() == NULL)
+        {
+            //TODO ERROR
+            printf("ERROR: invalid header\n");
+        }
+
+        if (size > 1)
+        {
+            message.opcode = Opcode(data[1]);
+            if (message.opcode.getDefinition() == NULL)
+            {
+                //TODO ERROR
+                printf("ERROR: invalid opcode\n");
+            }
+        }
+
+        if (size > 2)
+        {
+            //get bits from all operands bytes (because a single operand can be smaller than 1 byte)
+            vector<bit> operandsBits;
+            int power2[] = {0b00000001, 0b00000010, 0b00000100, 0b00001000, 0b00010000, 0b00100000, 0b01000000, 0b10000000};
+            for (int i = 2; i < size; i++)
+            {
+                for (int j = 7; j >= 0; j--)
+                {
+                    operandsBits.push_back((data[i] & power2[j]) >> j);
+                }
+            }
+
+            //loop through the operand definition tree and decode the operands
+            CECDefinitionOperand* operandDefinition = message.getDefinition()->operands;
+            while(operandDefinition != NULL)
+            {
+                if (operandDefinition->parent != NULL)
+                {
+                    int start = operandDefinition->getPosStart();
+                    int end = operandDefinition->getPosEnd();
+
+                    if ((end / 8) > size)
+                    {
+                        //TODO ERROR
+                        printf("ERROR: invalid operand length\n");
+                    }
+
+                    vector<bit> operandBits(operandsBits.begin() + start, operandsBits.begin() + end);
+                    Operand operand(operandBits);
+                    operand.definition = operandDefinition;
+                    message.operands.push_back(operand);
+                }
+
+                //next operandDefinition
+                if (operandDefinition->childs.size() > 0)
+                {
+                    //only 1 possible following operandDefinition
+                    if (operandDefinition->childs.size() == 1)
+                    {
+                        operandDefinition = operandDefinition->childs[0];
+                    }
+                    //multiple possible operands following
+                    else
+                    {
+                        //decide on constraints which is the next operandDefinition
+                        //TODO ...
+                    }
+                    //operandDefinition = NULL;
+                }
+                //no following operandDefinition
+                else
+                {
+                    operandDefinition = NULL;
+                }
+            }
+        }
+
+        printf("%s", message.toString().c_str());
+
+        return message;
+    }
+
+    CECMessage CECMessageFactory::create(Header header, Opcode opcode)
     {
         CECMessage message;
 
@@ -627,5 +936,106 @@ namespace avrcec
 
         return message;
     }
-}
 
+    CECMessage CECMessageFactory::create(Header header, Opcode opcode, std::vector<Operand> operands)
+    {
+        CECMessage message;
+
+
+
+        return message;
+    }
+
+    std::vector<CECDefinitionAddress*> CECMessageFactory::getDefinitionsAddress()
+    {
+        return definitionsAddress;
+    }
+
+    std::vector<CECDefinitionMessage*> CECMessageFactory::getDefinitionsMessage()
+    {
+        return definitionsMessage;
+    }
+
+    std::vector<CECDefinitionOperand*> CECMessageFactory::getDefinitionsOperand()
+    {
+        return definitionsOperand;
+    }
+
+    CECDefinitionAddress* CECMessageFactory::getDefinitionAddress(int id)
+    {
+        for (unsigned int i = 0; i < definitionsAddress.size(); i++)
+        {
+            if (definitionsAddress[i]->id == id)
+            {
+                return definitionsAddress[i];
+            }
+        }
+
+        return NULL;
+    }
+
+    CECDefinitionOperand* CECMessageFactory::getDefinitionOperand(int id)
+    {
+        for (unsigned int i = 0; i < definitionsOperand.size(); i++)
+        {
+            if (definitionsOperand[i]->id == id)
+            {
+                return definitionsOperand[i];
+            }
+        }
+
+        return NULL;
+    }
+
+    CECDefinitionMessage* CECMessageFactory::getDefinitionMessage(int id)
+    {
+        for (unsigned int i = 0; i < definitionsMessage.size(); i++)
+        {
+            if (definitionsMessage[i]->id == id)
+            {
+                return definitionsMessage[i];
+            }
+        }
+
+        return NULL;
+    }
+
+    CECDefinitionAddress* CECMessageFactory::getDefinitionAddress(std::string name)
+    {
+        for (unsigned int i = 0; i < definitionsAddress.size(); i++)
+        {
+            if (definitionsAddress[i]->name == name)
+            {
+                return definitionsAddress[i];
+            }
+        }
+
+        return NULL;
+    }
+
+    CECDefinitionOperand* CECMessageFactory::getDefinitionOperand(std::string name)
+    {
+        for (unsigned int i = 0; i < definitionsOperand.size(); i++)
+        {
+            if (definitionsOperand[i]->name == name)
+            {
+                return definitionsOperand[i];
+            }
+        }
+
+        return NULL;
+    }
+
+    CECDefinitionMessage* CECMessageFactory::getDefinitionMessage(std::string name)
+    {
+        for (unsigned int i = 0; i < definitionsMessage.size(); i++)
+        {
+            if (definitionsMessage[i]->name == name)
+            {
+                return definitionsMessage[i];
+            }
+        }
+
+        return NULL;
+    }
+}

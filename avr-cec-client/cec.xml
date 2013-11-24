@@ -764,7 +764,6 @@
             <description>Used to clear an External timer block of a device.</description>
             <direct>true</direct>
             <broadcast>false</broadcast>
-
             <operand id="4">
                 <operand id="5">
                     <operand id="6">
