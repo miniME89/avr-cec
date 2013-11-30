@@ -24,9 +24,11 @@
 
 #include "avrcec.h"
 #include "usb.h"
+#include <math.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sstream>
+#include <iomanip>
 #include "rapidxml.hpp"
 
 using namespace std;
@@ -159,9 +161,28 @@ namespace avrcec
     {
     }
 
-    std::vector<bit> Operand::getValue()
+    std::vector<bit> Operand::getValueBits()
     {
         return value;
+    }
+
+    std::vector<byte> Operand::getValueBytes()
+    {
+        vector<byte> bytes(ceil(value.size() / 8));
+        int shift = 0;
+        for (int i = value.size() - 1; i >= 0; i--)
+        {
+            bytes[(int)(i / 8)] |= value[i] <<(shift % 8);
+            shift++;
+        }
+
+        return bytes;
+    }
+
+    int Operand::getValueInt()
+    {
+        //TODO ...
+        return 0;
     }
 
     int Operand::getLength()
@@ -179,13 +200,19 @@ namespace avrcec
         std::stringstream ss;
 
         ss <<"header: initiator=" <<header.getDefinitionInitiator()->name <<" [" <<(int)header.getInitiator() <<"], destination=" <<header.getDefinitionDestination()->name <<" [" <<(int)header.getDestination() <<"]\n";
-        ss <<"opcode:" <<opcode.getDefinition()->name <<" [" <<(int)opcode.getValue() <<"]\n";
+        ss <<"opcode: " <<opcode.getDefinition()->name <<" [" <<(int)opcode.getValue() <<"]\n";
         for (unsigned int i = 0; i < operands.size(); i++)
         {
-            ss <<"operand " <<i <<": " <<operands[i].getDefinition()->name <<" [";
-            for (unsigned int j = 0; j < operands[i].getValue().size(); j++)
+            ss <<"operand " <<(i + 1) <<": " <<operands[i].getDefinition()->name <<" [";
+            vector<byte> bytes = operands[i].getValueBytes();
+            for (unsigned int j = 0; j < bytes.size(); j++)
             {
-                ss <<((operands[i].getValue()[j]) ? 1 : 0);
+                if (j != 0)
+                {
+                    ss <<" ";
+                }
+
+                ss <<std::hex <<std::setfill('0') <<std::setw(2) <<(int)bytes[j];
             }
             ss <<"]\n";
         }
@@ -652,17 +679,17 @@ namespace avrcec
 
     int CECDefinitionOperand::getPosStart()
     {
-        if (parent != NULL)
-        {
-            return length + parent->length;
-        }
-
-        return 0;
+        return getPosEnd() - length;
     }
 
     int CECDefinitionOperand::getPosEnd()
     {
-        return getPosStart() + length;
+        if (parent != NULL)
+        {
+            return length + parent->getPosEnd();
+        }
+
+        return 0;
     }
 
     //==============================================================
@@ -811,8 +838,7 @@ namespace avrcec
             loadOperands(nodeMessage, messageDefinition->operands);
 
             definitionsMessage.push_back(messageDefinition);
-            printf("%s", messageDefinition->toString().c_str());
-            fflush(stdout);
+            //printf("%s", messageDefinition->toString().c_str());
         }
 
         return true;
@@ -868,13 +894,13 @@ namespace avrcec
         if (size > 2)
         {
             //get bits from all operands bytes (because a single operand can be smaller than 1 byte)
-            vector<bit> operandsBits;
+            vector<bit> allOperandsBits;
             int power2[] = {0b00000001, 0b00000010, 0b00000100, 0b00001000, 0b00010000, 0b00100000, 0b01000000, 0b10000000};
             for (int i = 2; i < size; i++)
             {
                 for (int j = 7; j >= 0; j--)
                 {
-                    operandsBits.push_back((data[i] & power2[j]) >> j);
+                    allOperandsBits.push_back((data[i] & power2[j]) >> j);
                 }
             }
 
@@ -892,36 +918,84 @@ namespace avrcec
                         //TODO ERROR
                         printf("ERROR: invalid operand length\n");
                     }
-
-                    vector<bit> operandBits(operandsBits.begin() + start, operandsBits.begin() + end);
-                    Operand operand(operandBits);
-                    operand.definition = operandDefinition;
-                    message.operands.push_back(operand);
-                }
-
-                //next operandDefinition
-                if (operandDefinition->childs.size() > 0)
-                {
-                    //only 1 possible following operandDefinition
-                    if (operandDefinition->childs.size() == 1)
-                    {
-                        operandDefinition = operandDefinition->childs[0];
-                    }
-                    //multiple possible operands following
                     else
                     {
-                        //decide on constraints which is the next operandDefinition
-                        //TODO ...
+                        vector<bit> operandBits(allOperandsBits.begin() + start, allOperandsBits.begin() + end);
+                        Operand operand(operandBits);
+                        operand.definition = operandDefinition;
+                        message.operands.push_back(operand);
                     }
-                    //operandDefinition = NULL;
                 }
-                //no following operandDefinition
-                else
+
+                //decide which is the next operandDefinition
+                bool match = false;
+                for (unsigned int i = 0; i < operandDefinition->childs.size(); i++)
+                {
+                    //no constraints
+                    if (operandDefinition->childs[i]->constraints.size() == 0)
+                    {
+                        match = true;
+                    }
+
+                    //loop through all constraints
+                    for (map<CECDefinitionOperand*, vector<int> >::iterator j = operandDefinition->childs[i]->constraints.begin(); j != operandDefinition->childs[i]->constraints.end(); j++)
+                    {
+                        //loop to all previous operand values to get the depended operand
+                        for (unsigned int k = 0; k < message.operands.size(); k++)
+                        {
+                            //is the depended operand?
+                            if (message.operands[k].getDefinition()->id == j->first->id)
+                            {
+                                //loop through all possible constraint values
+                                for (unsigned int l = 0; l < j->second.size(); l++)
+                                {
+                                    //value matches with depended operand value?
+                                    if (message.operands[k].getValueInt() == j->second[l])
+                                    {
+                                        match = true;
+                                        break;
+                                    }
+                                }
+
+                                if (match)
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (match)
+                            {
+                                break;
+                            }
+                        }
+
+                        if (match)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        operandDefinition = operandDefinition->childs[i];
+
+                        break;
+                    }
+                }
+
+                if (!match)
                 {
                     operandDefinition = NULL;
                 }
             }
         }
+
+        printf("raw: ");
+        for (int i = 0; i < size; i++)
+        {
+            printf("%02X ", data[i]);
+        }
+        printf("\n");
 
         printf("%s", message.toString().c_str());
 

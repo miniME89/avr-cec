@@ -149,7 +149,9 @@ namespace avrcec
             Operand(std::vector<bit> operand);
             ~Operand();
 
-            std::vector<bit> getValue();
+            std::vector<bit> getValueBits();
+            std::vector<byte> getValueBytes();
+            int getValueInt();
             int getLength();
             CECDefinitionOperand* getDefinition();
     };
