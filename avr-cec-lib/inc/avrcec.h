@@ -83,11 +83,16 @@ namespace avrcec
         public:
             unsigned char data[8];
             int size;
+
+            std::string toString();
     };
 
     class Config
     {
-        //...
+        public:
+            //...
+
+            std::string toString();
     };
 
     /**
@@ -102,7 +107,7 @@ namespace avrcec
 
         public:
             Header();
-            Header(Header& obj);
+            Header(const Header& obj);
             Header(byte header);
             Header(byte initiator, byte destination);
             ~Header();
@@ -112,6 +117,8 @@ namespace avrcec
             byte getDestination();
             CECDefinitionAddress* getDefinitionInitiator();
             CECDefinitionAddress* getDefinitionDestination();
+
+            std::string toString();
     };
 
     /**
@@ -125,12 +132,14 @@ namespace avrcec
 
         public:
             Opcode();
-            Opcode(Opcode& obj);
+            Opcode(const Opcode& obj);
             Opcode(byte opcode);
             ~Opcode();
 
             byte getValue();
             CECDefinitionMessage* getDefinition();
+
+            std::string toString();
     };
 
     /**
@@ -154,6 +163,8 @@ namespace avrcec
             int getValueInt();
             int getLength();
             CECDefinitionOperand* getDefinition();
+
+            std::string toString();
     };
 
     class CECMessage
@@ -161,30 +172,21 @@ namespace avrcec
         private:
             friend class CECMessageFactory;
 
-            Header header;
-            Opcode opcode;
-            std::vector<Operand> operands;
-
-            CECMessage(Header header, Opcode opcode);
-            CECMessage(Header header, Opcode opcode, std::vector<Operand> operands);
+            Header* header;
+            Opcode* opcode;
+            std::vector<Operand*> operands;
+            CECMessage();
 
         public:
-            CECMessage(CECMessage& obj);
+            CECMessage(const CECMessage& obj);
             ~CECMessage();
 
-            Header getHeader();
-            Opcode getOpcode();
-            std::vector<Operand> getOperands();
+            Header* getHeader();
+            Opcode* getOpcode();
+            std::vector<Operand*> getOperands();
             CECDefinitionMessage* getDefinition();
 
             std::string toString();
-
-            //TODO remove
-            CECMessage();
-            byte data[16];
-            int size;
-
-            void setData(byte* data, int size) {memcpy(this->data, data, size); this->size = size;}
     };
 
     /**
@@ -229,11 +231,11 @@ namespace avrcec
 
             void spin();
 
-            bool readCECMessage(CECMessage* message);
-            bool sendCECMessage(CECMessage message);
-            bool readConfig(Config* config);
-            bool sendConfig(Config config);
-            bool readDebugMessage(DebugMessage* message);
+            CECMessage* readCECMessage();
+            bool sendCECMessage(CECMessage* message);
+            Config* readConfig();
+            bool sendConfig(Config* config);
+            DebugMessage* readDebugMessage();
 
             void addListenerCECMessage(void (*listener)(void*));
             void addListenerDebugMessage(void (*listener)(void*));
@@ -255,9 +257,9 @@ namespace avrcec
                 listenersConfig.push_back(new BindMember<T>(member, object));
             }
 
-            void notifyListenersCECMessage(CECMessage message);
-            void notifyListenersDebugMessage(DebugMessage message);
-            void notifyListenersConfig(Config config);
+            void notifyListenersCECMessage(CECMessage* message);
+            void notifyListenersDebugMessage(DebugMessage* message);
+            void notifyListenersConfig(Config* config);
 
             char* getVendorName();
             char* getDeviceName();
@@ -270,9 +272,19 @@ namespace avrcec
      */
     class CECDefinitionAddress
     {
-        public:
+        private:
+            friend class CECMessageFactory;
+
             int id;
             std::string name;
+
+        public:
+            CECDefinitionAddress();
+
+            int getId();
+            const std::string& getName();
+
+            std::string toString();
     };
 
     /**
@@ -281,9 +293,8 @@ namespace avrcec
     class CECDefinitionOperand
     {
         private:
-            std::string toString(CECDefinitionOperand* operand, int level);
+            friend class CECMessageFactory;
 
-        public:
             int id;
             int length;
             std::string name;
@@ -293,10 +304,24 @@ namespace avrcec
             CECDefinitionOperand* parent;
             std::vector<CECDefinitionOperand*> childs;
 
+            std::string toString(CECDefinitionOperand* operand, int level);
+
+        public:
             CECDefinitionOperand();
-            std::string toString();
+
+            int getId();
+            int getLength();
+            const std::string& getName();
+            const std::string& getDescription();
+            const std::map<int, std::string>& getOptions();
+            const std::map<CECDefinitionOperand*, std::vector<int> >& getConstraints();
+            const CECDefinitionOperand* getParent();
+            const std::vector<CECDefinitionOperand*>& getChilds();
+
             int getPosStart();
             int getPosEnd();
+
+            std::string toString();
     };
 
     /**
@@ -304,13 +329,25 @@ namespace avrcec
      */
     class CECDefinitionMessage
     {
-        public:
+        private:
+            friend class CECMessageFactory;
+
             int id;
             std::string name;
             std::string description;
             bool direct;
             bool broadcast;
             CECDefinitionOperand* operands;
+
+        public:
+            CECDefinitionMessage();
+
+            int getId();
+            const std::string& getName();
+            const std::string& getDescription();
+            bool isDirect();
+            bool isBroadcast();
+            const CECDefinitionOperand* getOperands();
 
             std::string toString();
     };
@@ -338,9 +375,9 @@ namespace avrcec
             static CECMessageFactory* getInstance();
             ~CECMessageFactory();
 
-            CECMessage create(byte* data, int size);
-            CECMessage create(Header header, Opcode opcode);
-            CECMessage create(Header header, Opcode opcode, std::vector<Operand> operands);
+            CECMessage* create(byte* data, int size);
+            CECMessage* create(Header header, Opcode opcode);
+            CECMessage* create(Header header, Opcode opcode, std::vector<Operand> operands);
 
             std::vector<CECDefinitionAddress*> getDefinitionsAddress();
             std::vector<CECDefinitionOperand*> getDefinitionsOperand();

@@ -47,6 +47,33 @@ namespace avrcec
     };
 
     //==============================================================
+    // DebugMessage
+    //==============================================================
+    std::string DebugMessage::toString()
+    {
+        stringstream ss;
+
+        for (int i = 0; i < size; i++)
+        {
+            ss <<data[i];
+        }
+
+        return ss.str();
+    }
+
+    //==============================================================
+    // Config
+    //==============================================================
+    std::string Config::toString()
+    {
+        stringstream ss;
+
+        //TODO implement
+
+        return ss.str();
+    }
+
+    //==============================================================
     // Header
     //==============================================================
     Header::Header()
@@ -56,7 +83,7 @@ namespace avrcec
         definitionDestination = NULL;
     }
 
-    Header::Header(Header& obj)
+    Header::Header(const Header& obj)
     {
         value = obj.value;
         definitionInitiator = obj.definitionInitiator;
@@ -108,6 +135,15 @@ namespace avrcec
         return definitionDestination;
     }
 
+    std::string Header::toString()
+    {
+        stringstream ss;
+
+        ss <<"header: initiator=" <<definitionInitiator->getName() <<" [" <<(int)getInitiator() <<"], destination=" <<definitionDestination->getName() <<" [" <<(int)getDestination() <<"]\n";
+
+        return ss.str();
+    }
+
     //==============================================================
     // Opcode
     //==============================================================
@@ -117,7 +153,7 @@ namespace avrcec
         definition = NULL;
     }
 
-    Opcode::Opcode(Opcode& obj)
+    Opcode::Opcode(const Opcode& obj)
     {
         value = obj.value;
         definition = obj.definition;
@@ -141,6 +177,15 @@ namespace avrcec
     CECDefinitionMessage* Opcode::getDefinition()
     {
         return definition;
+    }
+
+    std::string Opcode::toString()
+    {
+        stringstream ss;
+
+        ss <<"opcode: " <<definition->getName() <<" [" <<(int)value <<"]\n";
+
+        return ss.str();
     }
 
     //==============================================================
@@ -181,7 +226,14 @@ namespace avrcec
 
     int Operand::getValueInt()
     {
-        //TODO ...
+        int integer;
+        int shift = 0;
+        for (int i = value.size() - 1; i >= 0; i--)
+        {
+            integer |= value[i] <<shift;
+            shift++;
+        }
+
         return 0;
     }
 
@@ -195,26 +247,56 @@ namespace avrcec
         return definition;
     }
 
+    std::string Operand::toString()
+    {
+        stringstream ss;
+
+        ss <<"operand: " <<definition->getName() <<" [";
+        vector<byte> bytes = getValueBytes();
+        for (unsigned int j = 0; j < bytes.size(); j++)
+        {
+            if (j != 0)
+            {
+                ss <<" ";
+            }
+
+            ss <<std::hex <<std::setfill('0') <<std::setw(2) <<(int)bytes[j];
+        }
+
+        for (map<int, std::string>::const_iterator j = definition->getOptions().begin(); j != definition->getOptions().end(); j++)
+        {
+            if (j->first == getValueInt())
+            {
+                ss <<" = " <<j->second;
+                break;
+            }
+        }
+
+        ss <<"]\n";
+
+        return ss.str();
+    }
+
+    //==============================================================
+    // CECMessage
+    //==============================================================
     std::string CECMessage::toString()
     {
         std::stringstream ss;
 
-        ss <<"header: initiator=" <<header.getDefinitionInitiator()->name <<" [" <<(int)header.getInitiator() <<"], destination=" <<header.getDefinitionDestination()->name <<" [" <<(int)header.getDestination() <<"]\n";
-        ss <<"opcode: " <<opcode.getDefinition()->name <<" [" <<(int)opcode.getValue() <<"]\n";
+        if (header != NULL)
+        {
+            ss <<header->toString();
+        }
+
+        if (opcode != NULL)
+        {
+            ss <<opcode->toString();
+        }
+
         for (unsigned int i = 0; i < operands.size(); i++)
         {
-            ss <<"operand " <<(i + 1) <<": " <<operands[i].getDefinition()->name <<" [";
-            vector<byte> bytes = operands[i].getValueBytes();
-            for (unsigned int j = 0; j < bytes.size(); j++)
-            {
-                if (j != 0)
-                {
-                    ss <<" ";
-                }
-
-                ss <<std::hex <<std::setfill('0') <<std::setw(2) <<(int)bytes[j];
-            }
-            ss <<"]\n";
+            ss <<operands[i]->toString();
         }
 
         return ss.str();
@@ -225,42 +307,53 @@ namespace avrcec
     //==============================================================
     CECMessage::CECMessage()
     {
+        header = NULL;
+        opcode = NULL;
     }
 
-    CECMessage::CECMessage(CECMessage& obj)
+    CECMessage::CECMessage(const CECMessage& obj)
     {
-    }
-
-    CECMessage::CECMessage(Header header, Opcode opcode)
-    {
-    }
-
-    CECMessage::CECMessage(Header header, Opcode opcode, std::vector<Operand> operands)
-    {
+        header = obj.header;
+        opcode = obj.opcode;
+        operands = obj.operands;
     }
 
     CECMessage::~CECMessage()
     {
+        if (header != NULL)
+        {
+            delete header;
+        }
+
+        if (opcode != NULL)
+        {
+            delete opcode;
+        }
+
+        for (unsigned int i = 0; i < operands.size(); i++)
+        {
+            delete operands[i];
+        }
     }
 
-    Header CECMessage::getHeader()
+    Header* CECMessage::getHeader()
     {
         return header;
     }
 
-    Opcode CECMessage::getOpcode()
+    Opcode* CECMessage::getOpcode()
     {
         return opcode;
     }
 
-    std::vector<Operand> CECMessage::getOperands()
+    std::vector<Operand*> CECMessage::getOperands()
     {
         return operands;
     }
 
     CECDefinitionMessage* CECMessage::getDefinition()
     {
-        return opcode.getDefinition();
+        return opcode->getDefinition();
     }
 
     //==============================================================
@@ -311,13 +404,10 @@ namespace avrcec
 
     void* Connector::workerThreadPoll()
     {
-        CECMessage cecMessage;
-        DebugMessage debugMessage;
-
         while(runThreadPoll)
         {
-            readCECMessage(&cecMessage);
-            readDebugMessage(&debugMessage);
+            readCECMessage();
+            readDebugMessage();
 
             usleep(40 * 1000);
         }
@@ -487,63 +577,67 @@ namespace avrcec
         pthread_join(threadPoll, NULL);
     }
 
-    bool Connector::readCECMessage(CECMessage* message)
+    CECMessage* Connector::readCECMessage()
     {
         byte data[16];
         int readBytes = readData(READ_CEC_MESSAGE, data, sizeof(data));
         if (readBytes > 0)
         {
-            message->setData(data, readBytes);
-            CECMessageFactory::getInstance()->create(data, readBytes);
+            CECMessage* message = CECMessageFactory::getInstance()->create(data, readBytes);
 
-            notifyListenersCECMessage(*message);
+            notifyListenersCECMessage(message);
 
-            return true;
+            return NULL;
         }
 
-        return false;
+        return NULL;
     }
 
-    bool Connector::sendCECMessage(CECMessage message)
+    bool Connector::sendCECMessage(CECMessage* message)
     {
+        //TODO implement
+        /*
         int wroteBytes = sendData(SEND_CEC_MESSAGE, message.data, message.size);
 
         if (wroteBytes == message.size)
         {
             return true;
         }
+        */
 
         return false;
     }
 
-    bool Connector::readConfig(Config* config)
+    Config* Connector::readConfig()
     {
         byte data[8];
         int readBytes = readData(READ_DEBUG_MESSAGE, data, sizeof(data));
         if (readBytes > 0)
         {
             //TODO implement
+            Config* config = new Config;
 
-            notifyListenersConfig(*config);
+            notifyListenersConfig(config);
 
-            return true;
+            return config;
         }
 
-        return false;
+        return NULL;
     }
 
-    bool Connector::sendConfig(Config config)
+    bool Connector::sendConfig(Config* config)
     {
         //TODO implement
         return false;
     }
 
-    bool Connector::readDebugMessage(DebugMessage* message)
+    DebugMessage* Connector::readDebugMessage()
     {
         byte data[8];
         int readBytes = readData(READ_DEBUG_MESSAGE, data, sizeof(data));
         if (readBytes > 0)
         {
+            DebugMessage* message = new DebugMessage;
             message->size = readBytes;
 
             for (int i = 0; i < readBytes; i++)
@@ -551,12 +645,12 @@ namespace avrcec
                 message->data[i] = data[i];
             }
 
-            notifyListenersDebugMessage(*message);
+            notifyListenersDebugMessage(message);
 
-            return true;
+            return message;
         }
 
-        return false;
+        return NULL;
     }
 
     void Connector::addListenerCECMessage(void (*listener)(void*))
@@ -574,27 +668,27 @@ namespace avrcec
         listenersConfig.push_back(new BindFunction(listener));
     }
 
-    void Connector::notifyListenersCECMessage(CECMessage message)
+    void Connector::notifyListenersCECMessage(CECMessage* message)
     {
         for (unsigned int i = 0; i < listenersCECMessage.size(); i++)
         {
-            listenersCECMessage[i]->call(&message);
+            listenersCECMessage[i]->call(message);
         }
     }
 
-    void Connector::notifyListenersDebugMessage(DebugMessage message)
+    void Connector::notifyListenersDebugMessage(DebugMessage* message)
     {
         for (unsigned int i = 0; i < listenersDebugMessage.size(); i++)
         {
-            listenersDebugMessage[i]->call(&message);
+            listenersDebugMessage[i]->call(message);
         }
     }
 
-    void Connector::notifyListenersConfig(Config config)
+    void Connector::notifyListenersConfig(Config* config)
     {
         for (unsigned int i = 0; i < listenersDebugMessage.size(); i++)
         {
-            listenersConfig[i]->call(&config);
+            listenersConfig[i]->call(config);
         }
     }
 
@@ -616,6 +710,32 @@ namespace avrcec
     int Connector::getDeviceId()
     {
         return deviceId;
+    }
+
+    //==============================================================
+    // CECDefinitionAddress
+    //==============================================================
+    CECDefinitionAddress::CECDefinitionAddress()
+    {
+    }
+
+    int CECDefinitionAddress::getId()
+    {
+        return id;
+    }
+
+    const std::string& CECDefinitionAddress::getName()
+    {
+        return name;
+    }
+
+    std::string CECDefinitionAddress::toString()
+    {
+        stringstream ss;
+
+        ss <<"address: " <<name <<" [" <<id <<"]\n";
+
+        return ss.str();
     }
 
     //==============================================================
@@ -672,6 +792,46 @@ namespace avrcec
         parent = NULL;
     }
 
+    int CECDefinitionOperand::getId()
+    {
+        return id;
+    }
+
+    int CECDefinitionOperand::getLength()
+    {
+        return length;
+    }
+
+    const std::string& CECDefinitionOperand::getName()
+    {
+        return name;
+    }
+
+    const std::string& CECDefinitionOperand::getDescription()
+    {
+        return description;
+    }
+
+    const std::map<int, std::string>& CECDefinitionOperand::getOptions()
+    {
+        return options;
+    }
+
+    const std::map<CECDefinitionOperand*, std::vector<int> >& CECDefinitionOperand::getConstraints()
+    {
+        return constraints;
+    }
+
+    const CECDefinitionOperand* CECDefinitionOperand::getParent()
+    {
+        return parent;
+    }
+
+    const std::vector<CECDefinitionOperand*>& CECDefinitionOperand::getChilds()
+    {
+        return childs;
+    }
+
     string CECDefinitionOperand::toString()
     {
         return toString(this, 1);
@@ -695,6 +855,44 @@ namespace avrcec
     //==============================================================
     // CECDefinitionOpcode
     //==============================================================
+    CECDefinitionMessage::CECDefinitionMessage()
+    {
+        id = 0;
+        direct = false;
+        broadcast = false;
+        operands = NULL;
+    }
+
+    int CECDefinitionMessage::getId()
+    {
+        return id;
+    }
+
+    const std::string& CECDefinitionMessage::getName()
+    {
+        return name;
+    }
+
+    const std::string& CECDefinitionMessage::getDescription()
+    {
+        return description;
+    }
+
+    bool CECDefinitionMessage::isDirect()
+    {
+        return direct;
+    }
+
+    bool CECDefinitionMessage::isBroadcast()
+    {
+        return broadcast;
+    }
+
+    const CECDefinitionOperand* CECDefinitionMessage::getOperands()
+    {
+        return operands;
+    }
+
     string CECDefinitionMessage::toString()
     {
         std::stringstream ss;
@@ -870,22 +1068,27 @@ namespace avrcec
         return true;
     }
 
-    CECMessage CECMessageFactory::create(byte* data, int size)
+    CECMessage* CECMessageFactory::create(byte* data, int size)
     {
-        CECMessage message;
-
-        message.header = Header(data[0]);
-        if (message.header.getDefinitionDestination() == NULL || message.header.getDefinitionInitiator() == NULL)
+        CECMessage* message = new CECMessage;
+        message->header = new Header(data[0]);
+        if (message->header->getDefinitionDestination() == NULL || message->header->getDefinitionInitiator() == NULL)
         {
+            delete message->header;
+            message->header = NULL;
+
             //TODO ERROR
             printf("ERROR: invalid header\n");
         }
 
         if (size > 1)
         {
-            message.opcode = Opcode(data[1]);
-            if (message.opcode.getDefinition() == NULL)
+            message->opcode = new Opcode(data[1]);
+            if (message->opcode->getDefinition() == NULL)
             {
+                delete message->opcode;
+                message->opcode = NULL;
+
                 //TODO ERROR
                 printf("ERROR: invalid opcode\n");
             }
@@ -905,7 +1108,7 @@ namespace avrcec
             }
 
             //loop through the operand definition tree and decode the operands
-            CECDefinitionOperand* operandDefinition = message.getDefinition()->operands;
+            CECDefinitionOperand* operandDefinition = message->getDefinition()->operands;
             while(operandDefinition != NULL)
             {
                 if (operandDefinition->parent != NULL)
@@ -921,9 +1124,9 @@ namespace avrcec
                     else
                     {
                         vector<bit> operandBits(allOperandsBits.begin() + start, allOperandsBits.begin() + end);
-                        Operand operand(operandBits);
-                        operand.definition = operandDefinition;
-                        message.operands.push_back(operand);
+                        Operand* operand = new Operand(operandBits);
+                        operand->definition = operandDefinition;
+                        message->operands.push_back(operand);
                     }
                 }
 
@@ -941,16 +1144,16 @@ namespace avrcec
                     for (map<CECDefinitionOperand*, vector<int> >::iterator j = operandDefinition->childs[i]->constraints.begin(); j != operandDefinition->childs[i]->constraints.end(); j++)
                     {
                         //loop to all previous operand values to get the depended operand
-                        for (unsigned int k = 0; k < message.operands.size(); k++)
+                        for (unsigned int k = 0; k < message->operands.size(); k++)
                         {
                             //is the depended operand?
-                            if (message.operands[k].getDefinition()->id == j->first->id)
+                            if (message->operands[k]->getDefinition()->id == j->first->id)
                             {
                                 //loop through all possible constraint values
                                 for (unsigned int l = 0; l < j->second.size(); l++)
                                 {
                                     //value matches with depended operand value?
-                                    if (message.operands[k].getValueInt() == j->second[l])
+                                    if (message->operands[k]->getValueInt() == j->second[l])
                                     {
                                         match = true;
                                         break;
@@ -990,34 +1193,26 @@ namespace avrcec
             }
         }
 
-        printf("raw: ");
+        printf("\nraw: ");
         for (int i = 0; i < size; i++)
         {
             printf("%02X ", data[i]);
         }
         printf("\n");
 
-        printf("%s", message.toString().c_str());
+        //printf("%s", message->toString().c_str());
 
         return message;
     }
 
-    CECMessage CECMessageFactory::create(Header header, Opcode opcode)
+    CECMessage* CECMessageFactory::create(Header header, Opcode opcode)
     {
-        CECMessage message;
-
-
-
-        return message;
+        return NULL;
     }
 
-    CECMessage CECMessageFactory::create(Header header, Opcode opcode, std::vector<Operand> operands)
+    CECMessage* CECMessageFactory::create(Header header, Opcode opcode, std::vector<Operand> operands)
     {
-        CECMessage message;
-
-
-
-        return message;
+        return NULL;
     }
 
     std::vector<CECDefinitionAddress*> CECMessageFactory::getDefinitionsAddress()

@@ -58,24 +58,14 @@ class ExampleClass
         {
             CECMessage* message = (CECMessage*)data;
 
-            printf("message: %i    bytes read: %i    data: ", ++counterMessagesRead , message->size);
-            for (int i = 0; i < message->size; i++)
-            {
-                printf("%02X ", message->data[i]);
-            }
-            printf("\n");
+            printf("%s", message->toString().c_str());
         }
 
         void listenerDebugMessage(void* data)
         {
             DebugMessage* message = (DebugMessage*)data;
 
-            printf("Debug: ");
-            for (int i = 0; i < message->size; i++)
-            {
-                printf("%c", message->data[i]);
-            }
-            printf("\n");
+            printf("Debug: %s\n", message->toString().c_str());
         }
 
         void listenerConfig(void* data)
