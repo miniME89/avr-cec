@@ -22,26 +22,14 @@ void WindowMain::listenerCECMessage(void* data)
 {
     CECMessage* message = (CECMessage*)data;
 
-    printf("message: %i    bytes read: %i    data: ", ++counterMessagesRead , message->size);
-    for (int i = 0; i < message->size; i++)
-    {
-        printf("%02X ", message->data[i]);
-    }
-    printf("\n");
-    fflush(stdout);
+    printf("%s", message->toString().c_str());
 }
 
 void WindowMain::listenerDebugMessage(void* data)
 {
     DebugMessage* message = (DebugMessage*)data;
 
-    printf("Debug: ");
-    for (int i = 0; i < message->size; i++)
-    {
-        printf("%c", message->data[i]);
-    }
-    printf("\n");
-    fflush(stdout);
+    printf("Debug: %s\n", message->toString().c_str());
 }
 
 void WindowMain::listenerConfig(void* data)
