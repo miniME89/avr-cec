@@ -58,6 +58,7 @@ namespace avrcec
     {
         private:
             void (*function)(void*);
+
         public:
             BindFunction(void (*function)(void*)) : function(function) { }
             void call(void* data) { function(data); }

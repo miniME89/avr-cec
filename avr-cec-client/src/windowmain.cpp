@@ -23,6 +23,7 @@ void WindowMain::listenerCECMessage(void* data)
     CECMessage* message = (CECMessage*)data;
 
     printf("%s", message->toString().c_str());
+    fflush(stdout);
 }
 
 void WindowMain::listenerDebugMessage(void* data)
@@ -30,6 +31,7 @@ void WindowMain::listenerDebugMessage(void* data)
     DebugMessage* message = (DebugMessage*)data;
 
     printf("Debug: %s\n", message->toString().c_str());
+    fflush(stdout);
 }
 
 void WindowMain::listenerConfig(void* data)
@@ -62,10 +64,6 @@ void WindowMain::setupUi()
         connector.addListenerCECMessage(&WindowMain::listenerCECMessage, this);
         connector.addListenerDebugMessage(&WindowMain::listenerDebugMessage, this);
     }
-    else
-    {
-        printf("couldn't connect!\n");
-    }
 
     setupUiPageConnection();
     setupUiPageActions();
@@ -85,9 +83,9 @@ void WindowMain::setupUiPageActions()
     model->setHorizontalHeaderItem(1, new QStandardItem(QString("Column2 Header")));
     model->setHorizontalHeaderItem(2, new QStandardItem(QString("Column3 Header")));
 
-    connect(ui->buttonAdd, SIGNAL(clicked()), this, SLOT(clickedButtonAdd()));
-
     ui->tableActions->setModel(model);
+
+    connect(ui->buttonAdd, SIGNAL(clicked()), this, SLOT(clickedButtonAdd()));
 }
 
 void WindowMain::setupUiPageSniffer()
@@ -118,6 +116,6 @@ void WindowMain::selectionChangedMainMenu(QItemSelection selection)
 
 void WindowMain::clickedButtonAdd()
 {
-    //DialogAction* dialogAction = new DialogAction();
-    //dialogAction->open();
+    DialogAction* dialogAction = new DialogAction();
+    dialogAction->open();
 }
