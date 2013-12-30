@@ -20,6 +20,7 @@
 
 #include <QObject>
 #include <QItemSelection>
+#include "actions.h"
 
 class WindowMain;
 

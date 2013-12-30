@@ -26,6 +26,9 @@ TabActions::TabActions(WindowMain* window)
 {
     this->window = window;
     setupUi();
+
+    QList<Trigger*> triggers;
+    Trigger::load(triggers);
 }
 
 TabActions::~TabActions()
