@@ -15,14 +15,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "windowmain.h"
-#include <QApplication>
+#ifndef TABSETTINGS_H
+#define TABSETTINGS_H
 
-int main(int argc, char *argv[])
+#include <QObject>
+
+class WindowMain;
+
+class TabSettings : public QObject
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    Q_OBJECT
 
-    return a.exec();
-}
+    private:
+        WindowMain* window;
+
+    public:
+        TabSettings(WindowMain* window);
+        ~TabSettings();
+        void setupUi();
+};
+
+#endif // TABSETTINGS_H

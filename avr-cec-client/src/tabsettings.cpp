@@ -15,14 +15,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tabsettings.h"
 #include "windowmain.h"
-#include <QApplication>
+#include "ui_windowmain.h"
+#include <QDebug>
 
-int main(int argc, char *argv[])
+TabSettings::TabSettings(WindowMain* window)
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    this->window = window;
+    setupUi();
+}
 
-    return a.exec();
+TabSettings::~TabSettings()
+{
+
+}
+
+void TabSettings::setupUi()
+{
 }

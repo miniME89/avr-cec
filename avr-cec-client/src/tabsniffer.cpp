@@ -15,14 +15,30 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tabsniffer.h"
 #include "windowmain.h"
-#include <QApplication>
+#include "ui_windowmain.h"
+#include <QStandardItemModel>
+#include <QDebug>
 
-int main(int argc, char *argv[])
+TabSniffer::TabSniffer(WindowMain* window)
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    this->window = window;
+    setupUi();
+}
 
-    return a.exec();
+TabSniffer::~TabSniffer()
+{
+
+}
+
+void TabSniffer::setupUi()
+{
+    QStandardItemModel *model = new QStandardItemModel(1, 4, window);
+    model->setHorizontalHeaderItem(0, new QStandardItem(QString("Raw")));
+    model->setHorizontalHeaderItem(1, new QStandardItem(QString("From")));
+    model->setHorizontalHeaderItem(2, new QStandardItem(QString("To")));
+    model->setHorizontalHeaderItem(3, new QStandardItem(QString("Message")));
+
+    window->getUi()->tableSniffer->setModel(model);
 }

@@ -5,5 +5,8 @@
         <file>settings.png</file>
         <file>sniffer.png</file>
         <file>debug.png</file>
+        <file>event_enabled.png</file>
+        <file>trigger.png</file>
+        <file>cross.png</file>
     </qresource>
 </RCC>

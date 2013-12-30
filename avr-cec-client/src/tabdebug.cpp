@@ -15,14 +15,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tabdebug.h"
 #include "windowmain.h"
-#include <QApplication>
+#include "ui_windowmain.h"
+#include <QDebug>
 
-int main(int argc, char *argv[])
+TabDebug::TabDebug(WindowMain* window)
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    this->window = window;
+    setupUi();
+}
 
-    return a.exec();
+TabDebug::~TabDebug()
+{
+
+}
+
+void TabDebug::setupUi()
+{
 }

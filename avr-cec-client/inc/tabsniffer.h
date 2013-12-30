@@ -15,14 +15,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "windowmain.h"
-#include <QApplication>
+#ifndef TABSNIFFER_H
+#define TABSNIFFER_H
 
-int main(int argc, char *argv[])
+#include <QObject>
+
+class WindowMain;
+
+class TabSniffer : public QObject
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    Q_OBJECT
 
-    return a.exec();
-}
+    private:
+        WindowMain* window;
+
+    public:
+        TabSniffer(WindowMain* window);
+        ~TabSniffer();
+        void setupUi();
+};
+
+#endif // TABSNIFFER_H

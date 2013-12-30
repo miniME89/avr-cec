@@ -15,14 +15,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "windowmain.h"
-#include <QApplication>
+#ifndef TABCONNECTION_H
+#define TABCONNECTION_H
 
-int main(int argc, char *argv[])
+#include <QObject>
+
+class WindowMain;
+
+class TabConnection : public QObject
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    Q_OBJECT
 
-    return a.exec();
-}
+    private:
+        WindowMain* window;
+
+    public:
+        TabConnection(WindowMain* window);
+        ~TabConnection();
+        void setupUi();
+};
+
+#endif // TABCONNECTION_H

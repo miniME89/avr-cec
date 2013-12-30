@@ -15,14 +15,33 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "windowmain.h"
-#include <QApplication>
+#ifndef TABACTIONS_H
+#define TABACTIONS_H
 
-int main(int argc, char *argv[])
+#include <QObject>
+#include <QItemSelection>
+
+class WindowMain;
+
+class TabActions : public QObject
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    Q_OBJECT
 
-    return a.exec();
-}
+    private:
+        WindowMain* window;
+
+        void addTriggerRule();
+
+    public:
+        TabActions(WindowMain* window);
+        ~TabActions();
+        void setupUi();
+
+    private slots:
+        void eventAddTrigger();
+        void eventAddTriggerRule();
+        void eventRemoveTriggerRule();
+        void eventTreeActionsSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
+};
+
+#endif // TABACTIONS_H

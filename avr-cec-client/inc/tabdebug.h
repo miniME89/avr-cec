@@ -15,14 +15,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "windowmain.h"
-#include <QApplication>
+#ifndef TABDEBUG_H
+#define TABDEBUG_H
 
-int main(int argc, char *argv[])
+#include <QObject>
+
+class WindowMain;
+
+class TabDebug : public QObject
 {
-    QApplication a(argc, argv);
-    WindowMain w;
-    w.show();
+    Q_OBJECT
 
-    return a.exec();
-}
+    private:
+        WindowMain* window;
+
+    public:
+        TabDebug(WindowMain* window);
+        ~TabDebug();
+        void setupUi();
+};
+
+#endif // TABDEBUG_H

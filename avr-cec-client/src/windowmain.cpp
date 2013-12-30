@@ -1,23 +1,53 @@
+/*
+ *  Copyright (C) 2013
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "windowmain.h"
 #include "ui_windowmain.h"
-#include "dialogaction.h"
 #include <QStandardItemModel>
 #include <QDebug>
+#include <QScrollBar>
 
 using namespace avrcec;
 
-WindowMain::WindowMain(QWidget *parent) : QMainWindow(parent), ui(new Ui::WindowMain)
+WindowMain::WindowMain(QWidget *parent) : QMainWindow(parent)
 {
+    ui = new Ui::WindowMain();
+
     ui->setupUi(this);
     setupUi();
+
+    tabConnection = new TabConnection(this);
+    tabActions = new TabActions(this);
+    tabSniffer = new TabSniffer(this);
+    tabDebug = new TabDebug(this);
+    tabSettings = new TabSettings(this);
 }
 
 WindowMain::~WindowMain()
 {
+    delete tabConnection;
+    delete tabActions;
+    delete tabSniffer;
+    delete tabDebug;
+    delete tabSettings;
+
     delete ui;
 }
 
-int counterMessagesRead = 0;
 void WindowMain::listenerCECMessage(void* data)
 {
     CECMessage* message = (CECMessage*)data;
@@ -48,13 +78,14 @@ void WindowMain::setupUi()
     model->appendRow(new QStandardItem(QIcon(":/icons/debug.png"), "Debug"));
     model->appendRow(new QStandardItem(QIcon(":/icons/settings.png"), "Settings"));
 
-    for (int i = 0; i < model->rowCount(); i++) {
+    for (int i = 0; i < model->rowCount(); i++)
+    {
         model->item(i)->setSizeHint(QSize(50, 50));
     }
 
     ui->mainMenu->setModel(model);
 
-    connect(ui->mainMenu->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(selectionChangedMainMenu(QItemSelection)));
+    connect(ui->mainMenu->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(eventSelectionChangedMainMenu(QItemSelection)));
     //ui->mainMenu->selectionModel()->select(ui->mainMenu->rootIndex(), QItemSelectionModel::Select);
 
     if (connector.connect())
@@ -64,58 +95,14 @@ void WindowMain::setupUi()
         connector.addListenerCECMessage(&WindowMain::listenerCECMessage, this);
         connector.addListenerDebugMessage(&WindowMain::listenerDebugMessage, this);
     }
-
-    setupUiPageConnection();
-    setupUiPageActions();
-    setupUiPageSniffer();
-    setupUiPageSettings();
 }
 
-void WindowMain::setupUiPageConnection()
+void WindowMain::eventSelectionChangedMainMenu(QItemSelection selection)
 {
-
+    ui->stackedMainContent->setCurrentIndex(ui->mainMenu->currentIndex().row());
 }
 
-void WindowMain::setupUiPageActions()
+Ui::WindowMain* WindowMain::getUi()
 {
-    QStandardItemModel *model = new QStandardItemModel(1, 3, this);
-    model->setHorizontalHeaderItem(0, new QStandardItem(QString("Column1 Header")));
-    model->setHorizontalHeaderItem(1, new QStandardItem(QString("Column2 Header")));
-    model->setHorizontalHeaderItem(2, new QStandardItem(QString("Column3 Header")));
-
-    ui->tableActions->setModel(model);
-
-    connect(ui->buttonAdd, SIGNAL(clicked()), this, SLOT(clickedButtonAdd()));
-}
-
-void WindowMain::setupUiPageSniffer()
-{
-    QStandardItemModel *model = new QStandardItemModel(1, 4, this);
-    model->setHorizontalHeaderItem(0, new QStandardItem(QString("Raw")));
-    model->setHorizontalHeaderItem(1, new QStandardItem(QString("From")));
-    model->setHorizontalHeaderItem(2, new QStandardItem(QString("To")));
-    model->setHorizontalHeaderItem(3, new QStandardItem(QString("Message")));
-
-    ui->tableSniffer->setModel(model);
-}
-
-void WindowMain::setupUiPageDebug()
-{
-
-}
-
-void WindowMain::setupUiPageSettings()
-{
-
-}
-
-void WindowMain::selectionChangedMainMenu(QItemSelection selection)
-{
-    ui->stackedContent->setCurrentIndex(ui->mainMenu->currentIndex().row());
-}
-
-void WindowMain::clickedButtonAdd()
-{
-    DialogAction* dialogAction = new DialogAction();
-    dialogAction->open();
+    return ui;
 }

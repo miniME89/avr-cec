@@ -1,6 +1,8 @@
-QT       += core gui
+QT += core gui xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+QMAKE_CXXFLAGS += -Wno-unused-parameter
 
 TARGET = avr-cec-client
 TEMPLATE = app
@@ -8,13 +10,22 @@ TEMPLATE = app
 
 SOURCES += src/main.cpp \
     src/windowmain.cpp \
-    src/dialogaction.cpp
+    src/tabactions.cpp \
+    src/tabconnection.cpp \
+    src/tabsniffer.cpp \
+    src/tabdebug.cpp \
+    src/tabsettings.cpp \
+    src/actions.cpp
 
-HEADERS  += inc/windowmain.h \
-    inc/dialogaction.h
+HEADERS += inc/windowmain.h \
+    inc/tabactions.h \
+    inc/tabconnection.h \
+    inc/tabsniffer.h \
+    inc/tabdebug.h \
+    inc/tabsettings.h \
+    inc/actions.h
 
-FORMS    += ui/windowmain.ui \
-    ui/dialogaction.ui
+FORMS += ui/windowmain.ui
 
 INCLUDEPATH += inc
 INCLUDEPATH += ..
