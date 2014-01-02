@@ -86,11 +86,11 @@ void WindowMain::setupUi()
     ui->mainMenu->setModel(model);
 
     connect(ui->mainMenu->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(eventSelectionChangedMainMenu(QItemSelection)));
-    //ui->mainMenu->selectionModel()->select(ui->mainMenu->rootIndex(), QItemSelectionModel::Select);
 
     if (connector.connect())
     {
         printf("connected: vendorName=%s, deviceName=%s, vendorId=%i, deviceId=%i\n", connector.getVendorName(), connector.getDeviceName(), connector.getVendorId(), connector.getDeviceId());
+        fflush(stdout);
 
         connector.addListenerCECMessage(&WindowMain::listenerCECMessage, this);
         connector.addListenerDebugMessage(&WindowMain::listenerDebugMessage, this);
@@ -105,4 +105,9 @@ void WindowMain::eventSelectionChangedMainMenu(QItemSelection selection)
 Ui::WindowMain* WindowMain::getUi()
 {
     return ui;
+}
+
+Connector& WindowMain::getConnector()
+{
+    return connector;
 }

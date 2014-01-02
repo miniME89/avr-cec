@@ -57,6 +57,7 @@ class WindowMain : public QMainWindow
         ~WindowMain();
 
         Ui::WindowMain* getUi();
+        avrcec::Connector &getConnector();
 
     private slots:
         void eventSelectionChangedMainMenu(QItemSelection selection);

@@ -21,6 +21,8 @@
 #include <QStandardItemModel>
 #include <QDebug>
 
+using namespace avrcec;
+
 TabSniffer::TabSniffer(WindowMain* window)
 {
     this->window = window;
@@ -34,11 +36,35 @@ TabSniffer::~TabSniffer()
 
 void TabSniffer::setupUi()
 {
-    QStandardItemModel *model = new QStandardItemModel(1, 4, window);
+    QStandardItemModel *model = new QStandardItemModel(0, 4, window);
     model->setHorizontalHeaderItem(0, new QStandardItem(QString("Raw")));
     model->setHorizontalHeaderItem(1, new QStandardItem(QString("From")));
     model->setHorizontalHeaderItem(2, new QStandardItem(QString("To")));
     model->setHorizontalHeaderItem(3, new QStandardItem(QString("Message")));
 
     window->getUi()->tableSniffer->setModel(model);
+
+    window->getConnector().addListenerCECMessage(&TabSniffer::listenerCECMessage, this);
+}
+
+void TabSniffer::listenerCECMessage(void* data)
+{
+    QStandardItemModel* model = (QStandardItemModel*)window->getUi()->tableSniffer->model();
+    CECMessage* message = (CECMessage*)data;
+
+    QString rawString;
+    std::vector<byte> rawData = message->getRaw();
+    qDebug() <<rawData.size();
+    for (unsigned int i = 0; i < rawData.size(); i++)
+    {
+        rawString.append(QString("%1").arg(rawData[i], 2, 16, QChar('0')).toUpper().append(" "));
+    }
+
+    QList<QStandardItem*> item;
+    item << new QStandardItem(rawString);
+    item << new QStandardItem("...");
+    item << new QStandardItem("...");
+    item << new QStandardItem("...");
+
+    model->appendRow(item);
 }

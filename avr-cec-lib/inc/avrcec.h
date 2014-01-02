@@ -182,6 +182,7 @@ namespace avrcec
             CECMessage(const CECMessage& obj);
             ~CECMessage();
 
+            std::vector<byte> getRaw();
             Header* getHeader();
             Opcode* getOpcode();
             std::vector<Operand*> getOperands();

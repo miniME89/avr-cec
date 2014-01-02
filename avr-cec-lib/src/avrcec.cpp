@@ -336,6 +336,40 @@ namespace avrcec
         }
     }
 
+    std::vector<byte> CECMessage::getRaw()
+    {
+        vector<byte> raw;
+
+        if (header != NULL)
+        {
+            raw.push_back(header->getValue());
+        }
+
+        if (opcode != NULL)
+        {
+            raw.push_back(opcode->getValue());
+        }
+
+        int bitShift = -1;
+        for (unsigned int i = 0; i < operands.size(); i++)
+        {
+            std::vector<bit> operandBits = operands[i]->getValueBits();
+            for (unsigned int j = 0; j < operandBits.size(); j++)
+            {
+                if (bitShift < 0)
+                {
+                    bitShift = 7;
+                    raw.push_back(0);
+                }
+
+                raw[raw.size() - 1] |= operandBits[j] <<bitShift;
+                bitShift--;
+            }
+        }
+
+        return raw;
+    }
+
     Header* CECMessage::getHeader()
     {
         return header;

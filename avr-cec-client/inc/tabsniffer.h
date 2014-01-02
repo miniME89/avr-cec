@@ -29,6 +29,8 @@ class TabSniffer : public QObject
     private:
         WindowMain* window;
 
+        void listenerCECMessage(void* data);
+
     public:
         TabSniffer(WindowMain* window);
         ~TabSniffer();
