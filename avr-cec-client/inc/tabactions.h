@@ -31,7 +31,24 @@ class TabActions : public QObject
     private:
         WindowMain* window;
 
-        void addTriggerRule();
+        QList<Trigger*> triggers;
+
+        void addTriggerRule(Rule *rule);
+        void removeTriggerRules();
+        void load();
+        void save();
+
+        void updateTree();
+        void updateForm(Trigger* trigger);
+        void updateForm(Action* action);
+
+        Trigger* getCurrentTrigger();
+        Action* getCurrentAction();
+        int getCurrentTriggerIndex();
+        int getCurrentActionIndex();
+
+        void selectTrigger(int trigger);
+        void selectAction(int trigger, int action);
 
     public:
         TabActions(WindowMain* window);
@@ -39,9 +56,28 @@ class TabActions : public QObject
         void setupUi();
 
     private slots:
+        void eventTriggerShowContextMenu(const QPoint& pos);
+
+        void eventTriggerMessageChanged(int index);
+        void eventTriggerConjunctionChanged(int index);
+        void eventTriggerParameterChanged(int index);
+        void eventTriggerTypeChanged(int index);
+        void eventTriggerValueChanged(int index);
+
+        void eventActionTypeChanged(int index);
+
+        void eventImport();
+        void eventExport();
+
         void eventAddTrigger();
         void eventAddTriggerRule();
+        void eventAddAction();
+
+        void eventRemove();
+        void eventRemoveTrigger();
         void eventRemoveTriggerRule();
+        void eventRemoveAction();
+
         void eventTreeActionsSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
 };
 

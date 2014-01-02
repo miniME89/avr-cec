@@ -18,6 +18,7 @@
 #ifndef ACTIONS_H
 #define ACTIONS_H
 
+#include "avrcec.h"
 #include <QString>
 #include <QList>
 
@@ -32,6 +33,7 @@ class Action
 
         typedef enum Type
         {
+            INVALID = -1,
             KEY = 0
         } Type;
 
@@ -91,11 +93,11 @@ class Rule
         Conjunction conjunction;
         int parameter;
         Type type;
-        QString match;
+        QString value;
 
     public:
         Rule();
-        Rule(Conjunction conjunction, int parameter, Type type, QString match);
+        Rule(Conjunction conjunction, int parameter, Type type, QString value);
         ~Rule();
 
         Conjunction getConjunction();
@@ -107,8 +109,8 @@ class Rule
         Type getType();
         void setType(Type type);
 
-        QString getMatch();
-        void setMatch(QString match);
+        QString getValue();
+        void setValue(QString value);
 };
 
 class Trigger
@@ -119,9 +121,12 @@ class Trigger
         QList<Rule*> rules;
         QList<Action*> actions;
 
+        avrcec::CECDefinitionMessage* definitionMessage;
+
     public:
         Trigger();
         Trigger(QString name, int message, QList<Rule*> rules, QList<Action*> actions);
+        ~Trigger();
 
         QString getName();
         void setName(QString name);
@@ -132,12 +137,18 @@ class Trigger
         QList<Rule*> getRules();
         void setRules(QList<Rule*> rules);
         void addRule(Rule* rule);
+        void removeRule(int index);
+        void removeRule(Rule* rule);
 
         QList<Action*> getActions();
         void setActions(QList<Action*> actions);
         void addAction(Action* action);
+        void removeAction(int index);
+        void removeAction(Action* action);
 
-        static bool load(QList<Trigger*> &triggers);
+        avrcec::CECDefinitionMessage* getDefinition();
+
+        static bool load(QList<Trigger*>& triggers);
         static bool save(QList<Trigger*>& triggers);
 };
 

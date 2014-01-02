@@ -340,6 +340,8 @@ namespace avrcec
             bool broadcast;
             CECDefinitionOperand* operands;
 
+            void getOperandList(CECDefinitionOperand* operand, std::vector<CECDefinitionOperand*>& operands);
+
         public:
             CECDefinitionMessage();
 
@@ -348,7 +350,9 @@ namespace avrcec
             const std::string& getDescription();
             bool isDirect();
             bool isBroadcast();
-            const CECDefinitionOperand* getOperands();
+            const CECDefinitionOperand* getOperandTree();
+            std::vector<CECDefinitionOperand*> getOperandList();
+            int getOperandCount();
 
             std::string toString();
     };

@@ -20,6 +20,8 @@
 #include <QFile>
 #include <QDebug>
 
+using namespace avrcec;
+
 //==================================================
 // Action
 //==================================================
@@ -70,6 +72,7 @@ ActionKey::ActionKey(QString name, Action::Type type, QList<Parameter> parameter
 
 }
 
+//TODO operating specific code... IFDEF...
 #include <windows.h>
 void ActionKey::execute()
 {
@@ -115,9 +118,12 @@ Rule::Rule()
 
 }
 
-Rule::Rule(Rule::Conjunction conjunction, int parameter, Rule::Type type, QString match)
+Rule::Rule(Rule::Conjunction conjunction, int parameter, Rule::Type type, QString value)
 {
-
+    this->conjunction = conjunction;
+    this->parameter = parameter;
+    this->type = type;
+    this->value = value;
 }
 
 Rule::~Rule()
@@ -155,14 +161,14 @@ void Rule::setType(Rule::Type type)
     this->type = type;
 }
 
-QString Rule::getMatch()
+QString Rule::getValue()
 {
-    return match;
+    return value;
 }
 
-void Rule::setMatch(QString match)
+void Rule::setValue(QString value)
 {
-    this->match = match;
+    this->value = value;
 }
 
 //==================================================
@@ -170,7 +176,9 @@ void Rule::setMatch(QString match)
 //==================================================
 Trigger::Trigger()
 {
+    message = -1;
 
+    definitionMessage = NULL;
 }
 
 Trigger::Trigger(QString name, int message, QList<Rule*> rules, QList<Action*> actions)
@@ -179,6 +187,13 @@ Trigger::Trigger(QString name, int message, QList<Rule*> rules, QList<Action*> a
     this->message = message;
     this->rules = rules;
     this->actions = actions;
+
+    definitionMessage = CECMessageFactory::getInstance()->getDefinitionMessage(message);
+}
+
+Trigger::~Trigger()
+{
+    qDebug() <<"destroy Trigger!";
 }
 
 QString Trigger::getName()
@@ -199,6 +214,7 @@ int Trigger::getMessage()
 void Trigger::setMessage(int message)
 {
     this->message = message;
+    definitionMessage = CECMessageFactory::getInstance()->getDefinitionMessage(message);
 }
 
 QList<Rule*> Trigger::getRules()
@@ -216,6 +232,16 @@ void Trigger::addRule(Rule *rule)
     rules.push_back(rule);
 }
 
+void Trigger::removeRule(int index)
+{
+    rules.removeAt(index);
+}
+
+void Trigger::removeRule(Rule *rule)
+{
+    rules.removeOne(rule);
+}
+
 QList<Action*> Trigger::getActions()
 {
     return actions;
@@ -229,6 +255,21 @@ void Trigger::setActions(QList<Action *> actions)
 void Trigger::addAction(Action *action)
 {
     actions.push_back(action);
+}
+
+void Trigger::removeAction(int index)
+{
+    actions.removeAt(index);
+}
+
+void Trigger::removeAction(Action *action)
+{
+    actions.removeOne(action);
+}
+
+CECDefinitionMessage* Trigger::getDefinition()
+{
+    return definitionMessage;
 }
 
 bool Trigger::load(QList<Trigger*>& triggers)
@@ -284,12 +325,11 @@ bool Trigger::load(QList<Trigger*>& triggers)
                         QDomElement ruleConjunction = elementSub.firstChildElement("conjunction");
                         QDomElement ruleParameter = elementSub.firstChildElement("parameter");
                         QDomElement ruleType = elementSub.firstChildElement("type");
-                        QDomElement ruleMatch = elementSub.firstChildElement("match");
+                        QDomElement ruleValue = elementSub.firstChildElement("value");
 
-                        if (!ruleConjunction.isNull() && !ruleParameter.isNull() && !ruleType.isNull() && !ruleMatch.isNull())
+                        if (!ruleConjunction.isNull() && !ruleParameter.isNull() && !ruleType.isNull() && !ruleValue.isNull())
                         {
-                            qDebug() <<"found rule";
-                            trigger->addRule(new Rule((Rule::Conjunction)ruleConjunction.text().toInt(), ruleParameter.text().toInt(), (Rule::Type)ruleType.text().toInt(), ruleMatch.text()));
+                            trigger->addRule(new Rule((Rule::Conjunction)ruleConjunction.text().toInt(), ruleParameter.text().toInt(), (Rule::Type)ruleType.text().toInt(), ruleValue.text()));
                         }
                     }
                     //is action
@@ -300,8 +340,6 @@ bool Trigger::load(QList<Trigger*>& triggers)
 
                         if (!actionName.isNull() && !actionType.isNull())
                         {
-                            qDebug() <<"found action";
-
                             QList<Action::Parameter> actionParameters;
 
                             //loop through all nodes and find all parameters
@@ -318,8 +356,6 @@ bool Trigger::load(QList<Trigger*>& triggers)
 
                                     if (!name.isEmpty() && !value.isEmpty())
                                     {
-                                        qDebug() <<"found parameter";
-
                                         Action::Parameter parameter;
                                         parameter.name = name;
                                         parameter.value = value;
@@ -354,7 +390,99 @@ bool Trigger::load(QList<Trigger*>& triggers)
     return true;
 }
 
-bool Trigger::save(QList<Trigger*> &triggers)
+bool Trigger::save(QList<Trigger*>& triggers)
 {
+    QDomDocument doc;
+
+    QDomElement root = doc.createElement("actions");
+    doc.appendChild(root);
+
+    for (int i = 0; i < triggers.size(); i++)
+    {
+        QDomElement trigger = doc.createElement("trigger");
+
+        QDomElement element = doc.createElement("name");
+        QDomText text = doc.createTextNode(triggers[i]->getName());
+        element.appendChild(text);
+        trigger.appendChild(element);
+
+        element = doc.createElement("message");
+        text = doc.createTextNode(QString::number(triggers[i]->getMessage()));
+        element.appendChild(text);
+        trigger.appendChild(element);
+
+        //rules
+        QList<Rule*> rules = triggers[i]->getRules();
+        for (int j = 0; j < rules.size(); j++)
+        {
+            QDomElement rule = doc.createElement("rule");
+
+            element = doc.createElement("conjunction");
+            text = doc.createTextNode(QString::number(rules[j]->getConjunction()));
+            element.appendChild(text);
+            rule.appendChild(element);
+
+            element = doc.createElement("parameter");
+            text = doc.createTextNode(QString::number(rules[j]->getParameter()));
+            element.appendChild(text);
+            rule.appendChild(element);
+
+            element = doc.createElement("type");
+            text = doc.createTextNode(QString::number(rules[j]->getType()));
+            element.appendChild(text);
+            rule.appendChild(element);
+
+            element = doc.createElement("value");
+            text = doc.createTextNode(rules[j]->getValue());
+            element.appendChild(text);
+            rule.appendChild(element);
+
+            trigger.appendChild(rule);
+        }
+
+        //actions
+        QList<Action*> actions = triggers[i]->getActions();
+        for (int j = 0; j < actions.size(); j++)
+        {
+            QDomElement action = doc.createElement("action");
+
+            element = doc.createElement("name");
+            text = doc.createTextNode(actions[j]->getName());
+            element.appendChild(text);
+            action.appendChild(element);
+
+            element = doc.createElement("type");
+            text = doc.createTextNode(QString::number(actions[j]->getType()));
+            element.appendChild(text);
+            action.appendChild(element);
+
+            //parameters
+            QList<Action::Parameter> parameters = actions[j]->getParameters();
+            for (int k = 0; k < parameters.size(); k++)
+            {
+                element = doc.createElement("parameter");
+                element.setAttribute("name", parameters[k].name);
+                text = doc.createTextNode(parameters[k].value);
+                element.appendChild(text);
+                action.appendChild(element);
+            }
+
+            trigger.appendChild(action);
+        }
+
+        root.appendChild(trigger);
+    }
+
+    QFile file("actions.xml");
+    if(!file.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+
+    QTextStream ts(&file);
+    ts << doc.toString();
+
+    file.close();
+
     return true;
 }

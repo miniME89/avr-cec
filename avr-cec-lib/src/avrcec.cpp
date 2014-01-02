@@ -888,9 +888,39 @@ namespace avrcec
         return broadcast;
     }
 
-    const CECDefinitionOperand* CECDefinitionMessage::getOperands()
+    const CECDefinitionOperand* CECDefinitionMessage::getOperandTree()
     {
         return operands;
+    }
+
+    vector<CECDefinitionOperand*> CECDefinitionMessage::getOperandList()
+    {
+        vector<CECDefinitionOperand*> operandsList;
+
+        getOperandList(operands, operandsList);
+
+        return operandsList;
+    }
+
+    void CECDefinitionMessage::getOperandList(CECDefinitionOperand* operand, std::vector<CECDefinitionOperand*>& operandsList)
+    {
+        if (operand != NULL)
+        {
+            if (operand->getParent() != NULL)
+            {
+                operandsList.push_back(operand);
+            }
+
+            for (unsigned int i = 0; i < operand->getChilds().size(); i++)
+            {
+                getOperandList(operand->getChilds()[i], operandsList);
+            }
+        }
+    }
+
+    int CECDefinitionMessage::getOperandCount()
+    {
+        return getOperandList().size();
     }
 
     string CECDefinitionMessage::toString()

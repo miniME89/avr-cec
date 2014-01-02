@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>997</width>
+    <width>998</width>
     <height>600</height>
    </rect>
   </property>
@@ -242,6 +242,9 @@
               <height>16777215</height>
              </size>
             </property>
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
             <attribute name="headerVisible">
              <bool>false</bool>
             </attribute>
@@ -343,7 +346,7 @@
                   </widget>
                  </item>
                  <item row="2" column="1">
-                  <widget class="QLabel" name="labelDirect">
+                  <widget class="QLabel" name="labelTriggerDirect">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -401,7 +404,7 @@
                       <number>5</number>
                      </property>
                      <item>
-                      <widget class="QPushButton" name="buttonAddTriggerRule">
+                      <widget class="QPushButton" name="buttonTriggerAddRule">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                          <horstretch>0</horstretch>
@@ -478,7 +481,7 @@
                   </widget>
                  </item>
                  <item row="3" column="1">
-                  <widget class="QLabel" name="labelBroadcast">
+                  <widget class="QLabel" name="labelTriggerBroadcast">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -534,7 +537,7 @@
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QLabel" name="labelDescription">
+                  <widget class="QLabel" name="labelTriggerDescription">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -692,7 +695,7 @@
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QComboBox" name="comboAction">
+                  <widget class="QComboBox" name="comboActionType">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
