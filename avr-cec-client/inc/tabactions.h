@@ -32,27 +32,28 @@ class TabActions : public QObject
         WindowMain* window;
 
         QList<Trigger*> triggers;
+        QString triggersFilename;
 
         void addTriggerRule(Rule *rule);
-        void removeTriggerRules();
-        void load();
-        void save();
+        void removeTriggerRulesAll();
+        void load(QString filename);
+        void save(QString filename);
 
         void updateTree();
         void updateForm(Trigger* trigger);
         void updateForm(Action* action);
 
-        Trigger* getCurrentTrigger();
-        Action* getCurrentAction();
-        int getCurrentTriggerIndex();
-        int getCurrentActionIndex();
+        Trigger* getSelectedTrigger();
+        Action* getSelectedAction();
+        int getSelectedTriggerIndex();
+        int getSelectedActionIndex();
 
-        void selectTrigger(int trigger);
-        void selectAction(int trigger, int action);
+        void setSelection(int trigger, int action = -1);
 
     public:
         TabActions(WindowMain* window);
         ~TabActions();
+
         void setupUi();
 
     private slots:
@@ -62,7 +63,7 @@ class TabActions : public QObject
         void eventTriggerConjunctionChanged(int index);
         void eventTriggerParameterChanged(int index);
         void eventTriggerTypeChanged(int index);
-        void eventTriggerValueChanged(int index);
+        void eventTriggerOptionChanged(int index);
 
         void eventActionTypeChanged(int index);
 

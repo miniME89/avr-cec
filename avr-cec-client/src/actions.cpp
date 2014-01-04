@@ -34,7 +34,7 @@ Action::Action(QString name, Type type, QList<Parameter> parameters)
 
 Action::~Action()
 {
-
+    qDebug() <<"destroy Action";
 }
 
 QString Action::getName()
@@ -128,7 +128,7 @@ Rule::Rule(Rule::Conjunction conjunction, int parameter, Rule::Type type, QStrin
 
 Rule::~Rule()
 {
-
+    qDebug() <<"destroy Rule";
 }
 
 Rule::Conjunction Rule::getConjunction()
@@ -193,7 +193,12 @@ Trigger::Trigger(QString name, int message, QList<Rule*> rules, QList<Action*> a
 
 Trigger::~Trigger()
 {
-    qDebug() <<"destroy Trigger!";
+    qDebug() <<"destroy Trigger";
+
+    qDeleteAll(rules);
+    rules.clear();
+    qDeleteAll(actions);
+    actions.clear();
 }
 
 QString Trigger::getName()
@@ -272,10 +277,10 @@ CECDefinitionMessage* Trigger::getDefinition()
     return definitionMessage;
 }
 
-bool Trigger::load(QList<Trigger*>& triggers)
+bool Trigger::load(QString filename, QList<Trigger*>& triggers)
 {
     QDomDocument doc;
-    QFile file("actions.xml");
+    QFile file(filename);
     if(!file.open(QIODevice::ReadOnly))
     {
         return false;
@@ -390,7 +395,7 @@ bool Trigger::load(QList<Trigger*>& triggers)
     return true;
 }
 
-bool Trigger::save(QList<Trigger*>& triggers)
+bool Trigger::save(QString filename, QList<Trigger*>& triggers)
 {
     QDomDocument doc;
 
@@ -473,7 +478,7 @@ bool Trigger::save(QList<Trigger*>& triggers)
         root.appendChild(trigger);
     }
 
-    QFile file("actions.xml");
+    QFile file(filename);
     if(!file.open(QIODevice::WriteOnly))
     {
         return false;

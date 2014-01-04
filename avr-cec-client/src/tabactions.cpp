@@ -22,18 +22,23 @@
 #include <QDebug>
 #include <QScrollBar>
 #include <QMenu>
+#include <QFileDialog>
 
 using namespace avrcec;
 
 TabActions::TabActions(WindowMain* window)
 {
     this->window = window;
+    triggersFilename = "triggers.xml";
+
     setupUi();
+
+    load(triggersFilename);
 }
 
 TabActions::~TabActions()
 {
-
+    save(triggersFilename);
 }
 
 void TabActions::setupUi()
@@ -57,8 +62,6 @@ void TabActions::setupUi()
     connect(window->getUi()->buttonTriggerAddRule, SIGNAL(clicked()), this, SLOT(eventAddTriggerRule()));
     connect(window->getUi()->treeActions->selectionModel(), SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), this, SLOT(eventTreeActionsSelectionChanged(const QModelIndex&, const QModelIndex&)));
     connect(window->getUi()->treeActions, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(eventTriggerShowContextMenu(const QPoint)));
-
-    load();
 }
 
 void TabActions::eventTriggerShowContextMenu(const QPoint &pos)
@@ -73,7 +76,7 @@ void TabActions::eventTriggerShowContextMenu(const QPoint &pos)
     QAction* actionRemove = menu.addAction("Remove");
     connect(actionRemove, SIGNAL(triggered()), this, SLOT(eventRemove()));
 
-    if (getCurrentTrigger() == NULL)
+    if (getSelectedTrigger() == NULL)
     {
         actionAddAction->setDisabled(true);
     }
@@ -83,8 +86,6 @@ void TabActions::eventTriggerShowContextMenu(const QPoint &pos)
 
 void TabActions::addTriggerRule(Rule* rule = NULL)
 {
-    CECDefinitionMessage* definition = CECMessageFactory::getInstance()->getDefinitionMessage(window->getUi()->comboTriggerMessage->itemData(window->getUi()->comboTriggerMessage->currentIndex()).toInt());
-
     //Widget container
     QWidget* containerTriggerRule = new QWidget(window->getUi()->containerTriggerRulesContents);
     containerTriggerRule->setObjectName(QStringLiteral("rule"));
@@ -116,13 +117,6 @@ void TabActions::addTriggerRule(Rule* rule = NULL)
     comboParameter->setSizePolicy(sizePolicy4);
     comboParameter->setMinimumSize(QSize(120, 0));
 
-    //add trigger CEC message parameter
-    std::vector<CECDefinitionOperand*> operands = definition->getOperandList();
-    for (unsigned int i = 0; i < operands.size(); i++)
-    {
-        comboParameter->addItem(QString(operands[i]->getName().c_str()), QVariant(operands[i]->getId()));
-    }
-
     containerTriggerRuleLayout->addWidget(comboParameter);
 
     //combo box 3 (type)
@@ -138,13 +132,13 @@ void TabActions::addTriggerRule(Rule* rule = NULL)
     containerTriggerRuleLayout->addWidget(comboType);
 
     //combo box 4 (Value)
-    QComboBox* comboValue = new QComboBox(containerTriggerRule);
-    comboValue->setObjectName(QStringLiteral("comboBox_11"));
-    sizePolicy2.setHeightForWidth(comboValue->sizePolicy().hasHeightForWidth());
-    comboValue->setSizePolicy(sizePolicy2);
-    comboValue->setMinimumSize(QSize(120, 0));
+    QComboBox* comboOptions = new QComboBox(containerTriggerRule);
+    comboOptions->setObjectName(QStringLiteral("comboBox_11"));
+    sizePolicy2.setHeightForWidth(comboOptions->sizePolicy().hasHeightForWidth());
+    comboOptions->setSizePolicy(sizePolicy2);
+    comboOptions->setMinimumSize(QSize(120, 0));
 
-    containerTriggerRuleLayout->addWidget(comboValue);
+    containerTriggerRuleLayout->addWidget(comboOptions);
 
     //remove button
     QPushButton* buttonRemove = new QPushButton(containerTriggerRule);
@@ -164,14 +158,13 @@ void TabActions::addTriggerRule(Rule* rule = NULL)
         comboType->setCurrentIndex(rule->getType());
     }
 
-    connect(comboConjunction, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerConjunctionChanged(int)));
-    connect(comboParameter, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerParameterChanged(int)));
-    connect(comboType, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerTypeChanged(int)));
-    connect(comboValue, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerValueChanged(int)));
-    connect(buttonRemove, SIGNAL(clicked()), this, SLOT(eventRemoveTriggerRule()));
-
-    window->getUi()->containerTriggerRulesLayout->insertWidget(window->getUi()->containerTriggerRulesContents->children().size() - 3, containerTriggerRule);
-    window->getUi()->containerTriggerRules->verticalScrollBar()->setValue(window->getUi()->containerTriggerRules->verticalScrollBar()->maximum());
+    //add parameters for selected message
+    CECDefinitionMessage* definitionMessage = CECMessageFactory::getInstance()->getDefinitionMessage(window->getUi()->comboTriggerMessage->itemData(window->getUi()->comboTriggerMessage->currentIndex()).toInt());
+    std::vector<CECDefinitionOperand*> operands = definitionMessage->getOperandList();
+    for (unsigned int i = 0; i < operands.size(); i++)
+    {
+        comboParameter->addItem(QString(operands[i]->getName().c_str()), QVariant(operands[i]->getId()));
+    }
 
     if (rule != NULL)
     {
@@ -185,21 +178,41 @@ void TabActions::addTriggerRule(Rule* rule = NULL)
                 break;
             }
         }
+    }
 
-        //select value in combo box
-        for (int i = 0; i < comboValue->count(); i++)
+    //add options for selected parameter
+    CECDefinitionOperand* definitionOperand = CECMessageFactory::getInstance()->getDefinitionOperand(comboParameter->itemData(comboParameter->currentIndex()).toInt());
+    std::map<int, std::string> options = definitionOperand->getOptions();
+    for (std::map<int, std::string>::const_iterator i = options.begin(); i != options.end(); i++)
+    {
+        comboOptions->addItem(QString(i->second.c_str()), QVariant(i->first));
+    }
+
+    if (rule != NULL)
+    {
+        //select option in combo box
+        for (int i = 0; i < comboOptions->count(); i++)
         {
-            if (rule->getValue() == comboValue->itemData(i))
+            if (rule->getValue() == comboOptions->itemData(i))
             {
-                comboValue->setCurrentIndex(i);
+                comboOptions->setCurrentIndex(i);
 
                 break;
             }
         }
     }
+
+    connect(comboConjunction, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerConjunctionChanged(int)));
+    connect(comboParameter, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerParameterChanged(int)));
+    connect(comboType, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerTypeChanged(int)));
+    connect(comboOptions, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerOptionChanged(int)));
+    connect(buttonRemove, SIGNAL(clicked()), this, SLOT(eventRemoveTriggerRule()));
+
+    window->getUi()->containerTriggerRulesLayout->insertWidget(window->getUi()->containerTriggerRulesContents->children().size() - 3, containerTriggerRule);
+    window->getUi()->containerTriggerRules->verticalScrollBar()->setValue(window->getUi()->containerTriggerRules->verticalScrollBar()->maximum());
 }
 
-void TabActions::removeTriggerRules()
+void TabActions::removeTriggerRulesAll()
 {
     QObjectList childs = window->getUi()->containerTriggerRulesContents->children();
     for (int i = 0; i < childs.size(); i++)
@@ -211,25 +224,26 @@ void TabActions::removeTriggerRules()
     }
 }
 
-void TabActions::load()
+void TabActions::load(QString filename)
 {
-    //TODO delete allocated memmory?
+    qDeleteAll(triggers);
     triggers.clear();
 
-    if (Trigger::load(triggers))
-    {
-        updateTree();
-    }
+    Trigger::load(filename, triggers);
+    updateTree();
 }
 
-void TabActions::save()
+void TabActions::save(QString filename)
 {
-    Trigger::save(triggers);
+    Trigger::save(filename, triggers);
 }
 
 void TabActions::updateTree()
 {
     QStandardItemModel* model = (QStandardItemModel*)window->getUi()->treeActions->model();
+
+    int prevTriggerIndex = getSelectedTriggerIndex();
+    int prevActionIndex = getSelectedActionIndex();
 
     model->removeRows(0, model->rowCount());
 
@@ -255,6 +269,8 @@ void TabActions::updateTree()
     }
 
     window->getUi()->treeActions->expandAll();
+
+    setSelection(prevTriggerIndex, prevActionIndex);
 }
 
 void TabActions::updateForm(Trigger* trigger)
@@ -272,7 +288,7 @@ void TabActions::updateForm(Trigger* trigger)
         }
     }
 
-    removeTriggerRules();
+    removeTriggerRulesAll();
 
     //add rules
     QList<Rule*> rules = trigger->getRules();
@@ -287,50 +303,30 @@ void TabActions::updateForm(Action* action)
     window->getUi()->stackedActionsContent->setCurrentIndex(1);
 }
 
-Trigger* TabActions::getCurrentTrigger()
+Trigger* TabActions::getSelectedTrigger()
 {
-    QItemSelectionModel* selectionModel = window->getUi()->treeActions->selectionModel();
-    QModelIndex current = selectionModel->currentIndex();
-
-    if (current.isValid())
+    int triggerIndex = getSelectedTriggerIndex();
+    if (triggerIndex >= 0)
     {
-        //selection is Trigger
-        if (!current.parent().isValid())
-        {
-            qDebug() <<"current trigger index: " <<current.row();
-            return triggers[current.row()];
-        }
-        //selection is Action
-        else
-        {
-            qDebug() <<"current trigger index: " <<current.parent().row();
-            return triggers[current.parent().row()];
-        }
+        return triggers[triggerIndex];
     }
 
     return NULL;
 }
 
-Action* TabActions::getCurrentAction()
+Action* TabActions::getSelectedAction()
 {
-    QItemSelectionModel* selectionModel = window->getUi()->treeActions->selectionModel();
-    QModelIndex current = selectionModel->currentIndex();
-
-    if (current.isValid())
+    int triggerIndex = getSelectedTriggerIndex();
+    int actionIndex = getSelectedActionIndex();
+    if (triggerIndex >= 0 && actionIndex >= 0)
     {
-        //selection is action
-        if (current.parent().isValid())
-        {
-            qDebug() <<"current trigger index: " <<current.parent().row();
-            qDebug() <<"current action index: " <<current.row();
-            return triggers[current.parent().row()]->getActions()[current.row()];
-        }
+        return triggers[triggerIndex]->getActions()[actionIndex];
     }
 
     return NULL;
 }
 
-int TabActions::getCurrentTriggerIndex()
+int TabActions::getSelectedTriggerIndex()
 {
     QItemSelectionModel* selectionModel = window->getUi()->treeActions->selectionModel();
     QModelIndex current = selectionModel->currentIndex();
@@ -354,7 +350,7 @@ int TabActions::getCurrentTriggerIndex()
     return -1;
 }
 
-int TabActions::getCurrentActionIndex()
+int TabActions::getSelectedActionIndex()
 {
     QItemSelectionModel* selectionModel = window->getUi()->treeActions->selectionModel();
     QModelIndex current = selectionModel->currentIndex();
@@ -372,18 +368,32 @@ int TabActions::getCurrentActionIndex()
     return -1;
 }
 
-void TabActions::selectTrigger(int trigger)
+void TabActions::setSelection(int trigger, int action)
 {
-    QStandardItemModel* model = (QStandardItemModel*)window->getUi()->treeActions->model();
-    QItemSelectionModel* selectionModel = window->getUi()->treeActions->selectionModel();
-    selectionModel->setCurrentIndex(model->item(trigger)->index(), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-}
+    qDebug() <<"select: trigger =" <<trigger <<", action =" <<action;
 
-void TabActions::selectAction(int trigger, int action)
-{
     QStandardItemModel* model = (QStandardItemModel*)window->getUi()->treeActions->model();
     QItemSelectionModel* selectionModel = window->getUi()->treeActions->selectionModel();
-    selectionModel->setCurrentIndex(model->item(trigger)->child(action)->index(), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+
+    if (trigger >= 0)
+    {
+        QStandardItem* itemTrigger = model->item(trigger);
+        if (itemTrigger != NULL)
+        {
+            if (action < 0)
+            {
+                selectionModel->setCurrentIndex(model->item(trigger)->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            }
+            else
+            {
+                QStandardItem* itemAction = itemTrigger->child(action);
+                if (itemAction != NULL)
+                {
+                    selectionModel->setCurrentIndex(itemAction->index(), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+                }
+            }
+        }
+    }
 }
 
 void TabActions::eventTriggerMessageChanged(int index)
@@ -396,7 +406,7 @@ void TabActions::eventTriggerMessageChanged(int index)
     window->getUi()->labelTriggerDirect->setText((definition->isDirect()) ? "yes" : "no");
     window->getUi()->labelTriggerBroadcast->setText((definition->isBroadcast()) ? "yes" : "no");
 
-    removeTriggerRules();
+    removeTriggerRulesAll();
 
     if (definition->getOperandCount() > 0)
     {
@@ -408,7 +418,7 @@ void TabActions::eventTriggerMessageChanged(int index)
     }
 
     //update trigger
-    getCurrentTrigger()->setMessage(definition->getId());
+    getSelectedTrigger()->setMessage(definition->getId());
 }
 
 void TabActions::eventTriggerConjunctionChanged(int index)
@@ -429,7 +439,7 @@ void TabActions::eventTriggerConjunctionChanged(int index)
     currentTriggerRuleIndex = currentTriggerRuleIndex - 2;
 
     //update trigger rule
-    getCurrentTrigger()->getRules()[currentTriggerRuleIndex]->setConjunction((Rule::Conjunction)index);
+    getSelectedTrigger()->getRules()[currentTriggerRuleIndex]->setConjunction((Rule::Conjunction)index);
 }
 
 void TabActions::eventTriggerParameterChanged(int index)
@@ -449,6 +459,8 @@ void TabActions::eventTriggerParameterChanged(int index)
     }
     currentTriggerRuleIndex = currentTriggerRuleIndex - 2;
 
+    qDebug() <<"current trigger rule index: " <<currentTriggerRuleIndex;
+
     //get widgets
     QWidget* senderWidget = (QWidget*)sender();
     QComboBox* comboParameter = (QComboBox*)senderWidget->parent()->children()[2];
@@ -463,7 +475,7 @@ void TabActions::eventTriggerParameterChanged(int index)
     }
 
     //update trigger rule
-    getCurrentTrigger()->getRules()[currentTriggerRuleIndex]->setParameter(comboParameter->itemData(index).toInt());
+    getSelectedTrigger()->getRules()[currentTriggerRuleIndex]->setParameter(comboParameter->itemData(index).toInt());
 }
 
 void TabActions::eventTriggerTypeChanged(int index)
@@ -484,12 +496,12 @@ void TabActions::eventTriggerTypeChanged(int index)
     currentTriggerRuleIndex = currentTriggerRuleIndex - 2;
 
     //update trigger rule
-    getCurrentTrigger()->getRules()[currentTriggerRuleIndex]->setType((Rule::Type)index);
+    getSelectedTrigger()->getRules()[currentTriggerRuleIndex]->setType((Rule::Type)index);
 }
 
-void TabActions::eventTriggerValueChanged(int index)
+void TabActions::eventTriggerOptionChanged(int index)
 {
-    qDebug() <<"eventTriggerValueChanged";
+    qDebug() <<"eventTriggerOptionChanged";
 
     //get current trigger rule index
     QObject* container = sender()->parent();
@@ -504,11 +516,13 @@ void TabActions::eventTriggerValueChanged(int index)
     }
     currentTriggerRuleIndex = currentTriggerRuleIndex - 2;
 
+    qDebug() <<"current trigger rule index: " <<currentTriggerRuleIndex;
+
     //get sender
     QComboBox* senderWidget = (QComboBox*)sender();
 
     //update trigger rule
-    getCurrentTrigger()->getRules()[currentTriggerRuleIndex]->setValue(QString::number(senderWidget->itemData(index).toInt()));
+    getSelectedTrigger()->getRules()[currentTriggerRuleIndex]->setValue(QString::number(senderWidget->itemData(index).toInt()));
 }
 
 void TabActions::eventActionTypeChanged(int index)
@@ -521,14 +535,24 @@ void TabActions::eventImport()
 {
     qDebug() <<"eventImport";
 
-    load();
+    QString filename = QFileDialog::getOpenFileName(window, tr("Import Triggers"), "", tr("XML (*.xml)"));
+
+    QList<Trigger*> loadedTriggers;
+    if (Trigger::load(filename, loadedTriggers))
+    {
+        triggers <<loadedTriggers;
+
+        updateTree();
+    }
 }
 
 void TabActions::eventExport()
 {
     qDebug() <<"eventExport";
 
-    save();
+    QString filename = QFileDialog::getSaveFileName(window, tr("Export Triggers"), "", tr("XML (*.xml)"));
+
+    Trigger::save(filename, triggers);
 }
 
 void TabActions::eventAddTrigger()
@@ -538,14 +562,16 @@ void TabActions::eventAddTrigger()
     triggers.push_back(new Trigger("Trigger", 0, QList<Rule*>(), QList<Action*>()));
 
     updateTree();
-    selectTrigger(triggers.size() - 1);
+    setSelection(triggers.size() - 1);
 }
 
 void TabActions::eventAddTriggerRule()
 {
     qDebug() <<"eventAddTriggerRule";
 
-    addTriggerRule();
+    getSelectedTrigger()->addRule(new Rule(Rule::AND, 0, Rule::CONTAINS, ""));
+
+    updateTree();
 }
 
 void TabActions::eventAddAction()
@@ -553,22 +579,22 @@ void TabActions::eventAddAction()
     qDebug() <<"eventAddAction";
 
     ActionFactory actionFactory;
-    Trigger* currentTrigger = getCurrentTrigger();
+    Trigger* currentTrigger = getSelectedTrigger();
     currentTrigger->addAction(actionFactory.create("Action", Action::KEY, QList<Action::Parameter>()));
 
     updateTree();
-    selectAction(triggers.indexOf(currentTrigger), currentTrigger->getActions().size() - 1);
+    setSelection(triggers.indexOf(currentTrigger), currentTrigger->getActions().size() - 1);
 }
 
 void TabActions::eventRemove()
 {
     qDebug() <<"eventRemove";
 
-    if (getCurrentAction() != NULL)
+    if (getSelectedAction() != NULL)
     {
         eventRemoveAction();
     }
-    else if (getCurrentTrigger() != NULL)
+    else if (getSelectedTrigger() != NULL)
     {
         eventRemoveTrigger();
     }
@@ -578,35 +604,55 @@ void TabActions::eventRemoveTrigger()
 {
     qDebug() <<"eventRemoveTrigger";
 
-    int triggerIndex = getCurrentTriggerIndex();
+    int triggerIndex = getSelectedTriggerIndex();
     if (triggerIndex > -1)
     {
         triggers.removeAt(triggerIndex);
     }
 
     updateTree();
+    setSelection(0);
 }
 
 void TabActions::eventRemoveTriggerRule()
 {
     qDebug() <<"eventRemoveTriggerRule";
 
+    //get current trigger rule index
+    QObject* container = sender()->parent();
+    QObjectList children = window->getUi()->containerTriggerRulesContents->children();
+    int currentTriggerRuleIndex;
+    for (currentTriggerRuleIndex = 0; currentTriggerRuleIndex < children.size(); currentTriggerRuleIndex++)
+    {
+        if (children[currentTriggerRuleIndex] == container)
+        {
+            break;
+        }
+    }
+    currentTriggerRuleIndex = currentTriggerRuleIndex - 2;
+
+    qDebug() <<"current trigger rule index: " <<currentTriggerRuleIndex;
+
+
     QWidget* senderWidget = (QWidget*)sender();
     delete senderWidget->parent();
+
+    getSelectedTrigger()->removeRule(currentTriggerRuleIndex);
 }
 
 void TabActions::eventRemoveAction()
 {
     qDebug() <<"eventRemoveAction";
 
-    int triggerIndex = getCurrentTriggerIndex();
-    int actionIndex = getCurrentActionIndex();
+    int triggerIndex = getSelectedTriggerIndex();
+    int actionIndex = getSelectedActionIndex();
     if (triggerIndex > -1 && actionIndex > -1)
     {
         triggers[triggerIndex]->removeAction(actionIndex);
     }
 
     updateTree();
+    setSelection(triggerIndex);
 }
 
 void TabActions::eventTreeActionsSelectionChanged(const QModelIndex& current, const QModelIndex& previous)
@@ -618,13 +664,13 @@ void TabActions::eventTreeActionsSelectionChanged(const QModelIndex& current, co
         //is Trigger
         if (!current.parent().isValid())
         {
-            updateForm(getCurrentTrigger());
+            updateForm(getSelectedTrigger());
         }
         //is Action
         else
         {
 
-            updateForm(getCurrentAction());
+            updateForm(getSelectedAction());
         }
     }
 }

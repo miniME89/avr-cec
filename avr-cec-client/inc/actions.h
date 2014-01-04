@@ -148,8 +148,8 @@ class Trigger
 
         avrcec::CECDefinitionMessage* getDefinition();
 
-        static bool load(QList<Trigger*>& triggers);
-        static bool save(QList<Trigger*>& triggers);
+        static bool load(QString filename, QList<Trigger*>& triggers);
+        static bool save(QString filename, QList<Trigger*>& triggers);
 };
 
 #endif // ACTIONS_H
