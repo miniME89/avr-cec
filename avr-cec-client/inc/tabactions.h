@@ -35,7 +35,6 @@ class TabActions : public QObject
         QString triggersFilename;
 
         void addTriggerRule(Rule *rule);
-        void removeTriggerRulesAll();
         void load(QString filename);
         void save(QString filename);
 

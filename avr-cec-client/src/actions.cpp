@@ -247,6 +247,12 @@ void Trigger::removeRule(Rule *rule)
     rules.removeOne(rule);
 }
 
+void Trigger::removeRulesAll()
+{
+    qDeleteAll(rules);
+    rules.clear();
+}
+
 QList<Action*> Trigger::getActions()
 {
     return actions;
@@ -270,6 +276,12 @@ void Trigger::removeAction(int index)
 void Trigger::removeAction(Action *action)
 {
     actions.removeOne(action);
+}
+
+void Trigger::removeActionsAll()
+{
+    qDeleteAll(actions);
+    actions.clear();
 }
 
 CECDefinitionMessage* Trigger::getDefinition()

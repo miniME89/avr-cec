@@ -373,7 +373,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="5" column="0" colspan="6">
+                 <item row="5" column="0" colspan="3">
                   <widget class="QScrollArea" name="containerTriggerRules">
                    <property name="frameShape">
                     <enum>QFrame::NoFrame</enum>
@@ -387,7 +387,7 @@
                       <x>0</x>
                       <y>0</y>
                       <width>451</width>
-                      <height>369</height>
+                      <height>400</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="containerTriggerRulesLayout">
@@ -461,7 +461,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1" colspan="5">
+                 <item row="0" column="1" colspan="2">
                   <widget class="QComboBox" name="comboTriggerMessage">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -591,43 +591,6 @@
                     <bool>false</bool>
                    </property>
                   </widget>
-                 </item>
-                 <item row="6" column="0" colspan="6">
-                  <layout class="QHBoxLayout" name="horizontalLayout_7">
-                   <item>
-                    <spacer name="horizontalSpacer_4">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="buttonTriggerCancel">
-                     <property name="text">
-                      <string>Cancel</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="buttonTriggerOk">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>OK</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
                  </item>
                 </layout>
                </widget>
@@ -827,43 +790,6 @@
                     </layout>
                    </widget>
                   </widget>
-                 </item>
-                 <item row="2" column="0" colspan="3">
-                  <layout class="QHBoxLayout" name="horizontalLayout_2">
-                   <item>
-                    <spacer name="horizontalSpacer_3">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="buttonActionCancel">
-                     <property name="text">
-                      <string>Cancel</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="buttonActionOk">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>OK</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
                  </item>
                 </layout>
                </widget>

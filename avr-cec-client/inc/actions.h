@@ -139,12 +139,14 @@ class Trigger
         void addRule(Rule* rule);
         void removeRule(int index);
         void removeRule(Rule* rule);
+        void removeRulesAll();
 
         QList<Action*> getActions();
         void setActions(QList<Action*> actions);
         void addAction(Action* action);
         void removeAction(int index);
         void removeAction(Action* action);
+        void removeActionsAll();
 
         avrcec::CECDefinitionMessage* getDefinition();
 

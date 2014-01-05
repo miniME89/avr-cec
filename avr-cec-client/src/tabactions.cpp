@@ -212,18 +212,6 @@ void TabActions::addTriggerRule(Rule* rule = NULL)
     window->getUi()->containerTriggerRules->verticalScrollBar()->setValue(window->getUi()->containerTriggerRules->verticalScrollBar()->maximum());
 }
 
-void TabActions::removeTriggerRulesAll()
-{
-    QObjectList childs = window->getUi()->containerTriggerRulesContents->children();
-    for (int i = 0; i < childs.size(); i++)
-    {
-        if (childs[i]->objectName() == "rule")
-        {
-            delete childs[i];
-        }
-    }
-}
-
 void TabActions::load(QString filename)
 {
     qDeleteAll(triggers);
@@ -278,6 +266,7 @@ void TabActions::updateForm(Trigger* trigger)
     window->getUi()->stackedActionsContent->setCurrentIndex(0);
 
     //select message in combo box
+    disconnect(window->getUi()->comboTriggerMessage, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerMessageChanged(int)));
     for (int i = 0; i < window->getUi()->comboTriggerMessage->count(); i++)
     {
         if (trigger->getMessage() == window->getUi()->comboTriggerMessage->itemData(i))
@@ -287,8 +276,28 @@ void TabActions::updateForm(Trigger* trigger)
             break;
         }
     }
+    connect(window->getUi()->comboTriggerMessage, SIGNAL(currentIndexChanged(int)), this, SLOT(eventTriggerMessageChanged(int)));
 
-    removeTriggerRulesAll();
+    //check "Add Rule" button visibility
+    CECDefinitionMessage* definition = CECMessageFactory::getInstance()->getDefinitionMessage(window->getUi()->comboTriggerMessage->itemData(window->getUi()->comboTriggerMessage->currentIndex()).toInt());
+    if (definition->getOperandCount() > 0)
+    {
+        window->getUi()->buttonTriggerAddRule->show();
+    }
+    else
+    {
+        window->getUi()->buttonTriggerAddRule->hide();
+    }
+
+    //remove trigger rules
+    QObjectList childs = window->getUi()->containerTriggerRulesContents->children();
+    for (int i = 0; i < childs.size(); i++)
+    {
+        if (childs[i]->objectName() == "rule")
+        {
+            delete childs[i];
+        }
+    }
 
     //add rules
     QList<Rule*> rules = trigger->getRules();
@@ -406,8 +415,19 @@ void TabActions::eventTriggerMessageChanged(int index)
     window->getUi()->labelTriggerDirect->setText((definition->isDirect()) ? "yes" : "no");
     window->getUi()->labelTriggerBroadcast->setText((definition->isBroadcast()) ? "yes" : "no");
 
-    removeTriggerRulesAll();
+    //delete trigger rules
+    getSelectedTrigger()->removeRulesAll();
 
+    QObjectList childs = window->getUi()->containerTriggerRulesContents->children();
+    for (int i = 0; i < childs.size(); i++)
+    {
+        if (childs[i]->objectName() == "rule")
+        {
+            delete childs[i];
+        }
+    }
+
+    //check "Add Rule" button visibility
     if (definition->getOperandCount() > 0)
     {
         window->getUi()->buttonTriggerAddRule->show();
