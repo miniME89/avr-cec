@@ -51,7 +51,7 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="avr-cec.null.15948987" name="avr-cec"/>
+		<project id="avr-cec-target.null.15948987" name="avr-cec-target"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">

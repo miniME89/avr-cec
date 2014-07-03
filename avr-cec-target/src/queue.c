@@ -22,7 +22,7 @@
  *
  */
 
-#include "utils.h"
+#include "queue.h"
 #include "defines.h"
 #include "peripherals.h"
 #include "debug.h"
@@ -31,19 +31,24 @@
 //==========================================
 // Definitions
 //==========================================
-Queue* newQueue(uint8_t size, uint8_t sizeEach)
+Queue* queueCreate(uint8_t num, uint8_t size)
 {
+	//allocate memory for the queue structure itself
     Queue* queue = malloc(sizeof(Queue));
-    queue->data = malloc(size * sizeof(void*));
+
+    //allocate memory for a pointer to each item of the queue
+    queue->element = malloc(num * sizeof(void*));
+
+    queue->num = num;
     queue->size = size;
-    queue->sizeEach = sizeEach;
     queue->read = 0;
     queue->write = 0;
 
-    for (uint8_t i = 0; i < size; i++)
+    //allocate memory for each element
+    for (uint8_t i = 0; i < num; i++)
     {
-        queue->data[i] = malloc(sizeEach);
-        if (queue->data[i] == NULL)
+        queue->element[i] = malloc(size);
+        if (queue->element[i] == NULL)
         {
             return NULL;
         }
@@ -52,19 +57,34 @@ Queue* newQueue(uint8_t size, uint8_t sizeEach)
     return queue;
 }
 
-bool putQueue(Queue* queue, void* data)
+void queueDelete(Queue* queue)
 {
-    uint8_t next = ((queue->write + 1) & (queue->size - 1));
+	//free memory for each element
+    for (uint8_t i = 0; i < queue->num; i++)
+    {
+        free(queue->element[i]);
+    }
+
+    //free memory for the element pointer
+	free(queue->element);
+
+	//free memory for the queue structure itself
+	free(queue);
+}
+
+bool queuePut(Queue* queue, void* element)
+{
+    uint8_t next = ((queue->write + 1) & (queue->num - 1));
 
     if (queue->read == next)
     {
-        debug_string("OV");
+    	debugPutString("OV");
         return false;
     }
 
-    char* dst = queue->data[queue->write];
-    char* src = data;
-    uint8_t num = queue->sizeEach;
+    char* dst = queue->element[queue->write];
+    char* src = element;
+    uint8_t num = queue->size;
     while (num--)
     {
         *dst++ = *src++;
@@ -75,27 +95,33 @@ bool putQueue(Queue* queue, void* data)
     return true;
 }
 
-bool getQueue(Queue* queue, void* data)
+bool queueGet(Queue* queue, void* element)
 {
     if (queue->read == queue->write)
     {
         return false;
     }
 
-    char* dst = data;
-    char* src = queue->data[queue->read];
-    uint8_t num = queue->sizeEach;
+    char* dst = element;
+    char* src = queue->element[queue->read];
+    uint8_t num = queue->size;
     while (num--)
     {
         *dst++ = *src++;
     }
 
-    queue->read = (queue->read+1) & (queue->size - 1);
+    queue->read = (queue->read+1) & (queue->num - 1);
 
     return true;
 }
 
-bool isEmptyQueue(Queue* queue)
+bool queueIsEmpty(Queue* queue)
 {
     return (queue->read == queue->write);
+}
+
+void queueClear(Queue* queue)
+{
+    queue->read = 0;
+    queue->write = 0;
 }

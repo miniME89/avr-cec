@@ -24,55 +24,61 @@
 
 #include "debug.h"
 #include "defines.h"
-#include "utils.h"
+#include "queue.h"
 
 #if DEBUG_AVR_CEC == 1
-static Queue* debugDataQueue;
+
+//==========================================
+// Declarations
+//==========================================
+static Queue* debugQueue;
 
 //==========================================
 // Definitions
 //==========================================
-void _initDebug()
+void _debugSetup()
 {
-    debugDataQueue = newQueue(DEBUG_QUEUE_SIZE, sizeof(DebugData));
+    debugQueue = queueCreate(DEBUG_QUEUE_SIZE, sizeof(DebugData));
 }
 
-void _debug(DebugData* data)
+void _debugPut(DebugData* data)
 {
-
-    putQueue(debugDataQueue, data);
-
+    queuePut(debugQueue, data);
 }
 
-void _debug_char(uint8_t c)
+void _debugPutChar(uint8_t c)
 {
     DebugData data;
     data.data[0] = c;
     data.size = 1;
-    putQueue(debugDataQueue, &data);
+
+    queuePut(debugQueue, &data);
 }
 
-void _debug_word(uint16_t w)
+void _debugPutWord(uint16_t w)
 {
     DebugData data;
     data.data[0] = (uint8_t) (w >> 8);
     data.data[1] = (uint8_t) w;
     data.size = 2;
-    putQueue(debugDataQueue, &data);
+
+    queuePut(debugQueue, &data);
 }
 
-void _debug_string(char* str)
+void _debugPutString(char* str)
 {
     DebugData data;
     for (data.size = 0; *str; str++, data.size++)
     {
         data.data[data.size] = *str;
     }
-    putQueue(debugDataQueue, &data);
+
+    queuePut(debugQueue, &data);
 }
 
-bool _readDebugData(DebugData* data)
+bool _debugGet(DebugData* data)
 {
-    return getQueue(debugDataQueue, data);
+    return queueGet(debugQueue, data);
 }
+
 #endif

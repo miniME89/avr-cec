@@ -38,7 +38,7 @@ static uint8_t readCommand;
 static uint8_t currentPosition;
 static uint8_t bytesRemaining;
 
-void initUsb()
+void usbSetup()
 {
     usbInit();
 
@@ -52,7 +52,7 @@ void initUsb()
     usbDeviceConnect();
 }
 
-void processUsb()
+void usbProcess()
 {
     usbPoll();
 }
@@ -60,6 +60,7 @@ void processUsb()
 usbMsgLen_t usbFunctionSetup(uchar setupData[8])
 {
     usbRequest_t *rq = (void*)setupData;
+
     switch (rq->bRequest)
     {
         case COMMAND_GET_MESSAGE:
@@ -93,7 +94,7 @@ usbMsgLen_t usbFunctionSetup(uchar setupData[8])
 
         break;
         case COMMAND_GET_DEBUG:
-            if (readDebugData(&debugData))
+            if (debugGet(&debugData))
             {
                 for (uint8_t i = 0; i < debugData.size; i++)
                 {

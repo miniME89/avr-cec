@@ -25,48 +25,87 @@
 #ifndef DEFINES_H_
 #define DEFINES_H_
 
-//Debug
+//==========================================
+// Debug
+//==========================================
 #define DEBUG_AVR_CEC               1                                       //enable/disable debugging
 #define DEBUG_QUEUE_SIZE            8                                       //size of the debug data queue (Note: each queue item will allocate 10 bytes of memory on the heap, if debugging is enabled)
 
-//IO
+//==========================================
+// IO
+//==========================================
+/*
+ * The INFO LED pin will be used to reflect the HIGH or LOW state of the CEC bus, so the user will get some feedback
+ * that everything is working.
+ */
 #define INFO_LED_PORT               B
 #define INFO_LED_PIN                PINB4
 
-#define CEC_BUS_PULL_PORT           D
-#define CEC_BUS_PULL_PIN            PIND6
+/*
+ * The CEC output pin is used to only write to the CEC bus. This pin will be used to pull the bus LOW, which will result in a logical 0. To write a logical
+ * 1 the pin will simply be disconnected, which results in the default HIGH state of the bus.
+ */
+#define CEC_OUTPUT_PORT           	D
+#define CEC_OUTPUT_PIN            	PIND6
 
-#define CEC_INPUT_CAPTURE_PORT      B
-#define CEC_INPUT_CAPTURE_PIN       PINB0
+/*
+ * The CEC input pin is used to only read the CEC bus.
+ */
+#define CEC_INPUT_PORT      		B
+#define CEC_INPUT_PIN       		PINB0
 
-//Timer
+//==========================================
+// Timer
+//==========================================
 #define TIMER_PRESCALER             64                                      //prescaler (1, 8, 64, 256 or 1024)
-#define TIMER_TICK_VALUE            (1000000 / (F_CPU/TIMER_PRESCALER))     //time value of 1 timer tick (in us)
+#define TIMER_TICK_VALUE            (1000000 / (F_CPU/TIMER_PRESCALER))     //calculated time value of one timer tick (in us)
 
-//CEC
-#define CEC_READ_QUEUE_SIZE         8                                       //size of the cec messages read queue (Note: each queue item will allocate 18 bytes of memory on the heap)
-#define CEC_WRITE_QUEUE_SIZE        8                                       //size of the cec messages write queue (Note: each queue item will allocate 18 bytes of memory on the heap)
+//==========================================
+// CEC
+//==========================================
+/*
+ * The size of the read and write queues for CEC messages. For each queue item 18 bytes of memory will be allocate on the heap on startup. The size of both
+ * queues therefore depends on the size of the memory of the used microcontroller.
+ */
+#define CEC_READ_QUEUE_SIZE         8                                       //size of the cec messages read queue
+#define CEC_WRITE_QUEUE_SIZE        8                                       //size of the cec messages write queue
 
+/*
+ * These settings will probably be removed in the future and hold in the memory for configuration at runtime.
+ */
 #define ENABLE_ASSERTION            0                                       //enable/disable assertion of data blocks send to the specified logical address
-
 #define PHYSICAL_ADDRESS            0xFFFF
 #define LOGICAL_ADDRESS             0x4
 
+/*
+ * The following defines will hold some important CEC timing values for the start bit. There is no need for changing there values. For further details check
+ * the correspondent page in the HDMI CEC specification.
+ */
 #define START_BIT_T1                ((3.7 * 1000) / TIMER_TICK_VALUE)       //start bit: rising edge time t1 (in timer ticks => 3.7ms) (HDMI CEC specification p. 8)
 #define START_BIT_T2                ((4.5 * 1000) / TIMER_TICK_VALUE)       //start bit: falling edge time t2 (in timer ticks => 4.5ms) (HDMI CEC specification p. 8)
 #define START_BIT_TOLERANCE         ((0.2 * 1000) / TIMER_TICK_VALUE)       //start bit: rising/falling edge time tolerance (in timer ticks => 0.2ms) (HDMI CEC specification p. 8)
 
+/*
+ * The following defines will hold some important CEC timing values for the data bit. There is no need for changing there values. For further details check
+ * the correspondent page in the HDMI CEC specification.
+ */
 #define DATA_BIT_LOGIC_0            ((1.5 * 1000) / TIMER_TICK_VALUE)       //data bit: rising edge time (in timer ticks => 1.5ms) to represent a logic 0 (HDMI CEC specification p. 9)
 #define DATA_BIT_LOGIC_1            ((0.6 * 1000) / TIMER_TICK_VALUE)       //data bit: rising edge time (in timer ticks => 0.6ms) to represent a logic 1 (HDMI CEC specification p. 9)
 #define DATA_BIT_FOLLOWING          ((2.4 * 1000) / TIMER_TICK_VALUE)       //data bit: start time (in timer ticks => 2.4ms) for a following data bit (HDMI CEC specification p. 9)
 #define DATA_BIT_FOLLOWING_TIMEOUT  ((2.75 * 1000) / TIMER_TICK_VALUE)      //data bit: latest time for start of a following data bit (in timer ticks => 2.75ms) (HDMI CEC specification p. 9)
 #define DATA_BIT_SAMPLE_TIME        ((1.05 * 1000) / TIMER_TICK_VALUE)      //data bit: sample time (in timer ticks => 1.05ms) (HDMI CEC specification p. 9)
 
+/*
+ * The following defines will hold some important CEC timing values for the signal free time. There is no need for changing there values. For further details check
+ * the correspondent page in the HDMI CEC specification.
+ */
 #define SFT_PRESENT_INITIATOR       ((7 * 2.4 * 1000) / TIMER_TICK_VALUE)   //signal free time: present initiator sends another frame immediately after its previous frame (in timer ticks => 16.8ms) (HDMI CEC specification p. 15)
 #define SFT_NEW_INITIATOR           ((5 * 2.4 * 1000) / TIMER_TICK_VALUE)   //signal free time: new initiator wants to send a frame (in timer ticks => 12ms) (HDMI CEC specification p. 15)
 #define SFT_RETRANSMISSION          ((3 * 2.4 * 1000) / TIMER_TICK_VALUE)   //signal free time: retransmission after a previous unsuccessful attempt (in timer ticks => 7.2ms) (HDMI CEC specification p. 15)
 
-//usb
+//==========================================
+// USB
+//==========================================
 #define COMMAND_GET_MESSAGE         1
 #define COMMAND_PUT_MESSAGE         2
 #define COMMAND_GET_CONFIG          3

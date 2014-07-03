@@ -35,6 +35,7 @@ OBJDUMP = avr-objdump
 DUDE = avrdude
 NM = avr-nm
 SIZE = avr-size
+DOC = doxygen
 
 # Compiler flags
 CFLAGS = -g$(DEBUG)
@@ -57,6 +58,9 @@ LDFLAGS += -lm
 
 # Flash flags
 DUDEFLAGS = -c stk500v2 -p $(MCU) -P com8
+
+# Documentation flags
+DOCFLAGS = 
 
 # Sources and object files
 SOURCES_C = $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*/*.c)
@@ -130,6 +134,10 @@ clean:
 # Flash
 flash: $(BUILDDIR)/$(TARGET).hex
 	$(DUDE) $(DUDEFLAGS) -U flash:w:$<
+
+# Documentation
+doc:
+	$(DOC) $(DOCFLAGS) documentation.cfg
 
 # Listing of phony targets
 .PHONY : all build elf hex eep lss sym clean

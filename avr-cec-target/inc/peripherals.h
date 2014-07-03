@@ -34,40 +34,78 @@ typedef enum Level
     HIGH = 1
 } Level;
 
-typedef enum Edge
-{
-    FALLING,
-    RISING
-} Edge;
-
 typedef enum Timer
 {
     TIMER_A,
     TIMER_B
 } Timer;
 
-typedef enum DataDirection
-{
-    INPUT,
-    OUTPUT
-} DataDirection;
+/**
+ * Setup peripherals.
+ */
+void peripheralsSetup(void);
 
-//interrupts
+/**
+ * Enable or disable global interrupts
+ * @param enable True to enable global interrupts or false to disable global interrupts.
+ */
 void setInterrupts(bool enable);
 
-//IO
-void initIO(void);
-Level getInputCaptureState(void);
-void setInputCaptureTriggerEdge(Edge edge);
-void setInfoLED(Level level);
-void setDataDirectionCEC(DataDirection direction);
+//==========================================
+// IO
+//==========================================
+/**
+ * Get the level of the current level on the CEC input pin. The CEC input pin is used to only read the CEC bus.
+ * @return Returns the current level of the CEC input pin. This can be HIGH or LOW.
+ */
+Level getInCECLevel(void);
 
-//Timer1
-void initTimer(void);
+/**
+ * Set the level of the CEC output pin. The CEC output pin is used to only write the CEC bus. This will apply the level to the whole CEC bus. Note that a
+ * LOW level will force the bus LOW until it is set HIGH again. In the meantime no other devices can use the bus. The HIGH level will simply disconnect the
+ * CEC output pin from the bus which will result in the default HIGH state of the bus.
+ * @param level The level to set on the CEC output pin. This can be HIGH or LOW.
+ */
+void setOutCECLevel(Level level);
+
+/**
+ * Set the level of the output info LED pin.
+ * @param level The level to set on the output info LED pin. This can be HIGH or LOW.
+ */
+void setOutInfoLEDLevel(Level level);
+
+//==========================================
+// Timer
+//==========================================
+/**
+ *
+ */
 void resetTimer(void);
+
+/**
+ *
+ * @return
+ */
 uint16_t getTimerTicks(void);
+
+/**
+ *
+ * @return
+ */
 uint8_t getTimerOverflowCounter(void);
+
+/**
+ *
+ * @param timer
+ * @param ticks
+ */
 void setTimerCompareMatch(Timer timer, uint16_t ticks);
+
+/**
+ *
+ * @param timer
+ * @param enable
+ */
 void setTimerCompareMatchInterrupt(Timer timer, bool enable);
 
 #endif

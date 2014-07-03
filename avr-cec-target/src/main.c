@@ -29,17 +29,19 @@
 
 int main(void)
 {
-    initDebug();
-    initTimer();
-    initIO();
-    initCec();
-    initUsb();
+	//setup
+	debugSetup();
+    peripheralsSetup();
+    cecSetup();
+    usbSetup();
 
+    //enable interrupts
     setInterrupts(true);
 
+    //process loop
     while (1)
     {
-        processCec();
-        processUsb();
+        cecProcess();
+        usbProcess();
     }
 }

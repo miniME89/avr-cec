@@ -43,12 +43,12 @@ typedef struct CECMessage
 /**
  * Initialize the driver
  */
-void initCec(void);
+void cecSetup(void);
 
 /**
  * Process driver actions. An internal state machine takes care of the specific action which should be executed.
  */
-void processCec(void);
+void cecProcess(void);
 
 /**
  * Write a CEC message on the bus. The message will be put into the send queue and processed later.

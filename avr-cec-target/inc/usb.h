@@ -28,11 +28,11 @@
 /**
  * Initialize usb.
  */
-void initUsb(void);
+void usbSetup(void);
 
 /**
  * Process usb actions.
  */
-void processUsb(void);
+void usbProcess(void);
 
 #endif

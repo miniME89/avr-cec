@@ -25,7 +25,7 @@
 #include "cec.h"
 #include "defines.h"
 #include "peripherals.h"
-#include "utils.h"
+#include "queue.h"
 #include "debug.h"
 
 //==========================================
@@ -171,13 +171,13 @@ static Level shouldLevel = HIGH;
 //==========================================
 // Definitions
 //==========================================
-void initCec(void)
+void cecSetup(void)
 {
-    messageQueueRead = newQueue(CEC_READ_QUEUE_SIZE, sizeof(CECMessage));
-    messageQueueWrite = newQueue(CEC_WRITE_QUEUE_SIZE, sizeof(CECMessage));
+    messageQueueRead = queueCreate(CEC_READ_QUEUE_SIZE, sizeof(CECMessage));
+    messageQueueWrite = queueCreate(CEC_WRITE_QUEUE_SIZE, sizeof(CECMessage));
 }
 
-void processCec()
+void cecProcess()
 {
     switch(currentState)
     {
@@ -265,7 +265,7 @@ void processCec()
             {
                 if (messageBufferWrite.size == 0)                           //no message in write buffer?
                 {
-                    if (getQueue(messageQueueWrite, &messageBufferWrite)) //get message from queue
+                    if (queueGet(messageQueueWrite, &messageBufferWrite)) //get message from queue
                     {
                         setState(WRITE_SIGNAL_FREE_TIME);
                     }
@@ -315,7 +315,7 @@ void processCec()
                     clearTimeout(TIMER_B);
 
                     messageBufferRead.size = byteCounter;
-                    putQueue(messageQueueRead, &messageBufferRead);
+                    queuePut(messageQueueRead, &messageBufferRead);
 
                     readStartBitState = NOT_FOUND;
                     setState(READ_START_BIT);
@@ -387,7 +387,7 @@ void processCec()
                 clearTimeout(TIMER_A);
                 setState(READ_START_BIT);
                 events.toggledEdge = true;
-                debug_string("S");
+                debugPutString("S");
             }
 
             if (isEventTriggeredTimerA())
@@ -425,7 +425,7 @@ void processCec()
                     setState(READ_START_BIT);
                     events.toggledEdge = true;
 
-                    debug_string("L");
+                    debugPutString("L");
                 }
             }
 
@@ -540,7 +540,7 @@ void processCec()
                         setState(READ_START_BIT);
                         events.toggledEdge = true;
 
-                        debug_string("L");
+                        debugPutString("L");
                     }
                 }
                 else                                                                        //don't verify ACK bit
@@ -548,7 +548,7 @@ void processCec()
                     if (lastEdgeLevel == HIGH)                                              //ACK bit not asserted by follower?
                     {
                         //TODO error handling: ACK bit not asserted by follower
-                        debug_string("E");
+                    	debugPutString("E");
                     }
                 }
             }
@@ -627,12 +627,12 @@ bool isEventTransistionOut()
 
 bool writeCECMessage(CECMessage* message)
 {
-    return putQueue(messageQueueWrite, message);
+    return queuePut(messageQueueWrite, message);
 }
 
 bool readCECMessage(CECMessage* message)
 {
-    return getQueue(messageQueueRead, message);
+    return queueGet(messageQueueRead, message);
 }
 
 void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
@@ -670,13 +670,13 @@ void clearTimeout(Timer timer)
 
 void low()
 {
-    setDataDirectionCEC(OUTPUT);
+    setOutCECLevel(LOW);
     shouldLevel = LOW;
 }
 
 void high()
 {
-    setDataDirectionCEC(INPUT);
+    setOutCECLevel(HIGH);
     shouldLevel = HIGH;
 }
 
@@ -687,19 +687,10 @@ bool verifyLevel()
 
 void executeTimerInputCapture()
 {
-    lastEdgeLevel = getInputCaptureState();
+    lastEdgeLevel = getInCECLevel();
     lastEdgeTicks = getTimerTicks();
     events.toggledEdge = true;
-    setInfoLED(lastEdgeLevel);
-
-    if (lastEdgeLevel == HIGH)
-    {
-        setInputCaptureTriggerEdge(FALLING);                    //next trigger on falling edge
-    }
-    else
-    {
-        setInputCaptureTriggerEdge(RISING);                     //next trigger on rising edge
-    }
+    setOutInfoLEDLevel(lastEdgeLevel);
 }
 
 void executeTimerACompareMatch()
