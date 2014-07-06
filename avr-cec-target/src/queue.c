@@ -33,7 +33,7 @@
 //==========================================
 Queue* queueCreate(uint8_t num, uint8_t size)
 {
-	//allocate memory for the queue structure itself
+    //allocate memory for the queue structure itself
     Queue* queue = malloc(sizeof(Queue));
 
     //allocate memory for a pointer to each item of the queue
@@ -59,17 +59,17 @@ Queue* queueCreate(uint8_t num, uint8_t size)
 
 void queueDelete(Queue* queue)
 {
-	//free memory for each element
+    //free memory for each element
     for (uint8_t i = 0; i < queue->num; i++)
     {
         free(queue->element[i]);
     }
 
     //free memory for the element pointer
-	free(queue->element);
+    free(queue->element);
 
-	//free memory for the queue structure itself
-	free(queue);
+    //free memory for the queue structure itself
+    free(queue);
 }
 
 bool queuePut(Queue* queue, void* element)
@@ -78,7 +78,6 @@ bool queuePut(Queue* queue, void* element)
 
     if (queue->read == next)
     {
-    	debugPutString("OV");
         return false;
     }
 

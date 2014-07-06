@@ -53,7 +53,7 @@ void cecProcess(void);
 /**
  * Write a CEC message on the bus. The message will be put into the send queue and processed later.
  * @param message The CEC message to write.
- * @return Returns true if the message was successful put into a send queue.
+ * @return Returns true if the message was successful put into the send queue.
  */
 bool writeCECMessage(CECMessage* message);
 
@@ -63,20 +63,5 @@ bool writeCECMessage(CECMessage* message);
  * @return Returns true if the message was successful read from the queue. Returns false if the receive queue is empty.
  */
 bool readCECMessage(CECMessage* message);
-
-/**
- * Called when input capture interrupt is executed.
- */
-void executeTimerInputCapture(void);
-
-/**
- * Called when compare match A is executed.
- */
-void executeTimerACompareMatch(void);
-
-/**
- * Called when compare match B is executed.
- */
-void executeTimerBCompareMatch(void);
 
 #endif

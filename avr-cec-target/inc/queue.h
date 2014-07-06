@@ -32,11 +32,11 @@
  * The queue structure representing a FIFO queue for generic data.
  */
 typedef struct Queue {
-    void** element;		//!< A pointer to each item of the queue. It is therefore an array of void pointers.
-    uint8_t num;		//!< Number of the elements in the queue.
-    uint8_t size;		//!< Size of each individual element in the queue.
-    uint8_t read;		//!< Position of the next element in the queue returned by the getQueue function.
-    uint8_t write;		//!< Position of the next empty slot the putQueue function will write a new element.
+    void** element;         //!< A pointer to each item of the queue. It is therefore an array of void pointers.
+    uint8_t num;            //!< Number of the elements in the queue.
+    uint8_t size;           //!< Size of each individual element in the queue.
+    uint8_t read;           //!< Position of the next element in the queue returned by the getQueue function.
+    uint8_t write;          //!< Position of the next empty slot the putQueue function will write a new element.
 } Queue;
 
 /**

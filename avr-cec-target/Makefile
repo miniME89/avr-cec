@@ -140,7 +140,7 @@ doc:
 	$(DOC) $(DOCFLAGS) documentation.cfg
 
 # Listing of phony targets
-.PHONY : all build elf hex eep lss sym clean
+.PHONY : all build elf hex eep lss sym clean flash doc
 
 # Create build directory
 $(shell mkdir $(BUILDDIR) 2>/dev/null)

@@ -29,8 +29,8 @@
 
 int main(void)
 {
-	//setup
-	debugSetup();
+    //setup
+    debugSetup();
     peripheralsSetup();
     cecSetup();
     usbSetup();

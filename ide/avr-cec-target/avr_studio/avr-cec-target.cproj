@@ -177,6 +177,10 @@ cp main.elf ../avr-cec-target.elf
       <SubType>compile</SubType>
       <Link>inc\debug.h</Link>
     </Compile>
+    <Compile Include="..\..\..\avr-cec-target\inc\config.h">
+      <SubType>compile</SubType>
+      <Link>inc\config.h</Link>
+    </Compile>
     <Compile Include="..\..\..\avr-cec-target\inc\defines.h">
       <SubType>compile</SubType>
       <Link>inc\defines.h</Link>
@@ -205,9 +209,9 @@ cp main.elf ../avr-cec-target.elf
       <SubType>compile</SubType>
       <Link>inc\usbdrv\usbportability.h</Link>
     </Compile>
-    <Compile Include="..\..\..\avr-cec-target\inc\utils.h">
+    <Compile Include="..\..\..\avr-cec-target\inc\queue.h">
       <SubType>compile</SubType>
-      <Link>inc\utils.h</Link>
+      <Link>inc\queue.h</Link>
     </Compile>
     <Compile Include="..\..\..\avr-cec-target\src\cec.c">
       <SubType>compile</SubType>
@@ -241,9 +245,9 @@ cp main.elf ../avr-cec-target.elf
       <SubType>compile</SubType>
       <Link>src\usbdrv\usbdrvasm.S</Link>
     </Compile>
-    <Compile Include="..\..\..\avr-cec-target\src\utils.c">
+    <Compile Include="..\..\..\avr-cec-target\src\queue.c">
       <SubType>compile</SubType>
-      <Link>src\utils.c</Link>
+      <Link>src\queue.c</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 #directories
 build
 bin
+doxygen
 .settings
 
 #files

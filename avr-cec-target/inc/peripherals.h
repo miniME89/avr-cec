@@ -28,6 +28,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+typedef void (*InterruptCallback)(void);
+
 typedef enum Level
 {
     LOW = 0,
@@ -74,6 +76,12 @@ void setOutCECLevel(Level level);
  */
 void setOutInfoLEDLevel(Level level);
 
+/**
+ *
+ * @param callback
+ */
+void registerCallbackInputCapture(InterruptCallback callback);
+
 //==========================================
 // Timer
 //==========================================
@@ -99,13 +107,25 @@ uint8_t getTimerOverflowCounter(void);
  * @param timer
  * @param ticks
  */
-void setTimerCompareMatch(Timer timer, uint16_t ticks);
+void setValueTimerCompareMatch(Timer timer, uint16_t ticks);
 
 /**
  *
  * @param timer
  * @param enable
  */
-void setTimerCompareMatchInterrupt(Timer timer, bool enable);
+void setInterruptTimerCompareMatch(Timer timer, bool enable);
+
+/**
+ *
+ * @param callback
+ */
+void registerCallbackTimerA(InterruptCallback callback);
+
+/**
+ *
+ * @param callback
+ */
+void registerCallbackTimerB(InterruptCallback callback);
 
 #endif

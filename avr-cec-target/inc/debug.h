@@ -39,46 +39,46 @@ typedef struct DebugData
 } DebugData;
 
 #if DEBUG_AVR_CEC == 1
-	/**
-	 * Initialize debug. Don't use this function, use the corresponding macro instead.
-	 */
-	void _debugSetup(void);
+    /**
+     * Initialize debug. Don't use this function, use the corresponding macro instead.
+     */
+    void _debugSetup(void);
     #define debugSetup() _debugSetup()
 
-	/**
-	 * Add debug data. Don't use this function, use the corresponding macro instead.
-	 * @param data
-	 */
-	void _debugPut(DebugData* data);
+    /**
+     * Add debug data. Don't use this function, use the corresponding macro instead.
+     * @param data
+     */
+    void _debugPut(DebugData* data);
     #define debugPut(data) _debugPut(data)
 
-	/**
-	 * Add debug char (1 byte). Don't use this function, use the corresponding macro instead.
-	 * @param c
-	 */
-	void _debugPutChar(uint8_t c);
+    /**
+     * Add debug char (1 byte). Don't use this function, use the corresponding macro instead.
+     * @param c
+     */
+    void _debugPutChar(uint8_t c);
     #define debugPutChar(c) _debugPutChar(c)
 
-	/**
-	 * Add debug word (2 bytes). Don't use this function, use the corresponding macro instead.
-	 * @param w
-	 */
-	void _debugPutWord(uint16_t w);
+    /**
+     * Add debug word (2 bytes). Don't use this function, use the corresponding macro instead.
+     * @param w
+     */
+    void _debugPutWord(uint16_t w);
     #define debugPutWord(w) _debugPutWord(w)
 
-	/**
-	 * Add debug string.
-	 * @param str String of max 8 characters. Don't use this function, use the corresponding macro instead.
-	 */
-	void _debugPutString(char* str);
+    /**
+     * Add debug string.
+     * @param str String of max 8 characters. Don't use this function, use the corresponding macro instead.
+     */
+    void _debugPutString(char* str);
     #define debugPutString(str) _debugPutString(str)
 
-	/**
-	 * Get the next debug data element from the debug queue. Don't use this function, use the corresponding macro instead.
-	 * @param data
-	 * @return
-	 */
-	bool _debugGet(DebugData* data);
+    /**
+     * Get the next debug data element from the debug queue. Don't use this function, use the corresponding macro instead.
+     * @param data
+     * @return
+     */
+    bool _debugGet(DebugData* data);
     #define debugGet(data) _debugGet(data)
 #else
     #define debugSetup()

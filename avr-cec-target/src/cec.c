@@ -32,39 +32,20 @@
 // Declarations
 //==========================================
 /**
- * The state of the state machine.
+ * Typedef for a function pointer representing a state.
  */
-typedef enum State {
-    START,                  //!< START
-    EXIT,                   //!< EXIT
-    READ_START_BIT,         //!< READ_START_BIT
-    READ_DATA_BIT,          //!< READ_DATA_BIT
-    WRITE_SIGNAL_FREE_TIME, //!< WRITE_SIGNAL_FREE_TIME
-    WRITE_START_BIT,        //!< WRITE_START_BIT
-    WRITE_DATA_BIT          //!< WRITE_DATA_BIT
-} State;
+typedef void (*StatePointer)(void);
 
 /**
- * The sub states for the sub state machine when in READ_START_BIT state.
+ *
  */
-typedef enum SubStateReadStartBit {
-    NOT_FOUND,              //!< no start bit found
-    READ_T0,                //!< read t0 edge => any negative edge
-    READ_T1,                //!< read t1 edge in specified time
-    READ_T2                 //!< read t2 edge in specified time => found start bit
-} SubStateReadStartBit;
-
-/**
- * All possible events of the state machine.
- */
-typedef struct Events
+typedef enum StateMachine
 {
-    bool triggeredTimerA;
-    bool triggeredTimerB;
-    bool toggledEdge;
-    bool transistionIn;
-    bool transistionOut;
-} Events;
+    SM_MAIN = 0,       //!< SM_MAIN
+    SM_READ = 1,       //!< SM_READ
+    SM_WRITE = 2,      //!< SM_WRITE
+    SM_READSTARTBIT = 3//!< SM_READSTARTBIT
+} StateMachine;
 
 /**
  * Timer options
@@ -79,37 +60,13 @@ typedef struct TimerOptions
  * Set the state for the state machine.
  * @param state
  */
-static void setState(State state);
+static void setState(StateMachine stateMachine, StatePointer state);
 
 /**
- * Check if there is a triggered timer A event. This will consume the event if there is one.
- * @return Returns true if there is a triggered timer A event.
+ *
+ * @param stateMachine
  */
-static bool isEventTriggeredTimerA(void);
-
-/**
- * Check if there is a triggered timer B event. This will consume the event if there is one.
- * @return Returns true if there is a triggered timer B event.
- */
-static bool isEventTriggeredTimerB(void);
-
-/**
- * Check if there is a input toggled event. This will consume the event if there is one.
- * @return Returns true if there is a input toggled event.
- */
-static bool isEventInputToggled(void);
-
-/**
- * Check if there is a state transition in event. This will consume the event if there is one.
- * @return Returns true if there is a state transition in event.
- */
-static bool isEventTransistionIn(void);
-
-/**
- * Check if there is a state transition out event. This will consume the event if there is one.
- * @return Returns true if there is a state transition out event.
- */
-static bool isEventTransistionOut(void);
+static void executeStateMachine(StateMachine stateMachine);
 
 /**
  *
@@ -145,12 +102,142 @@ static void high(void);
  */
 static bool verifyLevel(void);
 
+/**
+ * Called when input capture interrupt is executed.
+ */
+static void callbackInputCapture(void);
+
+/**
+ * Called when compare match A is executed.
+ */
+static void callbackTimerA(void);
+
+/**
+ * Called when compare match B is executed.
+ */
+static void callbackTimerB(void);
+
+/**
+ * Check if there is a triggered timer A event. This will consume the event if there is one.
+ * @return Returns true if there is a triggered timer A event.
+ */
+static bool isEventTriggeredTimerA(bool consume);
+
+/**
+ * Check if there is a triggered timer B event. This will consume the event if there is one.
+ * @return Returns true if there is a triggered timer B event.
+ */
+static bool isEventTriggeredTimerB(bool consume);
+
+/**
+ * Check if there is a input toggled event. This will consume the event if there is one.
+ * @return Returns true if there is a input toggled event.
+ */
+static bool isEventInputToggled(bool consume);
+
+/**
+ *
+ * @return
+ */
+bool isEventFallingEdge(bool consume);
+
+/**
+ *
+ * @return
+ */
+bool isEventRisingEdge(bool consume);
+
+/**
+ * Check if there is a state transition in event. This will consume the event if there is one.
+ * @return Returns true if there is a state transition in event.
+ */
+static bool isEventTransistionIn(StateMachine stateMachine, bool consume);
+
+/**
+ * Check if there is a state transition out event. This will consume the event if there is one.
+ * @return Returns true if there is a state transition out event.
+ */
+static bool isEventTransistionOut(StateMachine stateMachine, bool consume);
+
+/**
+ *
+ */
+static void stateMain_Initial(void);
+
+/**
+ *
+ */
+static void stateMain_Read(void);
+
+/**
+ *
+ */
+static void stateMain_Write(void);
+
+/**
+ *
+ */
+static void stateMain_Final(void);
+
+/**
+ *
+ */
+static void stateRead_Initial(void);
+
+/**
+ *
+ */
+static void stateRead_StartBit(void);
+
+/**
+ *
+ */
+static void stateRead_DataBits(void);
+
+/**
+ *
+ */
+static void stateRead_Final(void);
+
+/**
+ *
+ */
+static void stateWrite_Initial(void);
+
+/**
+ *
+ */
+static void stateWrite_SignalFreeTime(void);
+
+/**
+ *
+ */
+static void stateWrite_StartBits(void);
+
+/**
+ *
+ */
+static void stateWrite_DataBits(void);
+
+/**
+ *
+ */
+static void stateWrite_Final(void);
+
 //==========================================
 // Variables
 //==========================================
-static State currentState = START;
-static SubStateReadStartBit readStartBitState = NOT_FOUND;
-static Events events = {.triggeredTimerA = false, .triggeredTimerB = false, .toggledEdge = false, .transistionIn = true, .transistionOut = false};
+static StatePointer currentState[4];
+
+bool beginStartBit = false;
+
+static bool eventTriggeredTimerA = false;
+static bool eventTriggeredTimerB = false;
+static bool eventToggledEdge = false;
+static bool eventFallingEdge = false;
+static bool eventRisingEdge = false;
+static bool eventTransistionIn[4] = {true};
+static bool eventTransistionOut[4] = {false};
 
 static TimerOptions timerOptionsA = {.repeat = false, .reset = false};
 static TimerOptions timerOptionsB = {.repeat = false, .reset = false};
@@ -159,6 +246,7 @@ static Queue* messageQueueRead;
 static Queue* messageQueueWrite;
 static CECMessage messageBufferWrite;
 static CECMessage messageBufferRead;
+
 static uint8_t bitCounter;
 static uint8_t byteCounter;
 static Level EOM;
@@ -173,456 +261,34 @@ static Level shouldLevel = HIGH;
 //==========================================
 void cecSetup(void)
 {
+    //create queues
     messageQueueRead = queueCreate(CEC_READ_QUEUE_SIZE, sizeof(CECMessage));
     messageQueueWrite = queueCreate(CEC_WRITE_QUEUE_SIZE, sizeof(CECMessage));
+
+    //register callbacks
+    registerCallbackInputCapture(callbackInputCapture);
+    registerCallbackTimerA(callbackTimerA);
+    registerCallbackTimerB(callbackTimerB);
+
+    //set initial state
+    setState(SM_MAIN, stateMain_Initial);
 }
 
 void cecProcess()
 {
-    switch(currentState)
-    {
-        //============================================================================================================
-        case START:
-            if (isEventTransistionIn())
-            {
-
-            }
-
-            CECMessage message;
-            message.data[0] = 0x05;
-            message.data[1] = 0x44;
-            message.data[2] = 0x43;
-            message.size = 3;
-            //putMessage(messageQueueWrite, message);
-
-            setState(READ_START_BIT);
-
-            if (isEventTransistionOut())
-            {
-
-            }
-        break;
-        //============================================================================================================
-        case EXIT:
-            if (isEventTransistionIn())
-            {
-
-            }
-
-            if (isEventTransistionOut())
-            {
-
-            }
-        break;
-        //============================================================================================================
-        case READ_START_BIT:
-            if (isEventTransistionIn())
-            {
-
-            }
-
-            if (isEventInputToggled())
-            {
-                if (lastEdgeLevel == HIGH)
-                {
-                    if (readStartBitState == READ_T0)                       //is t1?
-                    {
-                        if ((START_BIT_T1 + START_BIT_TOLERANCE) > lastEdgeTicks && lastEdgeTicks > (START_BIT_T1 - START_BIT_TOLERANCE))   //t1 valid time?
-                        {
-                            readStartBitState = READ_T1;
-                        }
-                        else                                                //wrong timing
-                        {
-                            readStartBitState = NOT_FOUND;
-                        }
-                    }
-                }
-                else
-                {
-                    if (readStartBitState == NOT_FOUND)                     //is t0?
-                    {
-                        readStartBitState = READ_T0;
-                        resetTimer();
-                    }
-                    else if (readStartBitState == READ_T1)                  //is t2?
-                    {
-                        if ((START_BIT_T2 + START_BIT_TOLERANCE) > lastEdgeTicks && lastEdgeTicks > (START_BIT_T2 - START_BIT_TOLERANCE))   //t2 valid time?
-                        {
-                            readStartBitState = READ_T2;
-                            //debug_char('F');
-
-                            setState(READ_DATA_BIT);
-                        }
-                        else                                                //timeout t2?
-                        {
-                            readStartBitState = NOT_FOUND;
-                        }
-                    }
-                }
-            }
-
-            if (readStartBitState == NOT_FOUND)                             //registered nothing on line?
-            {
-                if (messageBufferWrite.size == 0)                           //no message in write buffer?
-                {
-                    if (queueGet(messageQueueWrite, &messageBufferWrite)) //get message from queue
-                    {
-                        setState(WRITE_SIGNAL_FREE_TIME);
-                    }
-                }
-                else
-                {
-                    setState(WRITE_SIGNAL_FREE_TIME);
-                }
-            }
-
-            if (isEventTransistionOut())
-            {
-
-            }
-        break;
-        //============================================================================================================
-        case READ_DATA_BIT:
-            if (isEventTransistionIn())
-            {
-                messageBufferRead.size = 0;
-                bitCounter = 0;
-                byteCounter = 0;
-                EOM = LOW;
-                ACK = HIGH;
-
-                events.toggledEdge = true;
-            }
-
-            if (isEventInputToggled())
-            {
-                if (lastEdgeLevel == LOW)                                   //start of next data bit
-                {
-                    resetTimer();
-                    setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_A, false, false);
-
-                    if (bitCounter == 9 && (messageBufferRead.data[0] & 0x0F) == LOGICAL_ADDRESS)     //is ACK bit and needs to be asserted?
-                    {
-                        #if ENABLE_ASSERTION == 1
-                            low();                                          //assert ACK bit (start)
-                            setTimeout(DATA_BIT_LOGIC_0, TIMER_B, false, false);
-                        #endif
-                    }
-                }
-                else if (EOM == HIGH)                                       //end of message
-                {
-                    clearTimeout(TIMER_A);
-                    clearTimeout(TIMER_B);
-
-                    messageBufferRead.size = byteCounter;
-                    queuePut(messageQueueRead, &messageBufferRead);
-
-                    readStartBitState = NOT_FOUND;
-                    setState(READ_START_BIT);
-                }
-            }
-
-            //Timer A execution: on sample time (1.05ms) after start of every bit to read the logic level
-            if (isEventTriggeredTimerA())
-            {
-                if (bitCounter <= 7)                                        //data bit
-                {
-                    messageBufferRead.data[byteCounter] = (messageBufferRead.data[byteCounter] << 1) | lastEdgeLevel;
-                }
-
-                if (bitCounter == 7)
-                {
-                    byteCounter++;
-
-                    if (byteCounter > 15)                                   //max CEC message size is 16 blocks
-                    {
-                        //TODO error handling
-                        setState(READ_START_BIT);
-                    }
-                }
-                else if (bitCounter == 8)                                   //EOM bit
-                {
-                    EOM = lastEdgeLevel;
-                }
-                else if (bitCounter == 9)                                   //ACK bit
-                {
-                    ACK = lastEdgeLevel;
-                }
-
-                bitCounter++;
-
-                if (bitCounter > 9)                                         //end of data block (10 bit)
-                {
-                    bitCounter = 0;
-                }
-            }
-
-            //Timer B execution: pull line up again when data block was asserted
-            if (isEventTriggeredTimerB())
-            {
-                #if ENABLE_ASSERTION == 1
-                    debug_string("R");
-                    high();                                                 //assert ACK bit (end)
-                #endif
-            }
-
-            if (isEventTransistionOut())
-            {
-                messageBufferRead.size = 0;
-                bitCounter = 0;
-                byteCounter = 0;
-            }
-        break;
-        //============================================================================================================
-        case WRITE_SIGNAL_FREE_TIME:
-            if (isEventTransistionIn())
-            {
-                //TODO check for correct signal free time: SFT_PRESENT_INITIATOR, SFT_NEW_INITIATOR or SFT_RETRANSMISSION
-                resetTimer();
-                setTimeout(SFT_NEW_INITIATOR, TIMER_A, true, false);
-            }
-
-            if (isEventInputToggled())
-            {
-                clearTimeout(TIMER_A);
-                setState(READ_START_BIT);
-                events.toggledEdge = true;
-                debugPutString("S");
-            }
-
-            if (isEventTriggeredTimerA())
-            {
-                setState(WRITE_START_BIT);
-            }
-
-            if (isEventTransistionOut())
-            {
-
-            }
-        break;
-        //============================================================================================================
-        case WRITE_START_BIT:
-            if (isEventTransistionIn())
-            {
-                low();
-                resetTimer();
-
-                setTimeout(START_BIT_T1, TIMER_A, false, false);
-                setTimeout(START_BIT_T2, TIMER_B, true, false);
-            }
-
-            if (isEventInputToggled())
-            {
-                //TODO implement proper monitoring..
-                if (!verifyLevel())                                         //monitor CEC line
-                {
-                    //TODO error handling: unexpected HIGH/LOW impedance on line
-                    high();
-
-                    clearTimeout(TIMER_A);
-                    clearTimeout(TIMER_B);
-
-                    setState(READ_START_BIT);
-                    events.toggledEdge = true;
-
-                    debugPutString("L");
-                }
-            }
-
-            if (isEventTriggeredTimerA())
-            {
-                high();
-            }
-
-            if (isEventTriggeredTimerB())
-            {
-                setState(WRITE_DATA_BIT);
-            }
-
-            if (isEventTransistionOut())
-            {
-
-            }
-        break;
-        //============================================================================================================
-        case WRITE_DATA_BIT:
-            if (isEventTransistionIn())
-            {
-                bitCounter = 0;
-                byteCounter = 0;
-
-                events.triggeredTimerA = true;
-            }
-
-            //Timer A execution: beginning of every bit to pull line LOW / when line needs to be pulled HIGH again (dependend of logic 1/0)
-            if (isEventTriggeredTimerA())
-            {
-                if (lastEdgeLevel == HIGH)                                                  //start of next data bit
-                {
-                    if (bitCounter >= 10)                                                   //data block finished?
-                    {
-                        if ((byteCounter + 1) < messageBufferWrite.size)                     //there is a following data block
-                        {
-                            bitCounter = 0;
-                            byteCounter++;
-                        }
-                        else                                                                //end of message
-                        {
-                            setState(READ_START_BIT);
-                        }
-                    }
-
-                    if (bitCounter <= 7)                                                    //information bit
-                    {
-                        low();
-                        setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample information bit (for verification)
-
-                        bool dataBit;
-                        dataBit = (messageBufferWrite.data[byteCounter] & (0b10000000 >> bitCounter)) > 0;
-
-                        if (dataBit)                                                        //logic 1
-                        {
-                            setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
-                        }
-                        else                                                                //logic 0
-                        {
-                            setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
-                        }
-
-                        bitCounter++;
-                    }
-                    else if (bitCounter == 8)                                               //EOM
-                    {
-                        low();
-                        setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample EOM bit (for verification)
-
-                        if ((byteCounter + 1) < messageBufferWrite.size)                    //there is a following data block (EOM = 0)
-                        {
-                            setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
-                        }
-                        else                                                                //there is no following data block (EOM = 1)
-                        {
-                            setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
-                        }
-
-                        bitCounter++;
-                    }
-                    else if (bitCounter == 9)                                               //ACK
-                    {
-                        low();
-
-                        setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
-                        setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);            //sample ACK bit (for verification)
-
-                        bitCounter++;
-                    }
-                }
-                else                                                                        //back to high impedance of data bit
-                {
-                    high();
-                    setTimeout(DATA_BIT_FOLLOWING, TIMER_A, true, false);                   //set timer for following data bit
-                }
-            }
-
-            //Timer B execution: on sample time (1.05ms) after start of every bit to verify bit on line and check assertion of ACK bit
-            if (isEventTriggeredTimerB())
-            {
-                if (bitCounter < 10)                                                        //verify bit on CEC line
-                {
-                    if (!verifyLevel())                                                     //monitor CEC line
-                    {
-                        //TODO error handling: unexpected HIGH/LOW impedance on line
-                        high();
-
-                        clearTimeout(TIMER_A);
-                        clearTimeout(TIMER_B);
-
-                        setState(READ_START_BIT);
-                        events.toggledEdge = true;
-
-                        debugPutString("L");
-                    }
-                }
-                else                                                                        //don't verify ACK bit
-                {
-                    if (lastEdgeLevel == HIGH)                                              //ACK bit not asserted by follower?
-                    {
-                        //TODO error handling: ACK bit not asserted by follower
-                    	debugPutString("E");
-                    }
-                }
-            }
-
-            if (isEventTransistionOut())
-            {
-                messageBufferWrite.size = 0;
-                bitCounter = 0;
-                byteCounter = 0;
-            }
-        break;
-    }
+    executeStateMachine(SM_MAIN);
 }
 
-void setState(State state)
+static void setState(StateMachine stateMachine, StatePointer state)
 {
-    currentState = state;
-    events.transistionIn = true;
-    events.transistionOut = true;
+    currentState[stateMachine] = state;
+    eventTransistionIn[stateMachine] = true;
+    eventTransistionOut[stateMachine] = true;
 }
 
-bool isEventTriggeredTimerA()
+static void executeStateMachine(StateMachine stateMachine)
 {
-    if (events.triggeredTimerA)
-    {
-        events.triggeredTimerA = false;
-        return true;
-    }
-
-    return false;
-}
-
-bool isEventTriggeredTimerB()
-{
-    if (events.triggeredTimerB)
-    {
-        events.triggeredTimerB = false;
-        return true;
-    }
-
-    return false;
-}
-
-bool isEventInputToggled()
-{
-    if (events.toggledEdge)
-    {
-        events.toggledEdge = false;
-        return true;
-    }
-
-    return false;
-}
-
-bool isEventTransistionIn()
-{
-    if (events.transistionIn)
-    {
-        events.transistionIn = false;
-        return true;
-    }
-
-    return false;
-}
-
-bool isEventTransistionOut()
-{
-    if (events.transistionOut)
-    {
-        events.transistionOut = false;
-        return true;
-    }
-
-    return false;
+    currentState[stateMachine]();
 }
 
 bool writeCECMessage(CECMessage* message)
@@ -639,32 +305,32 @@ void setTimeout(uint16_t ticks, Timer timer, bool reset, bool repeat)
 {
     if (timer == TIMER_A)
     {
-        setTimerCompareMatch(TIMER_A, ticks);
-        setTimerCompareMatchInterrupt(TIMER_A, true);
+        setValueTimerCompareMatch(TIMER_A, ticks);
+        setInterruptTimerCompareMatch(TIMER_A, true);
         timerOptionsA.reset = reset;
         timerOptionsA.repeat = repeat;
-        events.triggeredTimerA = false;
+        eventTriggeredTimerA = false;
     }
     else
     {
-        setTimerCompareMatch(TIMER_B, ticks);
-        setTimerCompareMatchInterrupt(TIMER_B, true);
+        setValueTimerCompareMatch(TIMER_B, ticks);
+        setInterruptTimerCompareMatch(TIMER_B, true);
         timerOptionsB.reset = reset;
         timerOptionsB.repeat = repeat;
-        events.triggeredTimerB = false;
+        eventTriggeredTimerB = false;
     }
 }
 
 void clearTimeout(Timer timer)
 {
-    setTimerCompareMatchInterrupt(timer, false);
+    setInterruptTimerCompareMatch(timer, false);
     if (timer == TIMER_A)
     {
-        events.triggeredTimerA = false;
+        eventTriggeredTimerA = false;
     }
     else
     {
-        events.triggeredTimerB = false;
+        eventTriggeredTimerB = false;
     }
 }
 
@@ -685,15 +351,23 @@ bool verifyLevel()
     return (shouldLevel == lastEdgeLevel);
 }
 
-void executeTimerInputCapture()
+void callbackInputCapture()
 {
     lastEdgeLevel = getInCECLevel();
     lastEdgeTicks = getTimerTicks();
-    events.toggledEdge = true;
+    eventToggledEdge = true;
+    if (lastEdgeLevel == HIGH)
+    {
+        eventRisingEdge = true;
+    }
+    else
+    {
+        eventFallingEdge = true;
+    }
     setOutInfoLEDLevel(lastEdgeLevel);
 }
 
-void executeTimerACompareMatch()
+void callbackTimerA()
 {
     if (timerOptionsA.reset)
     {
@@ -702,13 +376,14 @@ void executeTimerACompareMatch()
 
     if (!timerOptionsA.repeat)
     {
-        setTimerCompareMatchInterrupt(TIMER_A, false);         //disable timer1 compare A interrupt
+        //disable timer1 compare A interrupt
+        setInterruptTimerCompareMatch(TIMER_A, false);
     }
 
-    events.triggeredTimerA = true;
+    eventTriggeredTimerA = true;
 }
 
-void executeTimerBCompareMatch()
+void callbackTimerB()
 {
     if (timerOptionsB.reset)
     {
@@ -717,8 +392,602 @@ void executeTimerBCompareMatch()
 
     if (!timerOptionsB.repeat)
     {
-        setTimerCompareMatchInterrupt(TIMER_B, false);         //disable timer1 compare B interrupt
+        //disable timer1 compare B interrupt
+        setInterruptTimerCompareMatch(TIMER_B, false);
     }
 
-    events.triggeredTimerB = true;
+    eventTriggeredTimerB = true;
+}
+
+/*
+ * Events
+ */
+bool isEventTriggeredTimerA(bool consume)
+{
+    if (eventTriggeredTimerA)
+    {
+        eventTriggeredTimerA = (consume) ? false : true;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool isEventTriggeredTimerB(bool consume)
+{
+    if (eventTriggeredTimerB)
+    {
+        eventTriggeredTimerB = (consume) ? false : true;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool isEventInputToggled(bool consume)
+{
+    if (eventToggledEdge)
+    {
+        eventToggledEdge = (consume) ? false : true;
+        eventFallingEdge = eventToggledEdge && eventFallingEdge;
+        eventRisingEdge = eventToggledEdge && eventRisingEdge;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool isEventFallingEdge(bool consume)
+{
+    if (eventFallingEdge)
+    {
+        eventToggledEdge = (consume) ? false : true;
+        eventFallingEdge = eventToggledEdge;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool isEventRisingEdge(bool consume)
+{
+    if (eventRisingEdge)
+    {
+        eventToggledEdge = (consume) ? false : true;
+        eventRisingEdge = eventToggledEdge;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool isEventTransistionIn(StateMachine stateMachine, bool consume)
+{
+    if (eventTransistionIn[stateMachine])
+    {
+        eventTransistionIn[stateMachine] = (consume) ? false : true;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool isEventTransistionOut(StateMachine stateMachine, bool consume)
+{
+    if (eventTransistionOut[stateMachine])
+    {
+        eventTransistionOut[stateMachine] = (consume) ? false : true;
+
+        return true;
+    }
+
+    return false;
+}
+
+/*
+ * state machine:     SM_MAIN
+ * states:            Initial, Read, Write, Final
+ * description:        
+ */
+void stateMain_Initial()
+{
+    CECMessage message;
+    message.data[0] = 0x05;
+    message.data[1] = 0x44;
+    message.data[2] = 0x43;
+    message.size = 3;
+    writeCECMessage(&message);
+
+    setState(SM_MAIN, stateMain_Read);
+}
+
+void stateMain_Read()
+{
+    //transition in event
+    if (isEventTransistionIn(SM_MAIN, true))
+    {
+        setState(SM_READ, stateRead_Initial);
+    }
+
+    //execute sub state machine
+    executeStateMachine(SM_READ);
+
+    //transition out event
+    if (isEventTransistionOut(SM_MAIN, true))
+    {
+
+    }
+}
+
+void stateMain_Write()
+{
+    //transition in event
+    if (isEventTransistionIn(SM_MAIN, true))
+    {
+        setState(SM_WRITE, stateWrite_Initial);
+    }
+
+    //execute sub state machine
+    executeStateMachine(SM_WRITE);
+
+    //transition out event
+    if (isEventTransistionOut(SM_MAIN, true))
+    {
+
+    }
+}
+
+void stateMain_Final()
+{
+
+}
+
+/*
+ * state machine:     SM_READ
+ * states:            Initial, StartBit, DataBit, Final
+ * description:
+ */
+void stateRead_Initial()
+{
+    setState(SM_READ, stateRead_StartBit);
+}
+
+void stateRead_StartBit()
+{
+    //transition in event
+    if (isEventTransistionIn(SM_READ, true))
+    {
+        beginStartBit = false;
+    }
+
+    //falling edge event: possible beginning (T0) or end (T2) of a start bit
+    if (isEventFallingEdge(true))
+    {
+        //no possible beginning of start bit already found? (T0)
+        if (!beginStartBit)
+        {
+            resetTimer();
+            beginStartBit = true;
+        }
+        //possible end of a start bit (T2)
+        else
+        {
+            //invalid time and therefore not a start bit?
+            if ((START_BIT_T2 + START_BIT_TOLERANCE) < lastEdgeTicks && lastEdgeTicks < (START_BIT_T2 - START_BIT_TOLERANCE))
+            {
+                setState(SM_READ, stateRead_StartBit);
+            }
+            //valid time for end of a start bit
+            else
+            {
+                setState(SM_READ, stateRead_DataBits);
+            }
+        }
+    }
+
+    //rising edge event: possible rising edge of a start bit (T1)
+    if (isEventRisingEdge(true))
+    {
+        //invalid time and therefore not a start bit?
+        if ((START_BIT_T1 + START_BIT_TOLERANCE) < lastEdgeTicks && lastEdgeTicks < (START_BIT_T1 - START_BIT_TOLERANCE))
+        {
+            setState(SM_READ, stateRead_StartBit);
+        }
+    }
+
+    //is message write buffer empty?
+    if (messageBufferWrite.size == 0)
+    {
+        //try to get next message from write queue
+        queueGet(messageQueueWrite, &messageBufferWrite);
+    }
+    //a message is in write buffer
+    else if (!beginStartBit)
+    {
+        setState(SM_READ, stateRead_Final);
+    }
+
+    //transition out event
+    if (isEventTransistionOut(SM_READ, true))
+    {
+
+    }
+}
+
+void stateRead_DataBits()
+{
+    //transition in event
+    if (isEventTransistionIn(SM_READ, true))
+    {
+        messageBufferRead.size = 0;
+        bitCounter = 0;
+        byteCounter = 0;
+        EOM = LOW;
+        ACK = HIGH;
+
+        eventToggledEdge = true;
+        eventFallingEdge = true;
+    }
+
+    //falling edge event: begin of next data bit
+    if (isEventFallingEdge(true))
+    {
+        //set timer to sample data bit at the save sample period (1.05ms)
+        resetTimer();
+        setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_A, false, false);
+
+        //is this bit an ACK bit?
+        if (bitCounter == 9)
+        {
+            //is this message directed at this destination address?
+            if ((messageBufferRead.data[0] & 0x0F) == LOGICAL_ADDRESS)
+            {
+                //assert bit by pulling line low and set timeout when to pull back high again
+                #if ENABLE_ASSERTION == 1
+                    low();
+                    setTimeout(DATA_BIT_LOGIC_0, TIMER_B, false, false);
+                #endif
+            }
+        }
+    }
+
+    //rising edge event: end of data bit
+    if (isEventRisingEdge(true))
+    {
+        //is this the end of the message?
+        if (EOM == HIGH)
+        {
+            clearTimeout(TIMER_A);
+            clearTimeout(TIMER_B);
+
+            //put the read message from the buffer into the read message queue
+            messageBufferRead.size = byteCounter;
+            queuePut(messageQueueRead, &messageBufferRead);
+
+            setState(SM_READ, stateRead_StartBit);
+        }
+    }
+
+    //timer A event: on sample time (1.05ms) after begin of every bit to read the logic level
+    if (isEventTriggeredTimerA(true))
+    {
+        //is information bit? (bit 0 to 7)
+        if (bitCounter <= 7)
+        {
+            //save the bit in the message read buffer
+            messageBufferRead.data[byteCounter] = (messageBufferRead.data[byteCounter] << 1) | lastEdgeLevel;
+        }
+
+        //is last information bit of data block? (bit 7)
+        if (bitCounter == 7)
+        {
+            byteCounter++;
+
+            //does the read message exceed the max message size of 16 blocks (16 x 10 bit)?
+            if (byteCounter > 15)
+            {
+                //TODO error handling
+                setState(SM_READ, stateRead_StartBit);
+            }
+        }
+        //is EOM bit of data block? (bit 8)
+        else if (bitCounter == 8)
+        {
+            EOM = lastEdgeLevel;
+        }
+        //is ACK bit of data block? (bit 9)
+        else if (bitCounter == 9)
+        {
+            ACK = lastEdgeLevel;
+        }
+
+        bitCounter++;
+
+        //end of data block? (10 bits)
+        if (bitCounter > 9)
+        {
+            bitCounter = 0;
+        }
+    }
+
+    //timer B event: pull line up again when data block was asserted
+    if (isEventTriggeredTimerB(true))
+    {
+        //pull line back high again (because the data block was asserted by pulling the line low before)
+        #if ENABLE_ASSERTION == 1
+            debugPutChar('A');
+            high();
+        #endif
+    }
+
+    //transition out event
+    if (isEventTransistionOut(SM_READ, true))
+    {
+        messageBufferRead.size = 0;
+        bitCounter = 0;
+        byteCounter = 0;
+    }
+}
+
+void stateRead_Final()
+{
+    setState(SM_MAIN, stateMain_Write);
+}
+
+/*
+ * state machine:     SM_WRITE
+ * states:            Initial, SignalFreeTime, StartBit, DataBit, Final
+ * description:        This state machine is a sub state machine.
+ */
+void stateWrite_Initial()
+{
+    setState(SM_WRITE, stateWrite_SignalFreeTime);
+}
+
+void stateWrite_SignalFreeTime()
+{
+    //transition in event
+    if (isEventTransistionIn(SM_WRITE, true))
+    {
+        //TODO check for correct signal free time: SFT_PRESENT_INITIATOR, SFT_NEW_INITIATOR or SFT_RETRANSMISSION
+        resetTimer();
+        setTimeout(SFT_NEW_INITIATOR, TIMER_A, true, false);
+    }
+
+    //input toggle event: someone other tries to write on the bus
+    if (isEventInputToggled(false))
+    {
+        //cancel the write action on the bus and read the signal
+        clearTimeout(TIMER_A);
+        setState(SM_WRITE, stateWrite_Final);
+        debugPutString("S");
+    }
+
+    //timer A event: waited for signal free time without recognizing any signal on the bus
+    if (isEventTriggeredTimerA(true))
+    {
+        setState(SM_WRITE, stateWrite_StartBits);
+    }
+
+    //transition out event
+    if (isEventTransistionOut(SM_WRITE, true))
+    {
+
+    }
+}
+
+void stateWrite_StartBits()
+{
+    //transition in event
+    if (isEventTransistionIn(SM_WRITE, true))
+    {
+        //begin of start bit by pulling line low
+        low();
+        resetTimer();
+
+        //timeout for pulling line high again
+        setTimeout(START_BIT_T1, TIMER_A, false, false);
+
+        //timeout for end of start bit
+        setTimeout(START_BIT_T2, TIMER_B, true, false);
+    }
+
+    //input toggle event: TODO description
+    if (isEventInputToggled(true))
+    {
+        //TODO implement proper monitoring..
+        if (!verifyLevel())                                         //monitor CEC line
+        {
+            //TODO error handling: unexpected HIGH/LOW impedance on line
+            high();
+
+            clearTimeout(TIMER_A);
+            clearTimeout(TIMER_B);
+
+            setState(SM_WRITE, stateWrite_Final);
+            eventToggledEdge = true;
+
+            debugPutString("L");
+        }
+    }
+
+    //timer A event: pull line back high again
+    if (isEventTriggeredTimerA(true))
+    {
+        high();
+    }
+
+    //timer B event: end of start bit
+    if (isEventTriggeredTimerB(true))
+    {
+        setState(SM_WRITE, stateWrite_DataBits);
+    }
+
+    //transition out event
+    if (isEventTransistionOut(SM_WRITE, true))
+    {
+
+    }
+}
+
+void stateWrite_DataBits()
+{
+    //transition in event
+    if (isEventTransistionIn(SM_WRITE, true))
+    {
+        bitCounter = 0;
+        byteCounter = 0;
+
+        eventTriggeredTimerA = true;
+    }
+
+    //toggle input event: do nothing but consume the event
+    if (isEventInputToggled(true))
+    {
+
+    }
+
+    //timer A event: beginning of every bit to pull line LOW / when line needs to be pulled HIGH again (dependend of logic 1/0)
+    if (isEventTriggeredTimerA(true))
+    {
+        //start of next data bit
+        if (lastEdgeLevel == HIGH)
+        {
+            //end of data block?
+            if (bitCounter >= 10)
+            {
+                //is there a following data block?
+                if ((byteCounter + 1) < messageBufferWrite.size)
+                {
+                    bitCounter = 0;
+                    byteCounter++;
+                }
+                //end of message
+                else
+                {
+                    setState(SM_WRITE, stateWrite_Final);
+                }
+            }
+
+            //information bit? (bit 0 to 7)
+            if (bitCounter <= 7)
+            {
+                low();
+
+                //sample information bit at save sample period for verification
+                setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);
+
+                bool dataBit;
+                dataBit = (messageBufferWrite.data[byteCounter] & (0b10000000 >> bitCounter)) > 0;
+
+                //is logical 1?
+                if (dataBit)
+                {
+                    setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
+                }
+                //is logical 0
+                else
+                {
+                    setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
+                }
+
+                bitCounter++;
+            }
+            //EOM bit? (bit 8)
+            else if (bitCounter == 8)
+            {
+                low();
+
+                //sample EOM bit at save sample period for verification
+                setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);
+
+                //is there a following data block?
+                if ((byteCounter + 1) < messageBufferWrite.size)
+                {
+                    //EOM = 0
+                    setTimeout(DATA_BIT_LOGIC_0, TIMER_A, false, false);
+                }
+                //there is no following data block
+                else
+                {
+                    //EOM = 1
+                    setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
+                }
+
+                bitCounter++;
+            }
+            //ACK bit? (bit 9)
+            else if (bitCounter == 9)
+            {
+                low();
+
+                setTimeout(DATA_BIT_LOGIC_1, TIMER_A, false, false);
+
+                //sample ACK bit at save sample period for verification
+                setTimeout(DATA_BIT_SAMPLE_TIME, TIMER_B, false, false);
+
+                bitCounter++;
+            }
+        }
+        //back to high impedance of data bit
+        else
+        {
+            high();
+
+            //set timer for following data bit
+            setTimeout(DATA_BIT_FOLLOWING, TIMER_A, true, false);
+        }
+    }
+
+    //timer B event: on sample time (1.05ms) after start of every bit to verify bit on line and check assertion of any ACK bits
+    if (isEventTriggeredTimerB(true))
+    {
+        //is information bit or EOM bit? (bit 0 to 9)
+        if (bitCounter < 10)
+        {
+            //monitor CEC line
+            if (!verifyLevel())
+            {
+                //TODO error handling: unexpected HIGH/LOW impedance on line
+                high();
+
+                clearTimeout(TIMER_A);
+                clearTimeout(TIMER_B);
+
+                setState(SM_WRITE, stateWrite_Final);
+                eventToggledEdge = true;
+
+                debugPutString("L");
+            }
+        }
+        //is ACK bit
+        else
+        {
+            //ACK bit not asserted by follower?
+            if (lastEdgeLevel == HIGH)
+            {
+                //TODO error handling: ACK bit not asserted by follower
+                debugPutString("E");
+            }
+        }
+    }
+
+    //transition out event
+    if (isEventTransistionOut(SM_WRITE, true))
+    {
+        messageBufferWrite.size = 0;
+        bitCounter = 0;
+        byteCounter = 0;
+    }
+}
+
+void stateWrite_Final()
+{
+    setState(SM_MAIN, stateMain_Read);
 }

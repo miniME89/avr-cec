@@ -32,6 +32,10 @@
 //==========================================
 // Variables
 //==========================================
+static InterruptCallback callbackInputCapture;
+static InterruptCallback callbackTimerA;
+static InterruptCallback callbackTimerB;
+
 static uint8_t timerOverflowCounter = 0;
 
 //==========================================
@@ -39,12 +43,12 @@ static uint8_t timerOverflowCounter = 0;
 //==========================================
 void peripheralsSetup()
 {
-	//setup IO
+    //setup IO
     __CONCAT(DDR, INFO_LED_PORT) |= (1 << INFO_LED_PIN);
     setOutCECLevel(HIGH);
     setOutInfoLEDLevel(HIGH);
 
-	//setup timer
+    //setup timer
     //TCCR1B = (1 << WGM12);
 
     #if TIMER_PRESCALER == 1
@@ -81,6 +85,28 @@ Level getInCECLevel()
     return (__CONCAT(PIN, CEC_INPUT_PORT) & (1 << CEC_INPUT_PIN));
 }
 
+void setOutCECLevel(Level level)
+{
+    if (level == LOW)
+    {
+        /*
+         * setting the CEC output pin to output and pulling the pin low will fore the CEC bus to be LOW, therefore a LOW bit is written on the bus
+         */
+        __CONCAT(PORT, CEC_OUTPUT_PORT) &= ~(1 << CEC_OUTPUT_PIN);      //LOW
+        __CONCAT(DDR, CEC_OUTPUT_PORT) |= (1 << CEC_OUTPUT_PIN);           //output
+    }
+    else
+    {
+        /*
+         * setting the CEC output pin to input and disabling the pull will cause the CEC output pin to be disconnected from the CEC bus. Because the
+         * default state of the bus is HIGH (which is pulled up by the other connected devices) a HIGH bit is written on the bus (as long as no other
+         * device pulled the bus LOW).
+         */
+        __CONCAT(PORT, CEC_OUTPUT_PORT) &= ~(1 << CEC_OUTPUT_PIN);         //disable pull up
+        __CONCAT(DDR, CEC_OUTPUT_PORT) &= ~(1 << CEC_OUTPUT_PIN);          //input
+    }
+}
+
 void setOutInfoLEDLevel(Level level)
 {
     if (((1 << INFO_LED_PIN) & (level << INFO_LED_PIN)) > 0)
@@ -94,26 +120,9 @@ void setOutInfoLEDLevel(Level level)
 
 }
 
-void setOutCECLevel(Level level)
+void registerCallbackInputCapture(InterruptCallback callback)
 {
-    if (level == LOW)
-    {
-    	/*
-    	 * setting the CEC output pin to output and pulling the pin low will fore the CEC bus to be LOW, therefore a LOW bit is written on the bus
-    	 */
-        __CONCAT(PORT, CEC_OUTPUT_PORT) &= ~(1 << CEC_OUTPUT_PIN);      //LOW
-        __CONCAT(DDR, CEC_OUTPUT_PORT) |= (1 << CEC_OUTPUT_PIN);   		//output
-    }
-    else
-    {
-    	/*
-    	 * setting the CEC output pin to input and disabling the pull will cause the CEC output pin to be disconnected from the CEC bus. Because the
-    	 * default state of the bus is HIGH (which is pulled up by the other connected devices) a HIGH bit is written on the bus (as long as no other
-    	 * device pulled the bus LOW).
-    	 */
-        __CONCAT(PORT, CEC_OUTPUT_PORT) &= ~(1 << CEC_OUTPUT_PIN); 		//disable pull up
-        __CONCAT(DDR, CEC_OUTPUT_PORT) &= ~(1 << CEC_OUTPUT_PIN);  		//input
-    }
+    callbackInputCapture = callback;
 }
 
 void resetTimer()
@@ -132,7 +141,7 @@ uint8_t getTimerOverflowCounter()
     return timerOverflowCounter;
 }
 
-void setTimerCompareMatch(Timer timer, uint16_t ticks)
+void setValueTimerCompareMatch(Timer timer, uint16_t ticks)
 {
     if (timer == TIMER_A)
     {
@@ -144,7 +153,7 @@ void setTimerCompareMatch(Timer timer, uint16_t ticks)
     }
 }
 
-void setTimerCompareMatchInterrupt(Timer timer, bool enable)
+void setInterruptTimerCompareMatch(Timer timer, bool enable)
 {
     if (enable)
     {
@@ -172,10 +181,20 @@ void setTimerCompareMatchInterrupt(Timer timer, bool enable)
     }
 }
 
+void registerCallbackTimerA(InterruptCallback callback)
+{
+    callbackTimerA = callback;
+}
+
+void registerCallbackTimerB(InterruptCallback callback)
+{
+    callbackTimerB = callback;
+}
+
 //Interrupt for timer input compare
 ISR(TIMER1_CAPT_vect)
 {
-    executeTimerInputCapture();
+    callbackInputCapture();
 
     TCCR1B ^= (1 << ICES1);
 }
@@ -183,13 +202,13 @@ ISR(TIMER1_CAPT_vect)
 //Interrupt for timer compare match A
 ISR(TIMER1_COMPA_vect)
 {
-    executeTimerACompareMatch();
+    callbackTimerA();
 }
 
 //Interrupt for timer compare match B
 ISR(TIMER1_COMPB_vect)
 {
-    executeTimerBCompareMatch();
+    callbackTimerB();
 }
 
 //Interrupt for timer overflow
